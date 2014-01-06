@@ -135,6 +135,11 @@ qint64 QHexEdit::selectionEnd()
     return this->_hexedit_p->selectionEnd();
 }
 
+void QHexEdit::setFont(const QFont &f)
+{
+    this->_hexedit_p->setFont(f);
+}
+
 bool QHexEdit::readOnly()
 {
     return this->_hexedit_p->readOnly();
