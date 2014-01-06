@@ -110,6 +110,11 @@ int QHexEdit::addressWidth()
     return this->_hexedit_p->addressWidth();
 }
 
+int QHexEdit::visibleLinesCount()
+{
+    return this->_hexedit_p->visibleLinesCount();
+}
+
 QHexEditData *QHexEdit::data()
 {
     return this->_hexedit_p->data();
@@ -138,6 +143,16 @@ qint64 QHexEdit::selectionEnd()
 void QHexEdit::setFont(const QFont &f)
 {
     this->_hexedit_p->setFont(f);
+}
+
+qint64 QHexEdit::visibleStartOffset()
+{
+    return this->_hexedit_p->visibleStartOffset();
+}
+
+qint64 QHexEdit::visibleEndOffset()
+{
+    return this->_hexedit_p->visibleEndOffset();
 }
 
 bool QHexEdit::readOnly()

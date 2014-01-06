@@ -312,6 +312,11 @@ int QHexEditPrivate::addressWidth()
     return this->_addressWidth;
 }
 
+int QHexEditPrivate::visibleLinesCount()
+{
+    return qCeil(this->height() / this->_charheight);
+}
+
 int QHexEditPrivate::wheelScrollLines()
 {
     return this->_whellscrolllines;
@@ -339,6 +344,17 @@ qint64 QHexEditPrivate::selectionEnd()
         return this->_hexeditdatamanager->selectionEnd();
 
     return 0;
+}
+
+qint64 QHexEditPrivate::visibleStartOffset()
+{
+    return this->verticalSliderPosition64() * QHexEditDataManager::BYTES_PER_LINE;
+}
+
+qint64 QHexEditPrivate::visibleEndOffset()
+{
+    qint64 endoff = this->visibleStartOffset() + ((this->height() / this->_charheight) * QHexEditDataManager::BYTES_PER_LINE) - 1;
+    return qMin(endoff, this->_hexeditdatamanager->length()); /* Adjust to EOF, if needed */
 }
 
 QHexEditData *QHexEditPrivate::data()

@@ -41,11 +41,14 @@ class QHexEditPrivate : public QWidget
         void setVerticalScrollBarValue(int value);
         bool readOnly();
         int addressWidth();
+        int visibleLinesCount();
         int wheelScrollLines();
         qint64 indexOf(QByteArray& ba, bool start);
         qint64 cursorPos();
         qint64 selectionStart();
         qint64 selectionEnd();
+        qint64 visibleStartOffset();
+        qint64 visibleEndOffset();
         QHexEditData* data();
         QColor& lineColor();
         QColor& addressForeColor();
