@@ -1,85 +1,290 @@
 #include "qhexeditdata.h"
 
-QHexEditData::QHexEditData(QIODevice *iodevice, QObject *parent): QObject(parent)
+QHexEditData::QHexEditData(QIODevice *iodevice, QObject *parent): QObject(parent), _iodevice(iodevice), _length(iodevice->size()), _lastpos(-1), _lastaction(QHexEditData::None)
 {
-    this->_iodevice = iodevice;
-    this->_iodevice->open(QIODevice::ReadOnly);
-
-    this->_bytes = this->_iodevice->readAll(); /* FIXME: !!! LARGE FILE SUPPORT !!! */
+    this->_modlist.append(new ModifiedItem(0, iodevice->size(), false));
 }
 
-QHexEditData::~QHexEditData()
+QUndoStack *QHexEditData::undoStack()
 {
-    if(this->_iodevice)
-        this->_iodevice->close();
-}
-
-const char *QHexEditData::constDataPtr()
-{
-    return this->_bytes.constData();
-}
-
-char *QHexEditData::dataPtr()
-{
-    return this->_bytes.data();
+    return &this->_undostack;
 }
 
 uchar QHexEditData::at(qint64 i)
 {
-    return this->_bytes.at(i);
+    return this->read(i, 1)[0];
 }
 
 qint64 QHexEditData::indexOf(const QByteArray &ba, qint64 start)
 {
-    return static_cast<qint64>(this->_bytes.indexOf(ba, start));
-}
+    if(!ba.length())
+        return -1;
 
-QByteArray QHexEditData::read(qint64 pos, qint64 len)
-{
-    return this->_bytes.mid(pos, len);
-}
-
-void QHexEditData::write(const QByteArray &ba)
-{
-    this->insert(this->_bytes.size(), ba);
-}
-
-qint64 QHexEditData::length()
-{
-    return this->_bytes.length();
-}
-
-void QHexEditData::save(QString filename)
-{
-    QFile f(filename);
-    f.open(QFile::WriteOnly);
-    f.write(this->_bytes);
-    f.close();
-}
-
-void QHexEditData::insert(qint64 pos, const QByteArray &newba)
-{
-    if(newba.length())
+    for(qint64 pos = start; pos < this->length(); pos++)
     {
-        this->_bytes.insert(pos, newba);
-        emit dataChanged(pos, newba.length());
+        QByteArray cba = this->read(pos, ba.length());
+
+        if(cba == ba)
+            return pos;
     }
+
+    return -1;
 }
 
-void QHexEditData::replace(qint64 pos, qint64 len, const QByteArray &newba)
+void QHexEditData::insert(qint64 pos, uchar ch)
 {
-    if(newba.length())
+    this->insert(pos, QByteArray().append(ch));
+}
+
+void QHexEditData::insert(qint64 pos, const QByteArray &ba)
+{
+    InsertCommand* ic = this->internalInsert(pos, ba, QHexEditData::Insert);
+
+    if(ic)
     {
-        this->_bytes.replace(pos, len, newba);
-        emit dataChanged(pos, newba.length());
+        this->recordAction(QHexEditData::Insert, pos + ba.length());
+        this->_undostack.push(ic);
     }
 }
 
 void QHexEditData::remove(qint64 pos, qint64 len)
 {
-    if(len > 0)
+    RemoveCommand* rc = this->internalRemove(pos, len, QHexEditData::Remove);
+
+    if(rc)
     {
-        this->_bytes.remove(pos, len);
-        emit dataChanged(pos, len);
+        this->recordAction(QHexEditData::Remove, pos);
+        this->_undostack.push(rc);
     }
+}
+
+void QHexEditData::replace(qint64 pos, uchar b)
+{
+    this->replace(pos, 1, b);
+}
+
+void QHexEditData::replace(qint64 pos, qint64 len, uchar b)
+{
+    this->replace(pos, len, QByteArray().append(b));
+}
+
+void QHexEditData::replace(qint64 pos, const QByteArray &ba)
+{
+    this->replace(pos, ba.length(), ba);
+}
+
+void QHexEditData::replace(qint64 pos, qint64 len, const QByteArray &ba)
+{
+    if(pos > this->length() || ba.isEmpty() || !this->modifiedItem(pos))
+        return;
+
+    this->_undostack.push(new ReplaceCommand(pos, len, ba, this));
+    this->recordAction(QHexEditData::Replace, pos + ba.length());
+}
+
+QByteArray QHexEditData::read(qint64 pos, qint64 len)
+{
+    int i;
+    QByteArray resba;
+    qint64 modoffset;
+
+    ModifiedItem* mi = this->modifiedItem(pos, &modoffset, &i);
+
+    if(!mi)
+        return QByteArray();
+
+    qint64 currpos = pos, mioffset = pos - modoffset;
+
+    while(len && (i < this->_modlist.length()))
+    {
+        QByteArray ba;
+        mi = this->_modlist[i];
+        qint64 copylen = qMin(mi->length() - mioffset, len);
+
+        if(mi->modified())
+            ba = this->_modbuffer.mid(mi->pos() + mioffset, copylen);
+        else
+        {
+            this->_iodevice->seek(mi->pos() + mioffset);
+            ba = this->_iodevice->read(copylen);
+        }
+
+        resba.append(ba);
+
+        currpos += copylen;
+        len -= copylen;
+        mioffset = 0;
+        i++;
+    }
+
+    return resba;
+}
+
+qint64 QHexEditData::length() const
+{
+    return this->_length;
+}
+
+QHexEditData *QHexEditData::fromDevice(QIODevice *iodevice)
+{
+    if(!iodevice->isOpen())
+        iodevice->open(QFile::ReadWrite);
+
+    return new QHexEditData(iodevice);
+}
+
+QHexEditData *QHexEditData::fromFile(QString filename)
+{
+    QFile* f = new QFile(filename);
+    f->open(QFile::ReadWrite);
+
+    return QHexEditData::fromDevice(f);
+}
+
+QHexEditData *QHexEditData::fromMemory(const QByteArray &ba)
+{
+    QBuffer* b = new QBuffer();
+    b->setData(ba);
+    b->open(QFile::ReadOnly);
+
+    return QHexEditData::fromDevice(b);
+}
+
+QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByteArray &ba, QHexEditData::ActionType act)
+{
+    if(pos < 0 || pos > this->length() || !ba.length())
+        return nullptr;
+
+    int i;
+    qint64 datapos;
+    ModifiedItem* mi = this->modifiedItem(pos, &datapos, &i);
+
+    if(!mi)
+        return nullptr;
+
+    bool optimize = false;
+    ModifyList oldml, newml;
+    qint64 modoffset = pos - datapos;
+    qint64 buffoffset = this->updateBuffer(ba);
+
+    if(!modoffset)
+    {
+        optimize = (act == QHexEditData::Insert) && this->canOptimize(act, pos);
+        newml.append(new ModifiedItem(buffoffset, ba.length()));
+    }
+    else
+    {
+        oldml.append(mi);
+        newml.append(new ModifiedItem(mi->pos(), modoffset, mi->modified()));
+        newml.append(new ModifiedItem(buffoffset, ba.length()));
+        newml.append(new ModifiedItem(mi->pos() + modoffset, mi->length() - modoffset, mi->modified()));
+    }
+
+    this->_length += ba.length();
+    return new InsertCommand(i, pos, oldml, newml, this, optimize);
+}
+
+QHexEditData::RemoveCommand* QHexEditData::internalRemove(qint64 pos, qint64 len, ActionType act)
+{
+    if(pos < 0 || !len || pos >= this->length() || pos > (this->length() - len))
+        return nullptr;
+
+    int i;
+    qint64 datapos;
+    ModifiedItem* mi = this->modifiedItem(pos, &datapos, &i);
+
+    if(!mi)
+        return nullptr;
+
+    QList<ModifiedItem*> olditems, newitems;
+    qint64 remoffset = pos - datapos, remlength = len;
+
+    if(remoffset)
+    {
+        newitems.append(new ModifiedItem(mi->pos(), remoffset, mi->modified()));
+
+        if((remoffset + remlength) < mi->length())
+            newitems.append(new ModifiedItem(mi->pos() + remoffset + remlength, mi->length() - remoffset - remlength, mi->modified()));
+
+        remlength -= qMin(remlength, mi->length() - remoffset);
+        olditems.append(mi);
+        i++;
+    }
+
+    while(remlength && (i < this->_modlist.length()))
+    {
+        mi = this->_modlist[i];
+
+        if(remlength < mi->length())
+            newitems.append(new ModifiedItem(mi->pos() + remlength, mi->length() - remlength, mi->modified()));
+
+        remlength -= qMin(remlength, mi->length());
+        olditems.append(mi);
+        i++;
+    }
+
+    this->_length -= len;
+    return new RemoveCommand(i - olditems.length(), pos, olditems, newitems, this);
+}
+
+bool QHexEditData::canOptimize(QHexEditData::ActionType at, qint64 pos)
+{
+    return (this->_lastaction == at) && (this->_lastpos == pos);
+}
+
+void QHexEditData::recordAction(QHexEditData::ActionType at, qint64 pos)
+{
+    this->_lastpos = pos;
+    this->_lastaction = at;
+}
+
+qint64 QHexEditData::updateBuffer(const QByteArray &ba)
+{
+    qint64 pos = this->_modbuffer.length();
+    this->_modbuffer.append(ba);
+    return pos;
+}
+
+QHexEditData::ModifiedItem* QHexEditData::modifiedItem(qint64 pos, qint64* datapos, int *index)
+{
+    int i = -1;
+    qint64 currpos = 0;
+    ModifiedItem* mi = nullptr;
+
+    for(i = 0; i < this->_modlist.length(); i++)
+    {
+        mi = this->_modlist[i];
+
+        if((pos >= currpos) && (pos < (currpos + mi->length())))
+        {
+            if(datapos)
+                *datapos = currpos;
+
+            if(index)
+                *index = i;
+
+            return mi;
+        }
+
+        currpos += mi->length();
+    }
+
+    if(mi && (pos == currpos)) /* Return Last Item for Append */
+    {
+        if(datapos)
+            *datapos = currpos;
+
+        if(index)
+            *index = i;
+
+        return mi;
+    }
+
+    return nullptr;
+}
+
+
+void QHexEditData::append(const QByteArray &ba)
+{
+    this->insert(this->length(), ba);
 }

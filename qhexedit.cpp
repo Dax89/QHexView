@@ -9,7 +9,6 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
     /* Forward QHexEditPrivate's Signals */
     connect(this->_hexedit_p, SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(selectionChanged(qint64)), this, SIGNAL(selectionChanged(qint64)));
-    connect(this->_hexedit_p, SIGNAL(bytesChanged(qint64)), this, SIGNAL(bytesChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(verticalScrollBarValueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
 
     this->_scrollarea->setFocusPolicy(Qt::NoFocus);
@@ -28,31 +27,6 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
 
     this->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     this->setLayout(this->_hlayout);
-}
-
-void QHexEdit::doAnd(qint64 start, qint64 end, uchar value)
-{
-    this->_hexedit_p->doAnd(start, end, value);
-}
-
-void QHexEdit::doOr(qint64 start, qint64 end, uchar value)
-{
-    this->_hexedit_p->doOr(start, end, value);
-}
-
-void QHexEdit::doXor(qint64 start, qint64 end, uchar value)
-{
-    this->_hexedit_p->doXor(start, end, value);
-}
-
-void QHexEdit::doMod(qint64 start, qint64 end, uchar value)
-{
-    this->_hexedit_p->doMod(start, end, value);
-}
-
-void QHexEdit::doNot(qint64 start, qint64 end)
-{
-    this->_hexedit_p->doNot(start, end);
 }
 
 void QHexEdit::undo()

@@ -1,17 +1,19 @@
 #include "qhexeditprivate.h"
 
 const int QHexEditPrivate::CURSOR_BLINK_INTERVAL = 500; /* 0.5 sec */
+const int QHexEditPrivate::BYTES_PER_LINE = 0x10;
 
 QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar, QWidget *parent): QWidget(parent)
 {
-    this->_hexeditdatamanager = NULL;
+    this->_hexeditdata = nullptr;
+    this->_lastkeyevent = nullptr;
     this->_scrollarea = scrollarea;
     this->_vscrollbar = vscrollbar;
     this->_blink = false;
     this->_readonly = false;
-    this->_selpart = HexPart;
-    this->_cursorX = this->_cursorY = 0;
-    this->_charheight = this->_charwidth = 0;
+    this->_cursorX = this->_cursorY = this->_cursorpos = this->_selectionstart = this->_selectionend = this->_charidx = this->_charheight = this->_charwidth = 0;
+    this->_selpart = QHexEditPrivate::HexPart;
+    this->_insmode = QHexEditPrivate::Overwrite;
 
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SLOT(vScrollBarValueChanged(int)));
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
@@ -40,20 +42,33 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
 
 void QHexEditPrivate::undo()
 {
-    if(this->_hexeditdatamanager->undo())
-        this->update();
+    if(!this->_hexeditdata || !this->_hexeditdata->undoStack()->canUndo())
+        return;
+
+    this->_hexeditdata->undoStack()->undo();
 }
 
 void QHexEditPrivate::redo()
 {
-    if(this->_hexeditdatamanager->redo())
-        this->update();
+    if(!this->_hexeditdata || !this->_hexeditdata->undoStack()->canRedo())
+        return;
+
+    this->_hexeditdata->undoStack()->redo();
 }
 
 void QHexEditPrivate::cut()
 {
-    if(this->_hexeditdatamanager->cut())
+    qint64 start = qMin(this->_selectionstart, this->_selectionend);
+    qint64 end = qMax(this->_selectionstart, this->_selectionend);
+
+    if(end - start)
     {
+        QClipboard* cpbd = qApp->clipboard();
+        QByteArray ba = this->_hexeditdata->read(start, end - start);
+
+        cpbd->setText(QString(ba));
+        this->_hexeditdata->remove(start, end - start);
+        this->setCursorPos(start, 0);
         this->adjust();
         this->ensureVisible();
     }
@@ -61,75 +76,51 @@ void QHexEditPrivate::cut()
 
 void QHexEditPrivate::copy()
 {
-    this->_hexeditdatamanager->copy();
+    qint64 start = qMin(this->_selectionstart, this->_selectionend);
+    qint64 end = qMax(this->_selectionstart, this->_selectionend);
+
+    if(end - start)
+    {
+        QClipboard* cpbd = qApp->clipboard();
+        QByteArray ba = this->_hexeditdata->read(start, end - start);
+        cpbd->setText(QString(ba));
+    }
 }
 
 void QHexEditPrivate::paste()
 {
-    if(this->_hexeditdatamanager->paste())
+    QClipboard* cpbd = qApp->clipboard();
+    QString s = cpbd->text();
+
+    if(!s.isNull())
     {
+        QByteArray ba = s.toLatin1();
+        qint64 start = qMin(this->_selectionstart, this->_selectionend);
+        qint64 end = qMax(this->_selectionstart, this->_selectionend);
+
+        if(end - start)
+            this->_hexeditdata->replace(start, end - start, ba);
+        else
+            this->_hexeditdata->insert(start, ba);
+
+        this->setCursorPos((start + s.length()), 0);
         this->adjust();
         this->ensureVisible();
     }
 }
 
-void QHexEditPrivate::doAnd(qint64 start, qint64 end, uchar value)
-{
-    if(this->_hexeditdatamanager)
-    {
-        this->_hexeditdatamanager->doAnd(start, end, value);
-        this->update();
-    }
-}
-
-void QHexEditPrivate::doOr(qint64 start, qint64 end, uchar value)
-{
-    if(this->_hexeditdatamanager)
-    {
-        this->_hexeditdatamanager->doOr(start, end, value);
-        this->update();
-    }
-}
-
-void QHexEditPrivate::doXor(qint64 start, qint64 end, uchar value)
-{
-    if(this->_hexeditdatamanager)
-    {
-        this->_hexeditdatamanager->doXor(start, end, value);
-        this->update();
-    }
-}
-
-void QHexEditPrivate::doMod(qint64 start, qint64 end, uchar value)
-{
-    if(this->_hexeditdatamanager)
-    {
-        this->_hexeditdatamanager->doMod(start, end, value);
-        this->update();
-    }
-}
-
-void QHexEditPrivate::doNot(qint64 start, qint64 end)
-{
-    if(this->_hexeditdatamanager)
-    {
-        this->_hexeditdatamanager->doNot(start, end);
-        this->update();
-    }
-}
-
 void QHexEditPrivate::setData(QHexEditData *hexeditdata)
 {
-    if(this->_hexeditdatamanager)
-        disconnect(this->_hexeditdatamanager->data(), SIGNAL(dataChanged(qint64,qint64)), this, SLOT(hexEditDataChanged(qint64,qint64))); /* Disconnect previous HexEditData, if any */
+    if(this->_hexeditdata) /* Disconnect previous HexEditData Signals, if any */
+        disconnect(this->_hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), this, SLOT(hexEditDataChanged(qint64,qint64,QHexEditData::ActionType)));
 
     if(hexeditdata)
     {
-        connect(hexeditdata, SIGNAL(dataChanged(qint64,qint64)), SLOT(hexEditDataChanged(qint64,qint64)));
-        this->_hexeditdatamanager = new QHexEditDataManager(hexeditdata);
+        this->_hexeditdata = hexeditdata;
+        connect(hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), SLOT(hexEditDataChanged(qint64,qint64,QHexEditData::ActionType)));
 
         /* Check Max Address Width */
-        QString addrString = QString("%1").arg(this->_hexeditdatamanager->length() / QHexEditDataManager::BYTES_PER_LINE);
+        QString addrString = QString("%1").arg(this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE);
 
         if(this->_addressWidth < addrString.length()) /* Adjust Address Width */
             this->_addressWidth = addrString.length();
@@ -137,7 +128,7 @@ void QHexEditPrivate::setData(QHexEditData *hexeditdata)
         this->setCursorPos(0); /* Make a Selection */
     }
     else
-        this->_hexeditdatamanager = NULL;
+        this->_hexeditdata = nullptr;
 
     this->adjust();
     this->update();
@@ -173,10 +164,7 @@ void QHexEditPrivate::ensureVisible()
     qint64 currline = this->verticalSliderPosition64() + (this->_cursorY / this->_charheight);
 
     if((currline + 1) < this->verticalSliderPosition64() || (currline + 1) > (this->verticalSliderPosition64() + vislines))
-    {
         this->_vscrollbar->setValue((currline + 1) - vislines);
-        this->update();
-    }
 }
 
 void QHexEditPrivate::adjust()
@@ -187,13 +175,13 @@ void QHexEditPrivate::adjust()
     this->_charheight = fm.height();
 
     this->_xposhex =  this->_charwidth * (this->_addressWidth + 1);
-    this->_xposascii = this->_xposhex + (this->_charwidth * (QHexEditDataManager::BYTES_PER_LINE * 3));
-    this->_xPosend = this->_xposascii + (this->_charwidth * QHexEditDataManager::BYTES_PER_LINE);
+    this->_xposascii = this->_xposhex + (this->_charwidth * (QHexEditPrivate::BYTES_PER_LINE * 3));
+    this->_xPosend = this->_xposascii + (this->_charwidth * QHexEditPrivate::BYTES_PER_LINE);
 
-    if(this->_hexeditdatamanager)
+    if(this->_hexeditdata)
     {
         /* Setup ScrollBars */
-        qint64 totLines = this->_hexeditdatamanager->length() / QHexEditDataManager::BYTES_PER_LINE;
+        qint64 totLines = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
         qint64 visLines = this->height() / this->_charheight;
 
         /* Setup Vertical ScrollBar */
@@ -216,28 +204,32 @@ void QHexEditPrivate::adjust()
         this->_vscrollbar->hide();
         this->setMinimumWidth(0);
     }
-
-    this->update();
 }
 
 void QHexEditPrivate::setSelectionEnd(qint64 pos, int charidx)
 {
-    qint64 oldselend = this->_hexeditdatamanager->selectionEnd();
+    qint64 oldselend = this->selectionEnd();
 
-    this->_hexeditdatamanager->setSelectionEnd(pos, charidx);
-    this->setCursorXY(this->_hexeditdatamanager->selectionEnd(), charidx);
+    if(pos >= this->_hexeditdata->length())
+        pos = this->_hexeditdata->length();
+
+    this->_selectionend = pos;
+    this->_cursorpos = pos;
+    this->_charidx = charidx;
+
+    this->updateCursorXY(this->selectionEnd(), charidx);
     this->update();
 
     if(oldselend != pos)
-        emit selectionChanged(qMax(this->_hexeditdatamanager->selectionStart(), pos) - qMin(this->_hexeditdatamanager->selectionStart(), pos));
+        emit selectionChanged(qMax(this->selectionStart(), pos) - qMin(this->selectionStart(), pos));
 }
 
 void QHexEditPrivate::setSelection(qint64 start, qint64 end)
 {
     if(end == -1)
-        end = this->_hexeditdatamanager->length();
+        end = this->_hexeditdata->length();
 
-    this->_hexeditdatamanager->setSelectionStart(start);
+    this->_selectionstart = start;
     this->setSelectionEnd(end, 0);
 
     emit positionChanged(start);
@@ -296,8 +288,8 @@ void QHexEditPrivate::setVerticalScrollBarValue(int value)
 
 qint64 QHexEditPrivate::indexOf(QByteArray &ba, bool start)
 {
-    if(this->_hexeditdatamanager)
-        return this->_hexeditdatamanager->indexOf(ba, start);
+    if(this->_hexeditdata)
+        return this->_hexeditdata->indexOf(ba, start);
 
     return -1;
 }
@@ -324,45 +316,33 @@ int QHexEditPrivate::wheelScrollLines()
 
 qint64 QHexEditPrivate::cursorPos()
 {
-    if(this->_hexeditdatamanager)
-        return this->_hexeditdatamanager->cursorPos();
-
-    return 0;
+    return this->_cursorpos;
 }
 
 qint64 QHexEditPrivate::selectionStart()
 {
-    if(this->_hexeditdatamanager)
-        return this->_hexeditdatamanager->selectionStart();
-
-    return 0;
+    return qMin(this->_selectionstart, this->_selectionend);
 }
 
 qint64 QHexEditPrivate::selectionEnd()
 {
-    if(this->_hexeditdatamanager)
-        return this->_hexeditdatamanager->selectionEnd();
-
-    return 0;
+    return qMax(this->_selectionstart, this->_selectionend);
 }
 
 qint64 QHexEditPrivate::visibleStartOffset()
 {
-    return this->verticalSliderPosition64() * QHexEditDataManager::BYTES_PER_LINE;
+    return this->verticalSliderPosition64() * QHexEditPrivate::BYTES_PER_LINE;
 }
 
 qint64 QHexEditPrivate::visibleEndOffset()
 {
-    qint64 endoff = this->visibleStartOffset() + ((this->height() / this->_charheight) * QHexEditDataManager::BYTES_PER_LINE) - 1;
-    return qMin(endoff, this->_hexeditdatamanager->length()); /* Adjust to EOF, if needed */
+    qint64 endoff = this->visibleStartOffset() + ((this->height() / this->_charheight) * QHexEditPrivate::BYTES_PER_LINE) - 1;
+    return qMin(endoff, this->_hexeditdata->length()); /* Adjust to EOF, if needed */
 }
 
 QHexEditData *QHexEditPrivate::data()
 {
-    if(this->_hexeditdatamanager)
-        return this->_hexeditdatamanager->data();
-
-    return NULL;
+    return this->_hexeditdata;
 }
 
 void QHexEditPrivate::setAddressForeColor(const QColor &c)
@@ -393,6 +373,23 @@ QBrush& QHexEditPrivate::selectedCursorBrush()
     return this->_selcursorbrush;
 }
 
+void QHexEditPrivate::internalSetCursorPos(qint64 pos, int charidx)
+{
+    if(pos > this->_hexeditdata->length()) /* No >= because we can add text at EOS */
+    {
+        int currLine = this->_selectionstart / QHexEditPrivate::BYTES_PER_LINE;
+        int lastLine = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
+
+        if(currLine == lastLine)
+            pos = this->_selectionstart;
+        else
+            pos = this->_hexeditdata->length();
+    }
+
+    this->_cursorpos = this->_selectionend = this->_selectionstart = pos;
+    this->_charidx = charidx;
+}
+
 QColor QHexEditPrivate::byteWeight(uchar b)
 {
     QColor c = this->palette().color(QPalette::WindowText);
@@ -403,42 +400,296 @@ QColor QHexEditPrivate::byteWeight(uchar b)
     return c;
 }
 
+bool QHexEditPrivate::isTextSelected()
+{
+    return this->_selectionstart != this->_selectionend;
+}
+
+void QHexEditPrivate::removeSelectedText()
+{
+    qint64 start = qMin(this->selectionStart(), this->selectionEnd());
+    qint64 end = qMax(this->selectionStart(), this->selectionEnd());
+
+    this->_hexeditdata->remove(start, end - start);
+}
+
+void QHexEditPrivate::processDeleteEvents()
+{
+    if(this->isTextSelected())
+        this->removeSelectedText();
+    else if(this->_insmode == QHexEditPrivate::Overwrite)
+    {
+        if(this->_selpart == HexPart)
+        {
+            QByteArray hexVal = this->_hexeditdata->read(this->selectionStart(), 1);
+
+            if(this->_charidx == 1) /* Change Byte's Low Part */
+                hexVal[0] = (hexVal[0] & 0xF0);
+            else /* Change Byte's High Part */
+                hexVal[0] = (hexVal[0] & 0x0F);
+
+            this->_hexeditdata->replace(this->selectionStart(), hexVal);
+        }
+        else
+            this->_hexeditdata->replace(this->selectionStart(), (char)0);
+    }
+    else
+        this->_hexeditdata->remove(this->selectionStart(), 1);
+}
+
+void QHexEditPrivate::processBackspaceEvents()
+{
+    if(this->isTextSelected())
+        this->removeSelectedText();
+    else if(this->selectionStart())
+    {
+        if(this->_insmode == QHexEditPrivate::Overwrite)
+            this->_hexeditdata->replace(this->selectionStart() - 1, (char)0);
+        else
+            this->_hexeditdata->remove(this->selectionStart() - 1, 1);
+    }
+}
+
+void QHexEditPrivate::processHexPart(int key)
+{
+    if(this->isTextSelected())
+        this->removeSelectedText();
+
+    uchar val = static_cast<uchar>(QString(key).toUInt(NULL, 16));
+
+    if((this->_insmode == QHexEditPrivate::Insert) && !this->_charidx) /* Insert a new byte */
+    {
+        /* Insert Mode: Add one byte in current position */
+        uchar hexval = val << 4; /* X0 Byte */
+        this->_hexeditdata->insert(this->selectionStart(), hexval);
+    }
+    else if((this->_hexeditdata->length() > 0) && (this->selectionStart() < this->_hexeditdata->length()))
+    {
+         /* Override mode, or update low nibble */
+        uchar hexval =  this->_hexeditdata->read(this->selectionStart(), 1)[0];
+
+        if(this->_charidx == 1) /* Change Byte's Low Part */
+            hexval = (hexval & 0xF0) + val;
+        else /* Change Byte's High Part */
+            hexval = (hexval & 0x0F) + (val << 4);
+
+        this->_hexeditdata->replace(this->selectionStart(), hexval);
+    }
+}
+
+void QHexEditPrivate::processAsciiPart(int key)
+{
+    if(this->isTextSelected())
+        this->removeSelectedText();
+
+    /* Insert Mode: Add one byte in current position */
+    if(this->_insmode == QHexEditPrivate::Insert)
+        this->_hexeditdata->insert(this->selectionStart(), static_cast<uchar>(key));
+    else if(this->_insmode == QHexEditPrivate::Overwrite && ((this->_hexeditdata->length() > 0) && (this->selectionStart() < this->_hexeditdata->length())))
+        this->_hexeditdata->replace(this->selectionStart(), (char)key);
+}
+
+bool QHexEditPrivate::processMoveEvents(QKeyEvent *event)
+{
+    bool processed = true;
+
+    if(event->matches(QKeySequence::MoveToNextChar) || event->matches(QKeySequence::MoveToPreviousChar))
+    {
+        if(this->_selpart == QHexEditPrivate::HexPart)
+        {
+            if(event->matches(QKeySequence::MoveToNextChar))
+            {
+                if(this->_charidx == 0)
+                    this->setCursorPos(this->selectionStart(), 1);
+                else /* if(this->_hexeditbuffer->charIndex() == 1) */
+                    this->setCursorPos(this->selectionStart() + 1, 0);
+            }
+            else if(event->matches(QKeySequence::MoveToPreviousChar))
+            {
+                if(this->_charidx == 0)
+                    this->setCursorPos(this->selectionStart() - 1, 1);
+                else /* if(this->_hexeditbuffer->charIndex() == 1) */
+                    this->setCursorPos(this->selectionStart(), 0);
+            }
+        }
+        else if(this->_selpart == QHexEditPrivate::AsciiPart)
+        {
+            if(event->matches(QKeySequence::MoveToNextChar))
+                this->setCursorPos(this->selectionStart() + 1, 0);
+            else if(event->matches(QKeySequence::MoveToPreviousChar))
+                this->setCursorPos(this->selectionStart() - 1, 0);
+        }
+    }
+    else if(event->matches(QKeySequence::MoveToNextLine))
+        this->setCursorPos(this->selectionStart() + QHexEditPrivate::BYTES_PER_LINE, this->_charidx);
+    else if(event->matches(QKeySequence::MoveToPreviousLine))
+        this->setCursorPos(this->selectionStart() - QHexEditPrivate::BYTES_PER_LINE, this->_charidx);
+    else if(event->matches(QKeySequence::MoveToStartOfLine))
+        this->setCursorPos(this->selectionStart() - (this->selectionStart() % QHexEditPrivate::BYTES_PER_LINE));
+    else if(event->matches(QKeySequence::MoveToNextPage))
+        this->setCursorPos(this->selectionStart() + (((this->height() / this->_charheight) - 1) * QHexEditPrivate::BYTES_PER_LINE));
+    else if(event->matches(QKeySequence::MoveToPreviousPage))
+        this->setCursorPos(this->selectionStart() - (((this->height() / this->_charheight) - 1) * QHexEditPrivate::BYTES_PER_LINE));
+    else if(event->matches(QKeySequence::MoveToEndOfLine))
+        this->setCursorPos(this->selectionStart() | (QHexEditPrivate::BYTES_PER_LINE - 1));
+    else if(event->matches(QKeySequence::MoveToStartOfDocument))
+        this->setCursorPos(0);
+    else if(event->matches(QKeySequence::MoveToEndOfDocument))
+        this->setCursorPos(this->_hexeditdata->length());
+    else
+        processed = false;
+
+    return processed;
+}
+
+bool QHexEditPrivate::processSelectEvents(QKeyEvent *event)
+{
+    bool processed = true;
+
+    if(event->matches(QKeySequence::SelectNextChar) || event->matches(QKeySequence::SelectPreviousChar))
+    {
+        if(this->_selpart == QHexEditPrivate::HexPart)
+        {
+            if(event->matches(QKeySequence::SelectNextChar))
+            {
+                if(this->_charidx == 0)
+                    this->setSelectionEnd(this->selectionEnd(), 1);
+                else /* if(this->_hexeditbuffer->charIndex() == 1) */
+                    this->setSelectionEnd(this->selectionEnd() + 1, 0);
+            }
+            else if(event->matches(QKeySequence::SelectPreviousChar))
+            {
+                if(this->_charidx == 0)
+                    this->setSelectionEnd(this->selectionEnd() - 1, 1);
+                else /* if(this->_hexeditbuffer->charIndex() == 1) */
+                    this->setSelectionEnd(this->selectionEnd(), 0);
+            }
+        }
+        else if(this->_selpart == QHexEditPrivate::AsciiPart)
+        {
+            if(event->matches(QKeySequence::SelectNextChar))
+                this->setSelectionEnd(this->selectionEnd() + 1, 0);
+            else if(event->matches(QKeySequence::SelectPreviousChar))
+                this->setSelectionEnd(this->selectionEnd() - 1, 0);
+        }
+    }
+    else if(event->matches(QKeySequence::SelectNextLine))
+        this->setSelectionEnd(this->selectionEnd() + QHexEditPrivate::BYTES_PER_LINE, this->_charidx);
+    else if(event->matches(QKeySequence::SelectPreviousLine))
+        this->setSelectionEnd(this->selectionEnd() - QHexEditPrivate::BYTES_PER_LINE, this->_charidx);
+    else if(event->matches(QKeySequence::SelectStartOfDocument))
+        this->setSelection(this->selectionEnd(), 0);
+    else if(event->matches(QKeySequence::SelectEndOfDocument))
+        this->setSelectionEnd(this->_hexeditdata->length(), 0);
+    else if(event->matches(QKeySequence::SelectAll))
+        this->setSelection(0, this->_hexeditdata->length());
+    else
+        processed = false;
+
+    return processed;
+}
+
+bool QHexEditPrivate::processTextInputEvents(QKeyEvent *event)
+{
+    if(event->modifiers() & Qt::ControlModifier)
+        return false;
+
+    bool processed = true;
+    int key = static_cast<int>(event->text()[0].toLatin1());
+
+    if((this->_selpart == HexPart) && ((key >= '0' && key <= '9') || (key >= 'a' && key <= 'f'))) /* Check if is a Hex Char */
+        this->processHexPart(key);
+    else if((this->_selpart == QHexEditPrivate::AsciiPart) && (key >= 0x20 && key <= 0x7E)) /* Check if is a Printable Char */
+        this->processAsciiPart(key);
+    else if(event->key() == Qt::Key_Delete)
+        this->processDeleteEvents();
+    else if((event->key() == Qt::Key_Backspace) && (event->modifiers() == Qt::NoModifier))
+        this->processBackspaceEvents();
+    else
+        processed = false;
+
+    return processed;
+}
+
+bool QHexEditPrivate::processInsOvrEvents(QKeyEvent *event)
+{
+    if((event->key() == Qt::Key_Insert) && (event->modifiers() == Qt::NoModifier))
+    {
+        this->_insmode = (this->_insmode == QHexEditPrivate::Overwrite ? QHexEditPrivate::Insert : QHexEditPrivate::Overwrite);
+        return true;
+    }
+
+    return false;
+}
+
+bool QHexEditPrivate::processUndoRedo(QKeyEvent *event)
+{
+    bool processed = true;
+
+    if(event->matches(QKeySequence::Undo))
+        this->undo();
+    else if(event->matches(QKeySequence::Redo))
+        this->redo();
+    else
+        processed = false;
+
+    return processed;
+}
+
+bool QHexEditPrivate::processClipboardKeys(QKeyEvent *event)
+{
+    bool processed = true;
+
+    if(event->matches(QKeySequence::Cut))
+        this->cut();
+    else if(event->matches(QKeySequence::Copy))
+        this->copy();
+    else if(event->matches(QKeySequence::Paste))
+        this->paste();
+    else
+        processed = false;
+
+    return processed;
+}
+
 void QHexEditPrivate::setCursorPos(qint64 pos, int charidx)
 {
     if(pos < 0)
         pos = 0;
-    else if(pos > this->_hexeditdatamanager->length())
-        pos = this->_hexeditdatamanager->length();
+    else if(pos > this->_hexeditdata->length())
+        pos = this->_hexeditdata->length();
 
-    qint64 oldpos = this->_hexeditdatamanager->cursorPos();
-    int oldcharidx = this->_hexeditdatamanager->charIndex();
-    qint64 oldsellength = this->_hexeditdatamanager->selectionEnd() - this->_hexeditdatamanager->selectionStart();
+    qint64 oldpos = this->cursorPos();
+    int oldcharidx = this->_charidx;
+    qint64 oldsellength = this->selectionEnd() - this->selectionStart();
 
     /* Delete Cursor */
     this->_blink = false;
     this->update();
 
-    this->_hexeditdatamanager->setCursorPos(pos, charidx);
-    this->setCursorXY(this->_hexeditdatamanager->cursorPos(), charidx);
+    this->internalSetCursorPos(pos, charidx);
+    this->updateCursorXY(this->cursorPos(), charidx);
 
     /* Redraw Cursor NOW! */
     this->_blink = true;
     this->update();
 
-    if(oldsellength != (this->_hexeditdatamanager->selectionEnd() - this->_hexeditdatamanager->selectionStart()))
+    this->ensureVisible();
+
+    if(oldsellength != (this->selectionEnd() - this->selectionStart()))
         emit selectionChanged(0);
 
     if(oldpos != pos || oldcharidx != charidx)
         emit positionChanged(pos);
 }
 
-void QHexEditPrivate::setCursorXY(qint64 pos, int charidx)
+void QHexEditPrivate::updateCursorXY(qint64 pos, int charidx)
 {
-    this->_cursorY = ((pos - (this->verticalSliderPosition64() * QHexEditDataManager::BYTES_PER_LINE)) / QHexEditDataManager::BYTES_PER_LINE) * this->_charheight;
+    this->_cursorY = ((pos - (this->verticalSliderPosition64() * QHexEditPrivate::BYTES_PER_LINE)) / QHexEditPrivate::BYTES_PER_LINE) * this->_charheight;
 
     if(this->_selpart == AddressPart || this->_selpart == HexPart)
     {
-        qint64 x = pos % QHexEditDataManager::BYTES_PER_LINE;
+        qint64 x = pos % QHexEditPrivate::BYTES_PER_LINE;
         this->_cursorX = x * (3 * this->_charwidth) + this->_xposhex;
 
         if(charidx)
@@ -446,11 +697,19 @@ void QHexEditPrivate::setCursorXY(qint64 pos, int charidx)
     }
     else /* if this->_selPart == AsciiPart */
     {
-        qint64 x = pos % QHexEditDataManager::BYTES_PER_LINE;
+        qint64 x = pos % QHexEditPrivate::BYTES_PER_LINE;
         this->_cursorX = x * this->_charwidth + this->_xposascii;
     }
+}
 
-    this->ensureVisible();
+void QHexEditPrivate::drawParts(QPainter &painter)
+{
+    int span = this->_charwidth / 2;
+    painter.setBackgroundMode(Qt::TransparentMode);
+    painter.setPen(this->palette().color(QPalette::WindowText));
+    painter.drawLine(this->_xposhex - span, 0, this->_xposhex - span, this->height());
+    painter.drawLine(this->_xposascii - span, 0, this->_xposascii - span, this->height());
+    painter.drawLine(this->_xPosend + span, 0, this->_xPosend + span, this->height());
 }
 
 QColor& QHexEditPrivate::addressForeColor()
@@ -477,12 +736,12 @@ void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line,
 
 void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, int y)
 {
-    int lineMax = this->_hexeditdatamanager->length() / QHexEditDataManager::BYTES_PER_LINE;
+    int lineMax = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
     painter.fillRect(0, y, this->_xposhex - (this->_charwidth / 2), this->_charheight, this->_addressbackcolor);
 
     if(line <= lineMax)
     {
-        QString addr = QString("%1").arg(line * QHexEditDataManager::BYTES_PER_LINE, this->_addressWidth, 16, QLatin1Char('0')).toUpper();
+        QString addr = QString("%1").arg(line * QHexEditPrivate::BYTES_PER_LINE, this->_addressWidth, 16, QLatin1Char('0')).toUpper();
 
         painter.setBackgroundMode(Qt::TransparentMode);
         painter.setPen(this->_addressforecolor);
@@ -493,15 +752,15 @@ void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 li
 void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 line, int y)
 {
     int x = this->_xposhex;
-    qint64 lineLength = QHexEditDataManager::BYTES_PER_LINE;
+    qint64 lineLength = QHexEditPrivate::BYTES_PER_LINE;
 
     painter.setBackgroundMode(Qt::OpaqueMode);
     painter.setBackground(this->palette().base());
 
-    qint64 lineStart = line * QHexEditDataManager::BYTES_PER_LINE;
-    qint64 lineEnd = lineStart + QHexEditDataManager::BYTES_PER_LINE;
+    qint64 lineStart = line * QHexEditPrivate::BYTES_PER_LINE;
+    qint64 lineEnd = lineStart + QHexEditPrivate::BYTES_PER_LINE;
 
-    if(this->_hexeditdatamanager->cursorPos() >= lineStart && this->_hexeditdatamanager->cursorPos() < lineEnd) /* This is the Selected Line! */
+    if(this->cursorPos() >= lineStart && this->cursorPos() < lineEnd) /* This is the Selected Line! */
         painter.fillRect(this->_xposhex - (this->_charwidth / 2), y, this->_xposascii - this->_xposhex, this->_charheight, this->_selLineColor);
     else if(line & 1)
         painter.fillRect(this->_xposhex - (this->_charwidth / 2), y, this->_xposascii - this->_xposhex, this->_charheight, this->_alternatelinecolor);
@@ -511,17 +770,17 @@ void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 li
         bool highlighted = false;
         qint64 pos = (line * lineLength) + i;
 
-        if(pos >= this->_hexeditdatamanager->length())
+        if(pos >= this->_hexeditdata->length())
             return; /* Reached EOF */
 
-        QByteArray ba = this->_hexeditdatamanager->read(lineStart + i, 1);
+        QByteArray ba = this->_hexeditdata->read(lineStart + i, 1);
         QString s = QString(ba.toHex()).toUpper();
         int w = fm.width(s);
 
         painter.setBackgroundMode(Qt::TransparentMode);
         painter.setPen(this->byteWeight(static_cast<uchar>(ba[0])));
 
-        if(pos == this->_hexeditdatamanager->selectionStart() && (this->_selpart == AsciiPart || !this->hasFocus()))
+        if(pos == this->selectionStart() && (this->_selpart == AsciiPart || !this->hasFocus()))
         {
             highlighted = true;
             w += this->_charwidth;
@@ -529,10 +788,10 @@ void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 li
             painter.setBackground(this->_selcursorbrush);
         }
 
-        if(this->_hexeditdatamanager->selectionStart() != this->_hexeditdatamanager->selectionEnd()) /* Highlight Selection */
+        if(this->selectionStart() != this->selectionEnd()) /* Highlight Selection */
         {
-            qint64 start = qMin(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-            qint64 end = qMax(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
+            qint64 start = qMin(this->selectionStart(), this->selectionEnd());
+            qint64 end = qMax(this->selectionStart(), this->selectionEnd());
 
             if((pos >= start && pos < end))
             {
@@ -581,37 +840,37 @@ void QHexEditPrivate::drawAsciiPart(QPainter &painter, QFontMetrics& fm, qint64 
     painter.setPen(this->palette().color(QPalette::WindowText));
 
     int span = this->_charwidth / 2;
-    qint64 lineStart = line * QHexEditDataManager::BYTES_PER_LINE;
-    qint64 lineEnd = lineStart + QHexEditDataManager::BYTES_PER_LINE;
+    qint64 lineStart = line * QHexEditPrivate::BYTES_PER_LINE;
+    qint64 lineEnd = lineStart + QHexEditPrivate::BYTES_PER_LINE;
 
-    if(this->_hexeditdatamanager->cursorPos() >= lineStart && this->_hexeditdatamanager->cursorPos() < lineEnd) /* This is the Selected Line! */
+    if(this->cursorPos() >= lineStart && this->cursorPos() < lineEnd) /* This is the Selected Line! */
         painter.fillRect(this->_xposascii - span, y, (this->_xPosend - this->_xposascii) + this->_charwidth, this->_charheight, this->_selLineColor);
     else if(line & 1)
         painter.fillRect(this->_xposascii - span, y, (this->_xPosend - this->_xposascii) + this->_charwidth, this->_charheight, this->_alternatelinecolor);
 
-    for(qint64 i = 0; i < QHexEditDataManager::BYTES_PER_LINE; i++)
+    for(qint64 i = 0; i < QHexEditPrivate::BYTES_PER_LINE; i++)
     {
         bool highlighted = false;
-        qint64 pos = (line * QHexEditDataManager::BYTES_PER_LINE) + i;
+        qint64 pos = (line * QHexEditPrivate::BYTES_PER_LINE) + i;
 
-        if(pos >= this->_hexeditdatamanager->length())
+        if(pos >= this->_hexeditdata->length())
             return; /* Reached EOF */
 
-        QByteArray ba = this->_hexeditdatamanager->read(lineStart + i, 1);
+        QByteArray ba = this->_hexeditdata->read(lineStart + i, 1);
         QString s = QString(ba);
         uchar ch = ba.at(0);
 
-        if(pos == this->_hexeditdatamanager->selectionStart() && (this->_selpart == HexPart || !this->hasFocus()))
+        if(pos == this->selectionStart() && (this->_selpart == QHexEditPrivate::HexPart || !this->hasFocus()))
         {
             highlighted = true;
             painter.setBackgroundMode(Qt::OpaqueMode);
             painter.setBackground(this->_selcursorbrush);
         }
 
-        if(this->_hexeditdatamanager->selectionStart() != this->_hexeditdatamanager->selectionEnd()) /* Highlight Selection */
+        if(this->selectionStart() != this->selectionEnd()) /* Highlight Selection */
         {
-            qint64 start = qMin(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-            qint64 end = qMax(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
+            qint64 start = qMin(this->selectionStart(), this->selectionEnd());
+            qint64 end = qMax(this->selectionStart(), this->selectionEnd());
 
             if(pos >= start && pos < end)
             {
@@ -659,7 +918,7 @@ void QHexEditPrivate::drawAsciiPart(QPainter &painter, QFontMetrics& fm, qint64 
 
 qint64 QHexEditPrivate::cursorPosFromPoint(const QPoint &pt, int *charindex)
 {
-    qint64 y = (this->verticalSliderPosition64() + (pt.y() / this->_charheight)) * QHexEditDataManager::BYTES_PER_LINE, x = 0;
+    qint64 y = (this->verticalSliderPosition64() + (pt.y() / this->_charheight)) * QHexEditPrivate::BYTES_PER_LINE, x = 0;
     *charindex = 0;
 
     if(this->_selpart == HexPart)
@@ -688,7 +947,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent* pe)
 {
     QPainter painter(this);
 
-    if(this->_hexeditdatamanager)
+    if(this->_hexeditdata)
     {
         QRect r = pe->rect();
         QFontMetrics fm = this->fontMetrics();
@@ -700,18 +959,13 @@ void QHexEditPrivate::paintEvent(QPaintEvent* pe)
             int y = (i - slidepos) * this->_charheight;
             this->drawLine(painter, fm, i, y);
         }
-
-        int span = this->_charwidth / 2;
-        painter.setBackgroundMode(Qt::TransparentMode);
-        painter.setPen(this->palette().color(QPalette::WindowText));
-        painter.drawLine(this->_xposhex - span, 0, this->_xposhex - span, this->height());
-        painter.drawLine(this->_xposascii - span, 0, this->_xposascii - span, this->height());
-        painter.drawLine(this->_xPosend + span, 0, this->_xPosend + span, this->height());
     }
 
-    if(this->_hexeditdatamanager && this->hasFocus() && this->_blink)
+    this->drawParts(painter);
+
+    if(this->_hexeditdata && this->hasFocus() && this->_blink)
     {
-        if(this->_hexeditdatamanager->mode() == QHexEditDataManager::Overwrite)
+        if(this->_insmode == QHexEditPrivate::Overwrite)
             painter.fillRect(this->_cursorX, this->_cursorY + this->_charheight - 3, this->_charwidth, 2, this->palette().color(QPalette::WindowText));
         else
             painter.fillRect(this->_cursorX, this->_cursorY, 2, this->_charheight, this->palette().color(QPalette::WindowText));
@@ -720,7 +974,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent* pe)
 
 void QHexEditPrivate::mousePressEvent(QMouseEvent* event)
 {
-    if(this->_hexeditdatamanager)
+    if(this->_hexeditdata)
     {
         if(event->buttons() & Qt::LeftButton)
         {
@@ -754,7 +1008,7 @@ void QHexEditPrivate::mousePressEvent(QMouseEvent* event)
 
 void QHexEditPrivate::mouseMoveEvent(QMouseEvent* event)
 {
-    if(this->_hexeditdatamanager)
+    if(this->_hexeditdata)
     {
         if(event->buttons() & Qt::LeftButton)
         {
@@ -775,7 +1029,7 @@ void QHexEditPrivate::mouseMoveEvent(QMouseEvent* event)
 
 void QHexEditPrivate::wheelEvent(QWheelEvent *event)
 {
-    if(this->_hexeditdatamanager->length())
+    if(this->_hexeditdata->length())
     {
         int numDegrees = event->delta() / 8;
         int numSteps = numDegrees / 15;
@@ -783,7 +1037,7 @@ void QHexEditPrivate::wheelEvent(QWheelEvent *event)
         if(event->orientation() == Qt::Vertical)
         {
             int pos = this->verticalSliderPosition64() - (numSteps * this->_whellscrolllines);
-            int maxlines = this->_hexeditdatamanager->length() / QHexEditDataManager::BYTES_PER_LINE;
+            int maxlines = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
 
             /* Bounds Check */
             if(pos < 0)
@@ -792,6 +1046,7 @@ void QHexEditPrivate::wheelEvent(QWheelEvent *event)
                 pos = maxlines;
 
             this->_vscrollbar->setSliderPosition(pos);
+            this->updateCursorXY(this->cursorPos(), this->_charidx);
             this->update();
 
             event->accept();
@@ -803,276 +1058,26 @@ void QHexEditPrivate::wheelEvent(QWheelEvent *event)
 
 void QHexEditPrivate::keyPressEvent(QKeyEvent* event)
 {
-    if(this->_hexeditdatamanager)
-    {
-        /* Move Events */
-        if(event->matches(QKeySequence::MoveToNextChar) || event->matches(QKeySequence::MoveToPreviousChar))
-        {
-            if(this->_selpart == HexPart)
-            {
-                if(event->matches(QKeySequence::MoveToNextChar))
-                {
-                    if(this->_hexeditdatamanager->charIndex() == 0)
-                        this->setCursorPos(this->_hexeditdatamanager->selectionStart(), 1);
-                    else /* if(this->_hexeditbuffer->charIndex() == 1) */
-                        this->setCursorPos(this->_hexeditdatamanager->selectionStart() + 1, 0);
-                }
-                else if(event->matches(QKeySequence::MoveToPreviousChar))
-                {
-                    if(this->_hexeditdatamanager->charIndex() == 0)
-                        this->setCursorPos(this->_hexeditdatamanager->selectionStart() - 1, 1);
-                    else /* if(this->_hexeditbuffer->charIndex() == 1) */
-                        this->setCursorPos(this->_hexeditdatamanager->selectionStart(), 0);
-                }
-            }
-            else if(this->_selpart == AsciiPart)
-            {
-                if(event->matches(QKeySequence::MoveToNextChar))
-                    this->setCursorPos(this->_hexeditdatamanager->selectionStart() + 1, 0);
-                else if(event->matches(QKeySequence::MoveToPreviousChar))
-                    this->setCursorPos(this->_hexeditdatamanager->selectionStart() - 1, 0);
-            }
-        }
-        else if(event->matches(QKeySequence::MoveToNextLine))
-            this->setCursorPos(this->_hexeditdatamanager->selectionStart() + QHexEditDataManager::BYTES_PER_LINE, this->_hexeditdatamanager->charIndex());
-        else if(event->matches(QKeySequence::MoveToPreviousLine))
-            this->setCursorPos(this->_hexeditdatamanager->selectionStart() - QHexEditDataManager::BYTES_PER_LINE, this->_hexeditdatamanager->charIndex());
-        else if(event->matches(QKeySequence::MoveToStartOfLine))
-            this->setCursorPos(this->_hexeditdatamanager->selectionStart() - (this->_hexeditdatamanager->selectionStart() % QHexEditDataManager::BYTES_PER_LINE));
-        else if(event->matches(QKeySequence::MoveToNextPage))
-            this->setCursorPos(this->_hexeditdatamanager->selectionStart() + (((this->height() / this->_charheight) - 1) * QHexEditDataManager::BYTES_PER_LINE));
-        else if(event->matches(QKeySequence::MoveToPreviousPage))
-            this->setCursorPos(this->_hexeditdatamanager->selectionStart() - (((this->height() / this->_charheight) - 1) * QHexEditDataManager::BYTES_PER_LINE));
-        else if(event->matches(QKeySequence::MoveToEndOfLine))
-            this->setCursorPos(this->_hexeditdatamanager->selectionStart() | (QHexEditDataManager::BYTES_PER_LINE - 1));
-        else if(event->matches(QKeySequence::MoveToStartOfDocument))
-            this->setCursorPos(0);
-        else if(event->matches(QKeySequence::MoveToEndOfDocument))
-            this->setCursorPos(this->_hexeditdatamanager->length());
+    if(!this->_hexeditdata)
+        return;
 
-        /* Select Events */
-        if(event->matches(QKeySequence::SelectNextChar) || event->matches(QKeySequence::SelectPreviousChar))
-        {
-            if(this->_selpart == HexPart)
-            {
-                if(event->matches(QKeySequence::SelectNextChar))
-                {
-                    if(this->_hexeditdatamanager->charIndex() == 0)
-                        this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd(), 1);
-                    else /* if(this->_hexeditbuffer->charIndex() == 1) */
-                        this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd() + 1, 0);
-                }
-                else if(event->matches(QKeySequence::SelectPreviousChar))
-                {
-                    if(this->_hexeditdatamanager->charIndex() == 0)
-                        this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd() - 1, 1);
-                    else /* if(this->_hexeditbuffer->charIndex() == 1) */
-                        this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd(), 0);
-                }
-            }
-            else if(this->_selpart == AsciiPart)
-            {
-                if(event->matches(QKeySequence::SelectNextChar))
-                    this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd() + 1, 0);
-                else if(event->matches(QKeySequence::SelectPreviousChar))
-                    this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd() - 1, 0);
-            }
-        }
-        else if(event->matches(QKeySequence::SelectNextLine))
-            this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd() + QHexEditDataManager::BYTES_PER_LINE, this->_hexeditdatamanager->charIndex());
-        else if(event->matches(QKeySequence::SelectPreviousLine))
-            this->setSelectionEnd(this->_hexeditdatamanager->selectionEnd() - QHexEditDataManager::BYTES_PER_LINE, this->_hexeditdatamanager->charIndex());
-        else if(event->matches(QKeySequence::SelectStartOfDocument))
-            this->setSelection(this->_hexeditdatamanager->selectionEnd(), 0);
-        else if(event->matches(QKeySequence::SelectEndOfDocument))
-            this->setSelectionEnd(this->_hexeditdatamanager->length(), 0);
-        else if(event->matches(QKeySequence::SelectAll))
-            this->setSelection(0, this->_hexeditdatamanager->length());
+    this->_lastkeyevent = event; /* Save Event */
+    bool processed = this->processMoveEvents(event);
 
-        if(!this->_readonly)
-        {
-            /* Text Input Commands */
-            int key = (int)event->text()[0].toLatin1();
+    if(!processed)
+        processed = this->processSelectEvents(event);
 
-            if(this->_selpart == HexPart)
-            {
-                if((key >= '0' && key <= '9') || (key >= 'a' && key <= 'f'))
-                {
-                    /* Remove Selected Text */
-                    if(this->_hexeditdatamanager->selectionStart() != this->_hexeditdatamanager->selectionEnd())
-                    {
-                        qint64 start = qMin(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-                        qint64 end = qMax(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
+    if(!processed)
+        processed = this->processInsOvrEvents(event);
 
-                        this->_hexeditdatamanager->remove(start, end - start);
-                        this->setCursorPos(start);  //FIXME: Check charIndex here?
-                    }
+    if(!processed)
+        processed = this->processUndoRedo(event);
 
-                    /* Insert Mode: Add one byte in current position */
-                    if(this->_hexeditdatamanager->mode() != QHexEditDataManager::Overwrite)
-                    {
-                        if(!(this->_hexeditdatamanager->charIndex() == 1))
-                            this->_hexeditdatamanager->insert(this->_hexeditdatamanager->selectionStart(), (char)0, false);
+    if(!processed)
+        processed = this->processClipboardKeys(event);
 
-                        qint64 currSel = this->_hexeditdatamanager->selectionStart() + 1;
-
-                        /* A New Line is added at EOF: update scrollbar information */
-                        if(!(currSel % QHexEditDataManager::BYTES_PER_LINE) && (currSel >= this->_hexeditdatamanager->length()))
-                            this->adjust();
-                    }
-
-                    /* Update Byte's Nibble */
-                    if((this->_hexeditdatamanager->length() > 0) && (this->_hexeditdatamanager->selectionStart() < this->_hexeditdatamanager->length()))
-                    {
-                        /* Convert digit's string rappresentation to integer rappresentation */
-                        uchar val = (unsigned char)QString(key).toUInt(NULL, 16);
-
-                        QByteArray hexVal = this->_hexeditdatamanager->read(this->_hexeditdatamanager->selectionStart(), 1);
-
-                        if(this->_hexeditdatamanager->charIndex() == 1) /* Change Byte's Low Part */
-                            hexVal[0] = (hexVal[0] & 0xF0) + val;
-                        else /* Change Byte's High Part */
-                            hexVal[0] = (hexVal[0] & 0x0F) + (val << 4);
-
-                        //this->_hexeditbuffer->replace(this->_hexeditbuffer->selectionStart(), hexVal);
-                        this->_hexeditdatamanager->remove(this->_hexeditdatamanager->selectionStart(), 1, false); /* It's an intermediate passage! */
-                        this->_hexeditdatamanager->insert(this->_hexeditdatamanager->selectionStart(), hexVal);
-
-                        emit bytesChanged(this->_hexeditdatamanager->selectionStart());
-                        this->adjust(); /* One or More Bytes Removed: Update ScrollBar Information */
-
-                        if(this->_hexeditdatamanager->charIndex() == 1)
-                            this->setCursorPos(this->_hexeditdatamanager->selectionStart() + 1, 0); //FIXME: Check charIndex here?
-                        else
-                            this->setCursorPos(this->_hexeditdatamanager->selectionStart(), 1);
-                    }
-                }
-            }
-            else if(this->_selpart == AsciiPart)
-            {
-                if(key >= 0x20 && key <= 0x7E) /* Check if is a printable Char */
-                {
-                    /* Remove Selected Text */
-                    if(this->_hexeditdatamanager->selectionStart() != this->_hexeditdatamanager->selectionEnd())
-                    {
-                        qint64 start = qMin(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-                        qint64 end = qMax(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-
-                        this->_hexeditdatamanager->remove(start, end - start);
-                        this->setCursorPos(start, 0);
-                    }
-
-                    /* Insert Mode: Add one byte in current position */
-                    if(this->_hexeditdatamanager->mode() == QHexEditDataManager::Insert)
-                    {
-                        this->_hexeditdatamanager->insert(this->_hexeditdatamanager->selectionStart(), (char)key);
-                        qint64 currSel = this->_hexeditdatamanager->selectionStart() + 1;
-
-                        emit bytesChanged(this->_hexeditdatamanager->selectionStart());
-
-                        /* A New Row is added at EOF, update scrollbar information */
-                        if(!(currSel % QHexEditDataManager::BYTES_PER_LINE) && (currSel >= this->_hexeditdatamanager->length()))
-                            this->adjust();
-
-                        this->setCursorPos(currSel, 0);
-                    }
-                    else if(this->_hexeditdatamanager->mode() == QHexEditDataManager::Overwrite && ((this->_hexeditdatamanager->length() > 0) && (this->_hexeditdatamanager->selectionStart() < this->_hexeditdatamanager->length())))
-                    {
-                        this->_hexeditdatamanager->replace(this->_hexeditdatamanager->selectionStart(), (char)key);
-
-                        emit bytesChanged(this->_hexeditdatamanager->selectionStart());
-                        this->adjust(); /* One or More Bytes Removed: Update ScrollBar Information */
-                        this->setCursorPos(this->_hexeditdatamanager->selectionStart() + 1, 0);
-                    }
-                }
-            }
-
-            /* Char Deletion Events */
-            if(event->key() == Qt::Key_Delete)
-            {
-                /* Remove Selected Text */
-                if(this->_hexeditdatamanager->selectionStart() != this->_hexeditdatamanager->selectionEnd())
-                {
-                    qint64 start = qMin(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-                    qint64 end = qMax(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-
-                    this->_hexeditdatamanager->remove(start, end - start);
-                    this->setCursorPos(start, 0);
-                }
-                else
-                {
-                    if(this->_hexeditdatamanager->mode() == QHexEditDataManager::Overwrite)
-                    {
-                        if(this->_selpart == HexPart)
-                        {
-                            QByteArray hexVal = this->_hexeditdatamanager->read(this->_hexeditdatamanager->selectionStart(), 1);
-
-                            if(this->_hexeditdatamanager->charIndex() == 1) /* Change Byte's Low Part */
-                                hexVal[0] = (hexVal[0] & 0xF0);
-                            else /* Change Byte's High Part */
-                                hexVal[0] = (hexVal[0] & 0x0F);
-
-                            this->_hexeditdatamanager->replace(this->_hexeditdatamanager->selectionStart(), hexVal);
-                        }
-                        else
-                            this->_hexeditdatamanager->replace(this->_hexeditdatamanager->selectionStart(), (char)0);
-                    }
-                    else
-                        this->_hexeditdatamanager->remove(this->_hexeditdatamanager->selectionStart(), 1);
-                }
-
-                emit bytesChanged(this->_hexeditdatamanager->selectionStart());
-                this->adjust(); /* One or More Bytes Removed: Update ScrollBar Information */
-            }
-            else if((event->key() == Qt::Key_Backspace) && (event->modifiers() == Qt::NoModifier))
-            {
-                if(this->_hexeditdatamanager->selectionStart() != this->_hexeditdatamanager->selectionEnd())
-                {
-                    qint64 start = qMin(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-                    qint64 end = qMax(this->_hexeditdatamanager->selectionStart(), this->_hexeditdatamanager->selectionEnd());
-
-                    this->_hexeditdatamanager->remove(start, end - start);
-                    this->setCursorPos(start, 0);
-                }
-                else
-                {
-                    if(this->_hexeditdatamanager->selectionStart())
-                    {
-                        if(this->_hexeditdatamanager->mode() == QHexEditDataManager::Overwrite)
-                            this->_hexeditdatamanager->replace(this->_hexeditdatamanager->selectionStart() - 1, (char)0);
-                        else
-                            this->_hexeditdatamanager->remove(this->_hexeditdatamanager->selectionStart() - 1, 1);
-
-                        this->setCursorPos(this->_hexeditdatamanager->selectionStart() - 1);
-                    }
-                }
-
-                emit bytesChanged(this->_hexeditdatamanager->selectionStart());
-                this->adjust(); /* One or More Bytes Removed: Update ScrollBar Information */
-            }
-        }
-
-        /* No Modifier Keys */
-        if((event->key() == Qt::Key_Insert) && (event->modifiers() == Qt::NoModifier))
-            this->_hexeditdatamanager->setMode(this->_hexeditdatamanager->mode() == QHexEditDataManager::Overwrite ? QHexEditDataManager::Insert : QHexEditDataManager::Overwrite);
-
-        /* Undo/Redo Keys */
-        if(event->matches(QKeySequence::Undo))
-            this->undo();
-        else if(event->matches(QKeySequence::Redo))
-            this->redo();
-
-        /* Clipboard Keys */
-        if(event->matches(QKeySequence::Cut))
-            this->cut();
-        else if(event->matches(QKeySequence::Copy))
-            this->copy();
-        else if(event->matches(QKeySequence::Paste))
-            this->paste();
-
-        this->ensureVisible();
-        this->update();
-    }
+    if(!this->_readonly && !processed)
+        this->processTextInputEvents(event);
 }
 
 void QHexEditPrivate::resizeEvent(QResizeEvent*)
@@ -1091,8 +1096,38 @@ void QHexEditPrivate::vScrollBarValueChanged(int)
     this->update();
 }
 
-void QHexEditPrivate::hexEditDataChanged(qint64, qint64)
+void QHexEditPrivate::hexEditDataChanged(qint64 offset, qint64, QHexEditData::ActionType reason)
 {
+    if(this->_lastkeyevent->key() == Qt::Key_Delete)
+    {
+        this->setSelectionEnd(this->selectionStart(), 0); /* Update ScrollBars only, don't move the cursor, reset selection */
+        this->adjust();
+        this->ensureVisible();
+        this->update();
+        return;
+    }
+
+    if(this->_lastkeyevent->key() == Qt::Key_Backspace)
+        this->setCursorPos(offset);
+    else if(this->_selpart == QHexEditPrivate::AsciiPart)
+    {
+        if(this->_lastkeyevent->matches(QKeySequence::Undo))
+            this->setCursorPos(offset);
+        else if(reason == QHexEditData::Insert || reason == QHexEditData::Replace)
+            this->setCursorPos(offset + 1);
+    }
+    else if(this->_selpart == QHexEditPrivate::HexPart)
+    {
+        if(reason == QHexEditData::Insert || reason == QHexEditData::Replace)
+        {
+            if(this->_charidx == 1)
+                this->setCursorPos(offset + 1, 0);
+            else
+                this->setCursorPos(offset, 1);
+        }
+    }
+
+    this->adjust(); /* Update ScrollBars */
+    this->ensureVisible();
     this->update();
-    this->adjust();  /* Update ScrollBars */
 }
