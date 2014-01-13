@@ -11,7 +11,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
     this->_vscrollbar = vscrollbar;
     this->_blink = false;
     this->_readonly = false;
-    this->_cursorX = this->_cursorY = this->_cursorpos = this->_selectionstart = this->_selectionend = this->_charidx = this->_charheight = this->_charwidth = 0;
+    this->_baseaddress = this->_cursorX = this->_cursorY = this->_cursorpos = this->_selectionstart = this->_selectionend = this->_charidx = this->_charheight = this->_charwidth = 0;
     this->_selpart = QHexEditPrivate::HexPart;
     this->_insmode = QHexEditPrivate::Overwrite;
 
@@ -107,6 +107,11 @@ void QHexEditPrivate::paste()
         this->adjust();
         this->ensureVisible();
     }
+}
+
+void QHexEditPrivate::setBaseAddress(qint64 ba)
+{
+    this->_baseaddress = ba;
 }
 
 void QHexEditPrivate::setData(QHexEditData *hexeditdata)
@@ -292,6 +297,11 @@ qint64 QHexEditPrivate::indexOf(QByteArray &ba, bool start)
         return this->_hexeditdata->indexOf(ba, start);
 
     return -1;
+}
+
+qint64 QHexEditPrivate::baseAddress()
+{
+    return this->_baseaddress;
 }
 
 bool QHexEditPrivate::readOnly()
@@ -741,7 +751,7 @@ void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 li
 
     if(line <= lineMax)
     {
-        QString addr = QString("%1").arg(line * QHexEditPrivate::BYTES_PER_LINE, this->_addressWidth, 16, QLatin1Char('0')).toUpper();
+        QString addr = QString("%1").arg(this->_baseaddress + (line * QHexEditPrivate::BYTES_PER_LINE), this->_addressWidth, 16, QLatin1Char('0')).toUpper();
 
         painter.setBackgroundMode(Qt::TransparentMode);
         painter.setPen(this->_addressforecolor);

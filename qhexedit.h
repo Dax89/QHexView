@@ -16,12 +16,14 @@ class QHexEdit : public QFrame
         int visibleLinesCount();
         QHexEditData *data();
         qint64 indexOf(QByteArray& ba, qint64 start = 0);
+        qint64 baseAddress();
         qint64 cursorPos();
         qint64 selectionStart();
         qint64 selectionEnd();
-        void setFont(const QFont &f);
         qint64 visibleStartOffset();
         qint64 visibleEndOffset();
+        void setFont(const QFont &f);
+        void setBaseAddress(qint64 ba);
 
     signals:
         void positionChanged(qint64 offset);

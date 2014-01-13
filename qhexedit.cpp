@@ -99,6 +99,11 @@ qint64 QHexEdit::indexOf(QByteArray &ba, qint64 start)
     return this->_hexedit_p->indexOf(ba, start);
 }
 
+qint64 QHexEdit::baseAddress()
+{
+    return this->_hexedit_p->baseAddress();
+}
+
 qint64 QHexEdit::cursorPos()
 {
     return this->_hexedit_p->cursorPos();
@@ -117,6 +122,11 @@ qint64 QHexEdit::selectionEnd()
 void QHexEdit::setFont(const QFont &f)
 {
     this->_hexedit_p->setFont(f);
+}
+
+void QHexEdit::setBaseAddress(qint64 ba)
+{
+    return this->_hexedit_p->setBaseAddress(ba);
 }
 
 qint64 QHexEdit::visibleStartOffset()
