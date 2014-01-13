@@ -250,6 +250,10 @@ class QHexEditData : public QObject
         QByteArray read(qint64 pos, qint64 len);
         qint64 length() const;
 
+    public slots:
+        bool save();
+        bool saveTo(QIODevice* iodevice);
+
     public:
         static QHexEditData* fromDevice(QIODevice* iodevice);
         static QHexEditData* fromFile(QString filename);

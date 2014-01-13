@@ -125,6 +125,42 @@ qint64 QHexEditData::length() const
     return this->_length;
 }
 
+bool QHexEditData::save()
+{
+    return this->saveTo(this->_iodevice);
+}
+
+bool QHexEditData::saveTo(QIODevice *iodevice)
+{
+    if(!iodevice->isOpen())
+        iodevice->open(QIODevice::WriteOnly);
+
+    if(!iodevice->isWritable())
+        return false;
+
+    qint64 outseekpos = 0;
+    this->_iodevice->reset();
+
+    for(int i = 0; i < this->_modlist.length(); i++)
+    {
+        ModifiedItem* mi = this->_modlist[i];
+        iodevice->seek(outseekpos);
+
+        if(mi->modified())
+            iodevice->write(this->_modbuffer.mid(mi->pos(), mi->length()));
+        else if(iodevice != this->_iodevice)
+        {
+            this->_iodevice->seek(mi->pos());
+            QByteArray ba = this->_iodevice->read(mi->length());
+            iodevice->write(ba);
+        }
+
+        outseekpos += mi->length();
+    }
+
+    return true;
+}
+
 QHexEditData *QHexEditData::fromDevice(QIODevice *iodevice)
 {
     if(!iodevice->isOpen())

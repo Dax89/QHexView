@@ -17,6 +17,7 @@ class QHexEditPrivate : public QWidget
         void cut();
         void copy();
         void paste();
+        void setBaseAddress(qint64 ba);
         void setCursorPos(qint64 pos);
         void setData(QHexEditData *hexeditdata);
         void setReadOnly(bool b);
