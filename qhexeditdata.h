@@ -233,9 +233,11 @@ class QHexEditData : public QObject
                 InsertCommand* _inscmd;
         };
 
+    private:
+        explicit QHexEditData(QIODevice* iodevice, QObject *parent = 0);
+
     public:
         enum ActionType { None = 0, Insert = 1, Remove = 2, Replace = 3 };
-        explicit QHexEditData(QIODevice* iodevice, QObject *parent = 0);
         QUndoStack* undoStack();
         uchar at(qint64 i);
         qint64 indexOf(const QByteArray& ba, qint64 start);
