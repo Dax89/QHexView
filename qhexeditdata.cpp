@@ -1,6 +1,8 @@
 #include "qhexeditdata.h"
 
-QHexEditData::QHexEditData(QIODevice *iodevice, QObject *parent): QObject(parent), _iodevice(iodevice), _length(iodevice->size()), _lastpos(-1), _lastaction(QHexEditData::None)
+const qint64 QHexEditData::BUFFER_SIZE = 8192;
+
+QHexEditData::QHexEditData(QIODevice *iodevice, QObject *parent): QObject(parent), _iodevice(iodevice), _buffereddatapos(-1), _length(iodevice->size()), _lastpos(-1), _lastaction(QHexEditData::None)
 {
     this->_modlist.append(new ModifiedItem(0, iodevice->size(), false));
 }
@@ -10,9 +12,32 @@ QUndoStack *QHexEditData::undoStack()
     return &this->_undostack;
 }
 
-uchar QHexEditData::at(qint64 i)
+uchar QHexEditData::at(qint64 pos)
 {
-    return this->read(i, 1)[0];
+    if(pos < 0)
+        pos = 0;
+    else if(pos >= this->_length)
+        pos = this->_length - 1;
+
+    int i;
+    qint64 modoffset;
+    ModifiedItem* mi = this->modifiedItem(pos, &modoffset, &i);
+
+    uchar ch;
+    qint64 mioffset = pos - modoffset;
+
+    if(mi->modified())
+        return this->_modbuffer.at(mi->pos() +  mioffset);
+    else
+    {
+        if(this->needsBuffering(mi->pos()))
+            this->bufferizeData(mi->pos());
+
+        qint64 bufferedpos = (mi->pos() + mioffset) - this->_buffereddatapos;
+        return this->_buffereddata.at(bufferedpos);
+    }
+
+    return ch;
 }
 
 qint64 QHexEditData::indexOf(const QByteArray &ba, qint64 start)
@@ -84,8 +109,10 @@ void QHexEditData::replace(qint64 pos, qint64 len, const QByteArray &ba)
 
 QByteArray QHexEditData::read(qint64 pos, qint64 len)
 {
+    if(len > this->_length)
+        len = this->_length;
+
     int i;
-    QByteArray resba;
     qint64 modoffset;
 
     ModifiedItem* mi = this->modifiedItem(pos, &modoffset, &i);
@@ -93,25 +120,27 @@ QByteArray QHexEditData::read(qint64 pos, qint64 len)
     if(!mi)
         return QByteArray();
 
-    qint64 currpos = pos, mioffset = pos - modoffset;
+    QByteArray resba(len, 0x00);
+    qint64 copied = 0, mioffset = pos - modoffset;
 
-    while(len && (i < this->_modlist.length()))
+    while(len > 0 && (i < this->_modlist.length()))
     {
-        QByteArray ba;
         mi = this->_modlist[i];
         qint64 copylen = qMin(mi->length() - mioffset, len);
 
         if(mi->modified())
-            ba = this->_modbuffer.mid(mi->pos() + mioffset, copylen);
+            memcpy(resba.data() + copied, this->_modbuffer.constData() + (mi->pos() +  mioffset), copylen);
         else
         {
-            this->_iodevice->seek(mi->pos() + mioffset);
-            ba = this->_iodevice->read(copylen);
+            if(this->needsBuffering(mi->pos()))
+                this->bufferizeData(mi->pos());
+
+            qint64 bufferedpos = (mi->pos() + mioffset) - this->_buffereddatapos;
+            copylen = qMin(copylen, QHexEditData::BUFFER_SIZE - 1);
+            memcpy(resba.data() + copied, this->_buffereddata.constData() + bufferedpos, copylen);
         }
 
-        resba.append(ba);
-
-        currpos += copylen;
+        copied += copylen;
         len -= copylen;
         mioffset = 0;
         i++;
@@ -279,6 +308,31 @@ qint64 QHexEditData::updateBuffer(const QByteArray &ba)
     qint64 pos = this->_modbuffer.length();
     this->_modbuffer.append(ba);
     return pos;
+}
+
+void QHexEditData::bufferizeData(qint64 pos)
+{
+    qint64 s = this->_iodevice->size();
+
+    if(s < QHexEditData::BUFFER_SIZE) /* Simple Case: Data Small than BUFFER_SIZE */
+    {
+        this->_buffereddatapos = 0;
+        this->_buffereddata = this->_iodevice->readAll();
+        return;
+    }
+
+    if((s - pos) < QHexEditData::BUFFER_SIZE)
+        pos = s - QHexEditData::BUFFER_SIZE;
+
+    this->_buffereddatapos = pos;
+
+    this->_iodevice->seek(pos);
+    this->_buffereddata = this->_iodevice->read(qMax(s, QHexEditData::BUFFER_SIZE));
+}
+
+bool QHexEditData::needsBuffering(qint64 pos)
+{
+    return (this->_buffereddatapos == -1) || (pos < this->_buffereddatapos) || (pos > (this->_buffereddatapos + this->_buffereddata.length()));
 }
 
 QHexEditData::ModifiedItem* QHexEditData::modifiedItem(qint64 pos, qint64* datapos, int *index)

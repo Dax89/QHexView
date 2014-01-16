@@ -239,7 +239,7 @@ class QHexEditData : public QObject
     public:
         enum ActionType { None = 0, Insert = 1, Remove = 2, Replace = 3 };
         QUndoStack* undoStack();
-        uchar at(qint64 i);
+        uchar at(qint64 pos);
         qint64 indexOf(const QByteArray& ba, qint64 start);
         void append(const QByteArray& ba);
         void insert(qint64 pos, uchar ch);
@@ -266,6 +266,8 @@ class QHexEditData : public QObject
         RemoveCommand* internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType act);
         QHexEditData::ModifiedItem *modifiedItem(qint64 pos, qint64 *datapos = nullptr, int* index = nullptr);
         qint64 updateBuffer(const QByteArray& ba);
+        void bufferizeData(qint64 pos);
+        bool needsBuffering(qint64 pos);
         bool canOptimize(QHexEditData::ActionType at, qint64 pos);
         void recordAction(QHexEditData::ActionType at, qint64 pos);
 
@@ -273,9 +275,12 @@ class QHexEditData : public QObject
         void dataChanged(qint64 offset, qint64 size, QHexEditData::ActionType reason);
 
     private:        
+        static const qint64 BUFFER_SIZE;
         ModifyList _modlist;
         QIODevice* _iodevice;
         QByteArray _modbuffer;
+        QByteArray _buffereddata;
+        qint64 _buffereddatapos;
         qint64 _length;
         qint64 _lastpos;
         QHexEditData::ActionType _lastaction;
