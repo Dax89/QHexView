@@ -431,17 +431,17 @@ void QHexEditPrivate::processDeleteEvents()
     {
         if(this->_selpart == HexPart)
         {
-            QByteArray hexVal = this->_hexeditdata->read(this->selectionStart(), 1);
+            uchar hexval = this->_hexeditdata->at(this->selectionStart());
 
             if(this->_charidx == 1) /* Change Byte's Low Part */
-                hexVal[0] = (hexVal[0] & 0xF0);
+                hexval = (hexval & 0xF0);
             else /* Change Byte's High Part */
-                hexVal[0] = (hexVal[0] & 0x0F);
+                hexval = (hexval & 0x0F);
 
-            this->_hexeditdata->replace(this->selectionStart(), hexVal);
+            this->_hexeditdata->replace(this->selectionStart(), hexval);
         }
         else
-            this->_hexeditdata->replace(this->selectionStart(), (char)0);
+            this->_hexeditdata->replace(this->selectionStart(), 0x00);
     }
     else
         this->_hexeditdata->remove(this->selectionStart(), 1);
@@ -454,7 +454,7 @@ void QHexEditPrivate::processBackspaceEvents()
     else if(this->selectionStart())
     {
         if(this->_insmode == QHexEditPrivate::Overwrite)
-            this->_hexeditdata->replace(this->selectionStart() - 1, (char)0);
+            this->_hexeditdata->replace(this->selectionStart() - 1, 0x00);
         else
             this->_hexeditdata->remove(this->selectionStart() - 1, 1);
     }
@@ -476,7 +476,7 @@ void QHexEditPrivate::processHexPart(int key)
     else if((this->_hexeditdata->length() > 0) && (this->selectionStart() < this->_hexeditdata->length()))
     {
          /* Override mode, or update low nibble */
-        uchar hexval =  this->_hexeditdata->read(this->selectionStart(), 1)[0];
+        uchar hexval = this->_hexeditdata->at(this->selectionStart());
 
         if(this->_charidx == 1) /* Change Byte's Low Part */
             hexval = (hexval & 0xF0) + val;
@@ -762,33 +762,33 @@ void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 li
 void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 line, int y)
 {
     int x = this->_xposhex;
-    qint64 lineLength = QHexEditPrivate::BYTES_PER_LINE;
+    qint64 linelength = QHexEditPrivate::BYTES_PER_LINE;
 
     painter.setBackgroundMode(Qt::OpaqueMode);
     painter.setBackground(this->palette().base());
 
-    qint64 lineStart = line * QHexEditPrivate::BYTES_PER_LINE;
-    qint64 lineEnd = lineStart + QHexEditPrivate::BYTES_PER_LINE;
+    qint64 linestart = line * QHexEditPrivate::BYTES_PER_LINE;
+    qint64 lineEnd = linestart + QHexEditPrivate::BYTES_PER_LINE;
 
-    if(this->cursorPos() >= lineStart && this->cursorPos() < lineEnd) /* This is the Selected Line! */
+    if(this->cursorPos() >= linestart && this->cursorPos() < lineEnd) /* This is the Selected Line! */
         painter.fillRect(this->_xposhex - (this->_charwidth / 2), y, this->_xposascii - this->_xposhex, this->_charheight, this->_selLineColor);
     else if(line & 1)
         painter.fillRect(this->_xposhex - (this->_charwidth / 2), y, this->_xposascii - this->_xposhex, this->_charheight, this->_alternatelinecolor);
 
-    for(qint64 i = 0; i < lineLength; i++)
+    for(qint64 i = 0; i < linelength; i++)
     {
         bool highlighted = false;
-        qint64 pos = (line * lineLength) + i;
+        qint64 pos = (line * linelength) + i;
 
         if(pos >= this->_hexeditdata->length())
             return; /* Reached EOF */
 
-        QByteArray ba = this->_hexeditdata->read(lineStart + i, 1);
-        QString s = QString(ba.toHex()).toUpper();
+        uchar b = this->_hexeditdata->at(linestart + i);
+        QString s = QString("%1").arg(b, 2, 16, QLatin1Char('0')).toUpper();
         int w = fm.width(s);
 
         painter.setBackgroundMode(Qt::TransparentMode);
-        painter.setPen(this->byteWeight(static_cast<uchar>(ba[0])));
+        painter.setPen(this->byteWeight(b));
 
         if(pos == this->selectionStart() && (this->_selpart == AsciiPart || !this->hasFocus()))
         {
@@ -805,7 +805,7 @@ void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 li
 
             if((pos >= start && pos < end))
             {
-                if(i < (lineLength - 1))
+                if(i < (linelength - 1))
                 {
                     s.append(" "); /* Append a WhiteSpace */
                     w = fm.width(s);
@@ -820,7 +820,7 @@ void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 li
 
         if(!highlighted && this->_highlightmap.contains(pos)) /* Highlight Range */
         {
-            if(i < (lineLength - 1))
+            if(i < (linelength - 1))
             {
                 s.append(" "); /* Append a WhiteSpace */
                 w = fm.width(s);
@@ -850,10 +850,10 @@ void QHexEditPrivate::drawAsciiPart(QPainter &painter, QFontMetrics& fm, qint64 
     painter.setPen(this->palette().color(QPalette::WindowText));
 
     int span = this->_charwidth / 2;
-    qint64 lineStart = line * QHexEditPrivate::BYTES_PER_LINE;
-    qint64 lineEnd = lineStart + QHexEditPrivate::BYTES_PER_LINE;
+    qint64 linestart = line * QHexEditPrivate::BYTES_PER_LINE;
+    qint64 lineend = linestart + QHexEditPrivate::BYTES_PER_LINE;
 
-    if(this->cursorPos() >= lineStart && this->cursorPos() < lineEnd) /* This is the Selected Line! */
+    if(this->cursorPos() >= linestart && this->cursorPos() < lineend) /* This is the Selected Line! */
         painter.fillRect(this->_xposascii - span, y, (this->_xPosend - this->_xposascii) + this->_charwidth, this->_charheight, this->_selLineColor);
     else if(line & 1)
         painter.fillRect(this->_xposascii - span, y, (this->_xPosend - this->_xposascii) + this->_charwidth, this->_charheight, this->_alternatelinecolor);
@@ -865,10 +865,6 @@ void QHexEditPrivate::drawAsciiPart(QPainter &painter, QFontMetrics& fm, qint64 
 
         if(pos >= this->_hexeditdata->length())
             return; /* Reached EOF */
-
-        QByteArray ba = this->_hexeditdata->read(lineStart + i, 1);
-        QString s = QString(ba);
-        uchar ch = ba.at(0);
 
         if(pos == this->selectionStart() && (this->_selpart == QHexEditPrivate::HexPart || !this->hasFocus()))
         {
@@ -906,11 +902,12 @@ void QHexEditPrivate::drawAsciiPart(QPainter &painter, QFontMetrics& fm, qint64 
         }
 
         int w = 0;
+        QChar b = this->_hexeditdata->at(linestart + i);
 
-        if(ch >= (uchar)0x20 && ch <= (uchar)0x7F)
+        if(b.isPrint())
         {
-            w = fm.width(s);
-            painter.drawText(x, y, w, this->_charheight, Qt::AlignLeft | Qt::AlignTop, s);
+            w = fm.width(b);
+            painter.drawText(x, y, w, this->_charheight, Qt::AlignLeft | Qt::AlignTop, QString(b));
         }
         else
         {
