@@ -30,11 +30,10 @@ uchar QHexEditData::at(qint64 pos)
         return this->_modbuffer.at(mi->pos() +  mioffset);
     else
     {
-        if(this->needsBuffering(mi->pos()))
-            this->bufferizeData(mi->pos());
+        if(this->needsBuffering(pos))
+            this->bufferizeData(pos);
 
-        qint64 bufferedpos = (mi->pos() + mioffset) - this->_buffereddatapos;
-        return this->_buffereddata.at(bufferedpos);
+        return this->_buffereddata.at(pos - this->_buffereddatapos);
     }
 
     return ch;
@@ -112,10 +111,8 @@ QByteArray QHexEditData::read(qint64 pos, qint64 len)
     if(len > this->_length)
         len = this->_length;
 
-    int i;
     qint64 modoffset;
-
-    ModifiedItem* mi = this->modifiedItem(pos, &modoffset, &i);
+    ModifiedItem* mi = this->modifiedItem(pos, &modoffset);
 
     if(!mi)
         return QByteArray();
@@ -123,27 +120,30 @@ QByteArray QHexEditData::read(qint64 pos, qint64 len)
     QByteArray resba(len, 0x00);
     qint64 copied = 0, mioffset = pos - modoffset;
 
-    while(len > 0 && (i < this->_modlist.length()))
+    while(len > 0)
     {
-        mi = this->_modlist[i];
         qint64 copylen = qMin(mi->length() - mioffset, len);
 
         if(mi->modified())
-            memcpy(resba.data() + copied, this->_modbuffer.constData() + (mi->pos() +  mioffset), copylen);
+            memcpy(resba.data() + copied, this->_modbuffer.constData() + (mi->pos() + mioffset), copylen);
         else
         {
-            if(this->needsBuffering(mi->pos()))
-                this->bufferizeData(mi->pos());
+            qint64 currpos = pos + copied;
 
-            qint64 bufferedpos = (mi->pos() + mioffset) - this->_buffereddatapos;
-            copylen = qMin(copylen, QHexEditData::BUFFER_SIZE - 1);
+            if(this->needsBuffering(currpos))
+                this->bufferizeData(currpos);
+
+            qint64 bufferedpos = currpos - this->_buffereddatapos;
+            copylen = qMin(copylen, QHexEditData::BUFFER_SIZE);
             memcpy(resba.data() + copied, this->_buffereddata.constData() + bufferedpos, copylen);
         }
 
         copied += copylen;
         len -= copylen;
         mioffset = 0;
-        i++;
+
+        if(len > 0)
+            mi = this->modifiedItem(pos, &modoffset);
     }
 
     return resba;
@@ -327,12 +327,12 @@ void QHexEditData::bufferizeData(qint64 pos)
     this->_buffereddatapos = pos;
 
     this->_iodevice->seek(pos);
-    this->_buffereddata = this->_iodevice->read(qMax(s, QHexEditData::BUFFER_SIZE));
+    this->_buffereddata = this->_iodevice->read(qMin(s, QHexEditData::BUFFER_SIZE));
 }
 
 bool QHexEditData::needsBuffering(qint64 pos)
 {
-    return (this->_buffereddatapos == -1) || (pos < this->_buffereddatapos) || (pos > (this->_buffereddatapos + this->_buffereddata.length()));
+    return (this->_buffereddatapos == -1) || (pos < this->_buffereddatapos) || (pos >= (this->_buffereddatapos + QHexEditData::BUFFER_SIZE));
 }
 
 QHexEditData::ModifiedItem* QHexEditData::modifiedItem(qint64 pos, qint64* datapos, int *index)
