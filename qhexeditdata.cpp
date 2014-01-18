@@ -222,10 +222,20 @@ QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByt
 
     int i;
     qint64 datapos;
-    ModifiedItem* mi = this->modifiedItem(pos, &datapos, &i);
+    ModifiedItem* mi;
 
-    if(!mi)
-        return nullptr;
+    if(!this->_modlist.isEmpty())
+    {
+        mi = this->modifiedItem(pos, &datapos, &i);
+
+        if(!mi)
+            return nullptr;
+    }
+    else
+    {
+        pos = 0;
+        datapos = 0;
+    }
 
     bool optimize = false;
     ModifyList oldml, newml;

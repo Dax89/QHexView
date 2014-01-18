@@ -1105,32 +1105,35 @@ void QHexEditPrivate::vScrollBarValueChanged(int)
 
 void QHexEditPrivate::hexEditDataChanged(qint64 offset, qint64, QHexEditData::ActionType reason)
 {
-    if(this->_lastkeyevent->key() == Qt::Key_Delete)
+    if(this->_lastkeyevent)
     {
-        this->setSelectionEnd(this->selectionStart(), 0); /* Update ScrollBars only, don't move the cursor, reset selection */
-        this->adjust();
-        this->ensureVisible();
-        this->update();
-        return;
-    }
-
-    if(this->_lastkeyevent->key() == Qt::Key_Backspace)
-        this->setCursorPos(offset);
-    else if(this->_selpart == QHexEditPrivate::AsciiPart)
-    {
-        if(this->_lastkeyevent->matches(QKeySequence::Undo))
-            this->setCursorPos(offset);
-        else if(reason == QHexEditData::Insert || reason == QHexEditData::Replace)
-            this->setCursorPos(offset + 1);
-    }
-    else if(this->_selpart == QHexEditPrivate::HexPart)
-    {
-        if(reason == QHexEditData::Insert || reason == QHexEditData::Replace)
+        if(this->_lastkeyevent->key() == Qt::Key_Delete)
         {
-            if(this->_charidx == 1)
-                this->setCursorPos(offset + 1, 0);
-            else
-                this->setCursorPos(offset, 1);
+            this->setSelectionEnd(this->selectionStart(), 0); /* Update ScrollBars only, don't move the cursor, reset selection */
+            this->adjust();
+            this->ensureVisible();
+            this->update();
+            return;
+        }
+
+        if(this->_lastkeyevent->key() == Qt::Key_Backspace)
+            this->setCursorPos(offset);
+        else if(this->_selpart == QHexEditPrivate::AsciiPart)
+        {
+            if(this->_lastkeyevent->matches(QKeySequence::Undo))
+                this->setCursorPos(offset);
+            else if(reason == QHexEditData::Insert || reason == QHexEditData::Replace)
+                this->setCursorPos(offset + 1);
+        }
+        else if(this->_selpart == QHexEditPrivate::HexPart)
+        {
+            if(reason == QHexEditData::Insert || reason == QHexEditData::Replace)
+            {
+                if(this->_charidx == 1)
+                    this->setCursorPos(offset + 1, 0);
+                else
+                    this->setCursorPos(offset, 1);
+            }
         }
     }
 

@@ -214,12 +214,20 @@ class QHexEditData : public QObject
                         qint64 l = qMin(this->_len, this->owner()->length());
 
                         this->_remcmd = this->owner()->internalRemove(this->pos(), l, QHexEditData::Replace);
-                        this->_remcmd->setNotify(false); /* Do not emit signal */
-                        this->_remcmd->redo();
+
+                        if(this->_remcmd)
+                        {
+                            this->_remcmd->setNotify(false); /* Do not emit signal */
+                            this->_remcmd->redo();
+                        }
 
                         this->_inscmd = this->owner()->internalInsert(this->pos(), this->_data, QHexEditData::Replace);
-                        this->_inscmd->setNotify(false);  /* Do not emit signal */
-                        this->_inscmd->redo();
+
+                        if(this->_inscmd)
+                        {
+                            this->_inscmd->setNotify(false); /* Do not emit signal */
+                            this->_inscmd->redo();
+                        }
                     }
 
                     if(this->canNotify())
