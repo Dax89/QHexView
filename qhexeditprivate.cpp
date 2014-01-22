@@ -237,6 +237,8 @@ void QHexEditPrivate::setSelection(qint64 start, qint64 end)
     this->_selectionstart = start;
     this->setSelectionEnd(end, 0);
 
+    this->ensureVisible();
+
     emit positionChanged(start);
 }
 
