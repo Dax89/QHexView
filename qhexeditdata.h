@@ -271,7 +271,7 @@ class QHexEditData : public QObject
 
     private:
         InsertCommand* internalInsert(qint64 pos, const QByteArray& ba, QHexEditData::ActionType act);
-        RemoveCommand* internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType act);
+        RemoveCommand* internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType); /* TODO: QHexEditData::internalRemove(): Optimization Needed */
         QHexEditData::ModifiedItem *modifiedItem(qint64 pos, qint64 *datapos = nullptr, int* index = nullptr);
         qint64 updateBuffer(const QByteArray& ba);
         void bufferizeData(qint64 pos);

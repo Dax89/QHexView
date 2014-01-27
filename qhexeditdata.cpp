@@ -259,7 +259,7 @@ QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByt
     return new InsertCommand(i, pos, oldml, newml, this, optimize);
 }
 
-QHexEditData::RemoveCommand* QHexEditData::internalRemove(qint64 pos, qint64 len, ActionType act)
+QHexEditData::RemoveCommand* QHexEditData::internalRemove(qint64 pos, qint64 len, ActionType)
 {
     if(pos < 0 || !len || pos >= this->length() || pos > (this->length() - len))
         return nullptr;
