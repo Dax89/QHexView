@@ -1,21 +1,25 @@
 #include "qhexeditprivate.h"
 
+QString QHexEditPrivate::UNPRINTABLE_CHAR;
 const int QHexEditPrivate::CURSOR_BLINK_INTERVAL = 500; /* 0.5 sec */
-const int QHexEditPrivate::BYTES_PER_LINE = 0x10;
+const qint64 QHexEditPrivate::BYTES_PER_LINE = 0x10;
 
 QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar, QWidget *parent): QWidget(parent)
 {
-    this->_hexeditdata = nullptr;
+    if(QHexEditPrivate::UNPRINTABLE_CHAR.isEmpty())
+        QHexEditPrivate::UNPRINTABLE_CHAR = ".";
+
     this->_lastkeyevent = nullptr;
+    this->_highlighter = nullptr;
+    this->_hexeditdata = nullptr;
     this->_scrollarea = scrollarea;
     this->_vscrollbar = vscrollbar;
-    this->_blink = false;
-    this->_readonly = false;
-    this->_baseaddress = this->_cursorX = this->_cursorY = this->_cursorpos = this->_selectionstart = this->_selectionend = this->_charidx = this->_charheight = this->_charwidth = 0;
+    this->_blink = this->_readonly = false;
+    this->_lastvisiblelines = this->_lastvscrollpos = this->_baseaddress = this->_cursorX = this->_cursorY = this->_cursorpos = this->_selectionstart = this->_selectionend = this->_charidx = this->_charheight = this->_charwidth = 0;
     this->_selpart = QHexEditPrivate::HexPart;
     this->_insmode = QHexEditPrivate::Overwrite;
 
-    connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SLOT(vScrollBarValueChanged(int)));
+    connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SLOT(onVScrollBarValueChanged(int)));
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
 
     QFont f("Courier", 10);
@@ -122,6 +126,7 @@ void QHexEditPrivate::setData(QHexEditData *hexeditdata)
     if(hexeditdata)
     {
         this->_hexeditdata = hexeditdata;
+        this->_highlighter = new QHexEditHighlighter(hexeditdata, QColor(Qt::transparent), this->palette().color(QPalette::WindowText));
         connect(hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), SLOT(hexEditDataChanged(qint64,qint64,QHexEditData::ActionType)));
 
         /* Check Max Address Width */
@@ -242,32 +247,37 @@ void QHexEditPrivate::setSelection(qint64 start, qint64 end)
     emit positionChanged(start);
 }
 
-void QHexEditPrivate::setRangeColor(qint64 start, qint64 end, QColor color)
+void QHexEditPrivate::highlightForeground(qint64 start, qint64 end, const QColor &color)
 {
-    for(qint64 i = start; i <= end; i++)
-        this->_highlightmap[i] = color;
+    if(!this->_highlighter)
+        return;
 
+    this->_highlighter->highlightForeground(start, end, color);
     this->update();
 }
 
-void QHexEditPrivate::removeRangeColor(qint64 start, qint64 end)
+void QHexEditPrivate::highlightBackground(qint64 start, qint64 end, const QColor &color)
 {
-    for(qint64 i = start; i <= end; i++)
-    {
-        if(this->_highlightmap.contains(i))
-            this->_highlightmap.remove(i);
-    }
+    if(!this->_highlighter)
+        return;
 
+    this->_highlighter->highlightBackground(start, end, color);
     this->update();
 }
 
-void QHexEditPrivate::resetRangeColor()
+void QHexEditPrivate::clearHighlight(qint64 start, qint64 end)
 {
-    if(!this->_highlightmap.isEmpty())
-    {
-        this->_highlightmap.clear();
-        this->update();
-    }
+    if(!this->_highlighter)
+        return;
+
+    this->_highlighter->clearHighlight(start, end);
+    this->update();
+}
+
+void QHexEditPrivate::clearHighlight()
+{
+    if(this->_hexeditdata)
+        this->clearHighlight(0, this->_hexeditdata->length());
 }
 
 void QHexEditPrivate::setFont(const QFont &font)
@@ -278,7 +288,7 @@ void QHexEditPrivate::setFont(const QFont &font)
 
 void QHexEditPrivate::setLineColor(const QColor &c)
 {
-    this->_selLineColor = c;
+    this->_sellinecolor = c;
     this->update();
 }
 
@@ -343,7 +353,7 @@ qint64 QHexEditPrivate::selectionEnd()
 
 qint64 QHexEditPrivate::visibleStartOffset()
 {
-    return this->verticalSliderPosition64() * QHexEditPrivate::BYTES_PER_LINE;
+    return qMin(this->verticalSliderPosition64() * QHexEditPrivate::BYTES_PER_LINE, this->_hexeditdata->length()); /* Adjust to EOF, if needed */
 }
 
 qint64 QHexEditPrivate::visibleEndOffset()
@@ -377,7 +387,7 @@ void QHexEditPrivate::setAlternateLineColor(const QColor &c)
 
 QColor& QHexEditPrivate::lineColor()
 {
-    return this->_selLineColor;
+    return this->_sellinecolor;
 }
 
 QBrush& QHexEditPrivate::selectedCursorBrush()
@@ -402,14 +412,17 @@ void QHexEditPrivate::internalSetCursorPos(qint64 pos, int charidx)
     this->_charidx = charidx;
 }
 
-QColor QHexEditPrivate::byteWeight(uchar b)
+void QHexEditPrivate::checkVisibleLines()
 {
-    QColor c = this->palette().color(QPalette::WindowText);
+    qint64 vislines = this->visibleLinesCount();
+    qint64 vscrollpos = this->verticalSliderPosition64();
 
-    if(!b)
-        c = QColor(Qt::darkGray);
-
-    return c;
+    if((vislines != this->_lastvisiblelines) || (vscrollpos != this->_lastvscrollpos))
+    {
+        this->_lastvisiblelines = vislines;
+        this->_lastvscrollpos = vscrollpos;
+        emit visibleLinesChanged();
+    }
 }
 
 bool QHexEditPrivate::isTextSelected()
@@ -724,6 +737,28 @@ void QHexEditPrivate::drawParts(QPainter &painter)
     painter.drawLine(this->_xPosend + span, 0, this->_xPosend + span, this->height());
 }
 
+void QHexEditPrivate::drawLineBackground(QPainter &painter, qint64 line, qint64 linestart, int y)
+{
+    QRect hexr(this->_xposhex, y, this->_xposascii - (this->_charwidth / 2), this->_charheight);
+    QRect asciir(this->_xposascii, y, (this->_charwidth * QHexEditPrivate::BYTES_PER_LINE) + (this->_charwidth / 2), this->_charheight);
+
+    if((this->_cursorpos >= linestart) && (this->_cursorpos < (linestart + QHexEditPrivate::BYTES_PER_LINE))) /* This is the Selected Line */
+    {
+        painter.fillRect(hexr, this->_sellinecolor);
+        painter.fillRect(asciir, this->_sellinecolor);
+    }
+    else if(line & 1)
+    {
+        painter.fillRect(hexr, this->_alternatelinecolor);
+        painter.fillRect(asciir, this->_alternatelinecolor);
+    }
+    else
+    {
+        painter.fillRect(hexr, this->palette().color(QPalette::Base));
+        painter.fillRect(asciir, this->palette().color(QPalette::Base));
+    }
+}
+
 QColor& QHexEditPrivate::addressForeColor()
 {
     return this->_addressforecolor;
@@ -741,188 +776,80 @@ QColor &QHexEditPrivate::alternateLineColor()
 
 void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line, int y)
 {
+    int xhex = this->_xposhex, xascii = this->_xposascii;
+    qint64 linestart = line * QHexEditPrivate::BYTES_PER_LINE;
+
+    painter.setBackgroundMode(Qt::TransparentMode);
+    this->drawLineBackground(painter, line, linestart, y);
     this->drawAddress(painter, fm, line, y);
-    this->drawHexPart(painter, fm, line, y);
-    this->drawAsciiPart(painter, fm, line, y);
-}
-
-void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, int y)
-{
-    int lineMax = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
-    painter.fillRect(0, y, this->_xposhex - (this->_charwidth / 2), this->_charheight, this->_addressbackcolor);
-
-    if(line <= lineMax)
-    {
-        QString addr = QString("%1").arg(this->_baseaddress + (line * QHexEditPrivate::BYTES_PER_LINE), this->_addressWidth, 16, QLatin1Char('0')).toUpper();
-
-        painter.setBackgroundMode(Qt::TransparentMode);
-        painter.setPen(this->_addressforecolor);
-        painter.drawText(0, y, fm.width(addr), this->_charheight, Qt::AlignLeft | Qt::AlignTop, addr);
-    }
-}
-
-void QHexEditPrivate::drawHexPart(QPainter &painter, QFontMetrics& fm, qint64 line, int y)
-{
-    int x = this->_xposhex;
-    qint64 linelength = QHexEditPrivate::BYTES_PER_LINE;
-
-    painter.setBackgroundMode(Qt::OpaqueMode);
-    painter.setBackground(this->palette().base());
-
-    qint64 linestart = line * QHexEditPrivate::BYTES_PER_LINE;
-    qint64 lineEnd = linestart + QHexEditPrivate::BYTES_PER_LINE;
-
-    if(this->cursorPos() >= linestart && this->cursorPos() < lineEnd) /* This is the Selected Line! */
-        painter.fillRect(this->_xposhex - (this->_charwidth / 2), y, this->_xposascii - this->_xposhex, this->_charheight, this->_selLineColor);
-    else if(line & 1)
-        painter.fillRect(this->_xposhex - (this->_charwidth / 2), y, this->_xposascii - this->_xposhex, this->_charheight, this->_alternatelinecolor);
-
-    for(qint64 i = 0; i < linelength; i++)
-    {
-        bool highlighted = false;
-        qint64 pos = (line * linelength) + i;
-
-        if(pos >= this->_hexeditdata->length())
-            return; /* Reached EOF */
-
-        uchar b = this->_hexeditdata->at(linestart + i);
-        QString s = QString("%1").arg(b, 2, 16, QLatin1Char('0')).toUpper();
-        int w = fm.width(s);
-
-        painter.setBackgroundMode(Qt::TransparentMode);
-        painter.setPen(this->byteWeight(b));
-
-        if(pos == this->selectionStart() && (this->_selpart == AsciiPart || !this->hasFocus()))
-        {
-            highlighted = true;
-            w += this->_charwidth;
-            painter.setBackgroundMode(Qt::OpaqueMode);
-            painter.setBackground(this->_selcursorbrush);
-        }
-
-        if(this->selectionStart() != this->selectionEnd()) /* Highlight Selection */
-        {
-            qint64 start = qMin(this->selectionStart(), this->selectionEnd());
-            qint64 end = qMax(this->selectionStart(), this->selectionEnd());
-
-            if((pos >= start && pos < end))
-            {
-                if(i < (linelength - 1))
-                {
-                    s.append(" "); /* Append a WhiteSpace */
-                    w = fm.width(s);
-                }
-
-                highlighted = true;
-                painter.setBackgroundMode(Qt::OpaqueMode);
-                painter.setBackground(this->palette().brush(QPalette::Highlight));
-                painter.setPen(this->palette().color(QPalette::HighlightedText));
-            }
-        }
-
-        if(!highlighted && this->_highlightmap.contains(pos)) /* Highlight Range */
-        {
-            if(i < (linelength - 1))
-            {
-                s.append(" "); /* Append a WhiteSpace */
-                w = fm.width(s);
-            }
-
-            highlighted = true;
-            painter.setBackgroundMode(Qt::OpaqueMode);
-            painter.setBackground(QBrush(this->_highlightmap[pos]));
-            painter.setPen(this->palette().color(QPalette::WindowText));
-        }
-
-        painter.drawText(x, y, w, this->_charheight, Qt::AlignLeft | Qt::AlignTop, s);
-
-        if(!highlighted)
-            w += this->_charwidth; /* Character not selected, add a whitespace (pixel span, not true space) */
-
-        x += w;
-    }
-}
-
-void QHexEditPrivate::drawAsciiPart(QPainter &painter, QFontMetrics& fm, qint64 line, int y)
-{
-    int x = this->_xposascii;
-
-    painter.setBackgroundMode(Qt::OpaqueMode);
-    painter.setBackground(this->palette().base());
-    painter.setPen(this->palette().color(QPalette::WindowText));
-
-    int span = this->_charwidth / 2;
-    qint64 linestart = line * QHexEditPrivate::BYTES_PER_LINE;
-    qint64 lineend = linestart + QHexEditPrivate::BYTES_PER_LINE;
-
-    if(this->cursorPos() >= linestart && this->cursorPos() < lineend) /* This is the Selected Line! */
-        painter.fillRect(this->_xposascii - span, y, (this->_xPosend - this->_xposascii) + this->_charwidth, this->_charheight, this->_selLineColor);
-    else if(line & 1)
-        painter.fillRect(this->_xposascii - span, y, (this->_xPosend - this->_xposascii) + this->_charwidth, this->_charheight, this->_alternatelinecolor);
 
     for(qint64 i = 0; i < QHexEditPrivate::BYTES_PER_LINE; i++)
     {
-        bool highlighted = false;
         qint64 pos = (line * QHexEditPrivate::BYTES_PER_LINE) + i;
 
         if(pos >= this->_hexeditdata->length())
             return; /* Reached EOF */
 
-        if(pos == this->selectionStart() && (this->_selpart == QHexEditPrivate::HexPart || !this->hasFocus()))
-        {
-            highlighted = true;
-            painter.setBackgroundMode(Qt::OpaqueMode);
-            painter.setBackground(this->_selcursorbrush);
-        }
+        uchar b = this->_hexeditdata->at(linestart + i);
 
-        if(this->selectionStart() != this->selectionEnd()) /* Highlight Selection */
-        {
-            qint64 start = qMin(this->selectionStart(), this->selectionEnd());
-            qint64 end = qMax(this->selectionStart(), this->selectionEnd());
+        QColor bchex, fchex, bcascii, fcascii;
+        this->colorize(b, pos, bchex, fchex, bcascii, fcascii);
 
-            if(pos >= start && pos < end)
-            {
-                highlighted = true;
-                painter.setBackgroundMode(Qt::OpaqueMode);
-                painter.setBackground(this->palette().brush(QPalette::Highlight));
-                painter.setPen(this->palette().color(QPalette::HighlightedText));
-            }
-        }
-
-        if(!highlighted && this->_highlightmap.contains(pos)) /* Highlight Range */
-        {
-            highlighted = true;
-            painter.setBackgroundMode(Qt::OpaqueMode);
-            painter.setBackground(QBrush(this->_highlightmap[pos]));
-            painter.setPen(this->palette().color(QPalette::WindowText));
-        }
-
-        if(!highlighted)
-        {
-            painter.setBackgroundMode(Qt::TransparentMode);
-            painter.setPen(this->palette().color(QPalette::WindowText));
-        }
-
-        int w = 0;
-        QChar b = this->_hexeditdata->at(linestart + i);
-
-        if(b.isPrint())
-        {
-            w = fm.width(b);
-            painter.drawText(x, y, w, this->_charheight, Qt::AlignLeft | Qt::AlignTop, QString(b));
-        }
-        else
-        {
-            w = fm.width(".");
-
-            if(!highlighted)
-                painter.setPen(QColor(Qt::darkGray)); /* Make Non-Ascii bytes less visible */
-
-            painter.drawText(x, y, w, this->_charheight, Qt::AlignLeft | Qt::AlignTop, ".");
-        }
-
-        x += w;
+        this->drawHex(painter, fm, bchex, fchex, b, i, xhex, y);
+        this->drawAscii(painter, fm, bcascii, fcascii, b, xascii, y);
     }
+}
+
+void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, int y)
+{
+    qint64 linemax = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
+    painter.fillRect(0, y, this->_xposhex - (this->_charwidth / 2), this->_charheight, this->_addressbackcolor);
+
+    if(line < linemax)
+    {
+        QString addr = QString("%1").arg(this->_baseaddress + (line * QHexEditPrivate::BYTES_PER_LINE), this->_addressWidth, 16, QLatin1Char('0')).toUpper();
+        painter.setPen(this->_addressforecolor);
+        painter.drawText(0, y, fm.width(addr), this->_charheight, Qt::AlignLeft | Qt::AlignTop, addr);
+    }
+}
+
+void QHexEditPrivate::drawHex(QPainter &painter, QFontMetrics &fm, const QColor& bc, const QColor &fc, uchar b, qint64 i, int &x, int y)
+{
+    QString s = QString("%1").arg(b, 2, 16, QLatin1Char('0')).toUpper();
+    int w = fm.width(s);
+    QRect r(x, y, w, this->_charheight);
+
+    if(i < (QHexEditPrivate::BYTES_PER_LINE - 1))
+        r.setWidth(r.width() + this->_charwidth);
+
+    painter.fillRect(r, bc);
+    painter.setPen(fc);
+    painter.drawText(x, y, w, this->_charheight, Qt::AlignLeft | Qt::AlignTop, s);
+
+    x += r.width();
+}
+
+void QHexEditPrivate::drawAscii(QPainter &painter, QFontMetrics &fm, const QColor &bc, const QColor &fc, uchar b, int &x, int y)
+{
+    int w;
+    QString s;
+
+    if(QChar(b).isPrint())
+    {
+        w = fm.width(b);
+        s = QString(b);
+    }
+    else
+    {
+        w = fm.width(QHexEditPrivate::UNPRINTABLE_CHAR);
+        s = QHexEditPrivate::UNPRINTABLE_CHAR;
+    }
+
+    QRect r(x, y, w, this->_charheight);
+    painter.fillRect(r, bc);
+    painter.setPen(fc);
+    painter.drawText(r, Qt::AlignLeft | Qt::AlignTop, s);
+    x += w;
 }
 
 qint64 QHexEditPrivate::cursorPosFromPoint(const QPoint &pt, int *charindex)
@@ -950,6 +877,24 @@ qint64 QHexEditPrivate::cursorPosFromPoint(const QPoint &pt, int *charindex)
 qint64 QHexEditPrivate::verticalSliderPosition64()
 {
     return static_cast<qint64>(this->_vscrollbar->sliderPosition());
+}
+
+void QHexEditPrivate::colorize(uchar b, qint64 pos, QColor &bchex, QColor &fchex, QColor &bcascii, QColor &fcascii)
+{
+    if((this->_selectionstart != this->_selectionend) && (pos >= this->selectionStart()) && (pos < this->selectionEnd())) /* Selected Text */
+    {
+        bchex = bcascii = this->palette().color(QPalette::Highlight);
+        fchex = fcascii = this->palette().color(QPalette::HighlightedText);
+    }
+    else
+    {
+        QColor bc, fc;
+        this->_highlighter->colors(pos, bc, fc);
+
+        bchex = bcascii = bc;
+        fchex = (b ? fc : QColor(Qt::darkGray));
+        fcascii = (QChar(b).isPrint() ? fc : QColor(Qt::darkGray));
+    }
 }
 
 void QHexEditPrivate::paintEvent(QPaintEvent* pe)
@@ -1092,6 +1037,7 @@ void QHexEditPrivate::keyPressEvent(QKeyEvent* event)
 void QHexEditPrivate::resizeEvent(QResizeEvent*)
 {
     this->adjust(); /* Update ScrollBars */
+    this->checkVisibleLines();
 }
 
 void QHexEditPrivate::blinkCursor()
@@ -1100,8 +1046,9 @@ void QHexEditPrivate::blinkCursor()
     this->update(this->_cursorX, this->_cursorY, this->_charwidth, this->_charheight);
 }
 
-void QHexEditPrivate::vScrollBarValueChanged(int)
+void QHexEditPrivate::onVScrollBarValueChanged(int)
 {
+    this->checkVisibleLines();
     this->update();
 }
 

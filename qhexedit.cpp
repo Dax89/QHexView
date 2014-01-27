@@ -7,6 +7,7 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
     this->_hexedit_p = new QHexEditPrivate(this->_scrollarea, this->_vscrollbar);
 
     /* Forward QHexEditPrivate's Signals */
+    connect(this->_hexedit_p, SIGNAL(visibleLinesChanged()), this, SIGNAL(visibleLinesChanged()));
     connect(this->_hexedit_p, SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(selectionChanged(qint64)), this, SIGNAL(selectionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(verticalScrollBarValueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
@@ -44,19 +45,24 @@ void QHexEdit::setSelection(qint64 start, qint64 end)
     this->_hexedit_p->setSelection(start, end);
 }
 
-void QHexEdit::setRangeColor(qint64 start, qint64 end, QColor color)
+void QHexEdit::highlightBackground(qint64 start, qint64 end, const QColor &color)
 {
-    this->_hexedit_p->setRangeColor(start, end, color);
+    this->_hexedit_p->highlightBackground(start, end, color);
 }
 
-void QHexEdit::removeRangeColor(qint64 start, qint64 end)
+void QHexEdit::highlightForeground(qint64 start, qint64 end, const QColor &color)
 {
-    this->_hexedit_p->removeRangeColor(start, end);
+    this->_hexedit_p->highlightForeground(start, end, color);
 }
 
-void QHexEdit::resetRangeColor()
+void QHexEdit::clearHighlight(qint64 start, qint64 end)
 {
-    this->_hexedit_p->resetRangeColor();
+    this->_hexedit_p->clearHighlight(start, end);
+}
+
+void QHexEdit::clearHighlight()
+{
+    this->_hexedit_p->clearHighlight();
 }
 
 void QHexEdit::setVerticalScrollBarValue(int value)

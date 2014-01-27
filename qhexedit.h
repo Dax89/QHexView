@@ -26,6 +26,7 @@ class QHexEdit : public QFrame
         void setBaseAddress(qint64 ba);
 
     signals:
+        void visibleLinesChanged();
         void positionChanged(qint64 offset);
         void selectionChanged(qint64 length);
         void bytesChanged(qint64 pos);
@@ -42,9 +43,10 @@ class QHexEdit : public QFrame
         void setCursorPos(qint64 pos);
         void setData(QHexEditData *hexeditdata);
         void setSelection(qint64 start, qint64 end);
-        void setRangeColor(qint64 start, qint64 end, QColor color);
-        void removeRangeColor(qint64 start, qint64 end);
-        void resetRangeColor();
+        void highlightBackground(qint64 start, qint64 end, const QColor& color);
+        void highlightForeground(qint64 start, qint64 end, const QColor& color);
+        void clearHighlight(qint64 start, qint64 end);
+        void clearHighlight();
         void setVerticalScrollBarValue(int value);
 
     private:
