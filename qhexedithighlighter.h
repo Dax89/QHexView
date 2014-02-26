@@ -10,31 +10,33 @@ class QHexEditHighlighter : public QObject
 {
     Q_OBJECT
 
+    /*
     private:
         class ColorRange
         {
             public:
-                explicit ColorRange(qint64 p, qint64 l, QColor c): _pos(p), _len(l), _color(c) { }
-                ColorRange(const ColorRange& cr): _pos(cr._pos), _len(cr._len), _color(cr._color) { }
+                explicit ColorRange(qint64 p, qint64 e, QColor c): _start(p), _end(e), _color(c) { }
+                ColorRange(const ColorRange& cr): _start(cr._start), _end(cr._end), _color(cr._color) { }
                 static ColorRange invalid() { return ColorRange(-1, -1, QColor(QColor::Invalid)); }
 
             public:
-                bool contains(qint64 pos) const { return (pos >= this->_pos) && (pos <= this->endPos()); }
+                bool contains(qint64 pos) const { return (pos >= this->_start) && (pos <= this->end()); }
                 void setColor(const QColor& c) { this->_color = c; }
                 const QColor& color() const { return this->_color; }
-                qint64 pos() const { return this->_pos; }
-                qint64 endPos() const { return this->_pos + this->_len; }
-                qint64 length() const { return this->_len; }
-                bool isValid() const { return (this->_pos != -1) && (this->_len != -1) && this->_color.isValid(); }
+                qint64 start() const { return this->_start; }
+                qint64 end() const { return this->_end; }
+                qint64 length() const { return this->_end - this->_start; }
+                bool isValid() const { return (this->_start != -1) && (this->_end != -1) && this->_color.isValid(); }
 
             private:
-                qint64 _pos;
-                qint64 _len;
+                qint64 _start;
+                qint64 _end;
                 QColor _color;
         };
+     */
 
     private:
-        typedef QList<ColorRange> ColorList;
+        typedef QHash<qint64, QColor> ColorMap;
 
     public:
         explicit QHexEditHighlighter(QHexEditData* hexeditdata, QColor backdefault, QColor foredefault, QObject *parent = 0);
@@ -48,15 +50,12 @@ class QHexEditHighlighter : public QObject
         void clearHighlight(qint64 start, qint64 end);
 
     private:
-        bool canOptimize(const QHexEditHighlighter::ColorRange cr, qint64 start, qint64 end, const QColor& color) const;
-        ColorRange rangeAt(const QHexEditHighlighter::ColorList &rangelist, qint64 pos, qint64* index = nullptr) const;
-        ColorRange insertionPoint(const QHexEditHighlighter::ColorList &rangelist, qint64 pos, qint64 *index = nullptr) const;
-        void internalClear(QHexEditHighlighter::ColorList& rangelist, qint64 start, qint64 end);
-        void internalHighlight(QHexEditHighlighter::ColorList& rangelist, qint64 start, qint64 end, const QColor& color);
+        void internalClear(ColorMap &rangelist, qint64 start, qint64 end);
+        void internalHighlight(QHexEditHighlighter::ColorMap& rangelist,qint64 start, qint64 end, const QColor& color);
 
     private:
-        QHexEditHighlighter::ColorList _backgroundranges;
-        QHexEditHighlighter::ColorList _foregroundranges;
+        QHexEditHighlighter::ColorMap _backgroundmap;
+        QHexEditHighlighter::ColorMap _foregroundmap;
         QHexEditData* _hexeditdata;
         QColor _backdefault;
         QColor _foredefault;
