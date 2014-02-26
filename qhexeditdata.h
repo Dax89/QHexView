@@ -16,6 +16,41 @@ class QHexEditData : public QObject
 {
     Q_OBJECT
 
+    public:
+        enum ActionType { None = 0, Insert = 1, Remove = 2, Replace = 3 };
+
+    private:
+        class QHexEditDataDevice: public QIODevice
+        {
+            public:
+                QHexEditDataDevice(QObject* parent = 0): QIODevice(parent), _hexeditdata(nullptr) { }
+                void setData(QHexEditData* hexeditdata) { this->_hexeditdata = hexeditdata; }
+                virtual qint64 size() { return this->_hexeditdata->length(); }
+
+            protected:
+                qint64 readData(char *data, qint64 maxlen)
+                {
+                    if(!this->_hexeditdata)
+                        return 0;
+
+                    QByteArray ba = this->_hexeditdata->read(this->pos(), maxlen);
+                    memcpy(data, ba.data(), ba.length());
+                    return ba.length();
+                }
+
+                qint64 writeData(const char *data, qint64 len)
+                {
+                    if(!this->_hexeditdata)
+                        return 0;
+
+                    this->_hexeditdata->replace(this->pos(), QByteArray::fromRawData(data, len));
+                    return len; /* Append if needed */
+                }
+
+            private:
+                QHexEditData* _hexeditdata;
+        };
+
     private:
         class ModifiedItem
         {
@@ -59,6 +94,13 @@ class QHexEditData : public QObject
                 void setNotify(bool b) { this->_notify = b; }
                 qint64 pos() const { return this->_pos; }
                 QHexEditData* owner() const { return this->_owner; }
+
+            protected:
+                void notifyDataChanged(qint64 offset, qint64 size, QHexEditData::ActionType reason)
+                {
+                    this->owner()->_dirtybuffer = true;
+                    emit this->owner()->dataChanged(offset, size, reason);
+                }
 
             private:
                 QHexEditData* _owner;
@@ -117,6 +159,7 @@ class QHexEditData : public QObject
                         ModifiedItem* newmi = ic->_newml.last();
 
                         oldmi->updateLen(newmi->length());
+                        this->notifyDataChanged(ic->pos(), ic->newLength(), QHexEditData::Insert);
                         return true;
                     }
 
@@ -132,7 +175,7 @@ class QHexEditData : public QObject
                         this->owner()->_modlist.insert(this->index() + i, this->_oldml[i]);
 
                     if(this->canNotify())
-                        emit this->owner()->dataChanged(this->pos(), this->oldLength(), QHexEditData::Insert);
+                        this->notifyDataChanged(this->pos(), this->oldLength(), QHexEditData::Insert);
                 }
 
                 virtual void redo()
@@ -147,7 +190,7 @@ class QHexEditData : public QObject
                         this->owner()->_modlist.insert(this->index() + i, this->_newml[i]);
 
                     if(this->canNotify())
-                        emit this->owner()->dataChanged(this->pos(), this->newLength(), QHexEditData::Insert);
+                        this->notifyDataChanged(this->pos(), this->newLength(), QHexEditData::Insert);
                 }
 
             private:
@@ -171,7 +214,7 @@ class QHexEditData : public QObject
                         this->owner()->_modlist.insert(this->index() + i, this->_oldml.at(i));
 
                     if(this->canNotify())
-                        emit this->owner()->dataChanged(this->pos(), this->oldLength(), QHexEditData::Remove);
+                        this->notifyDataChanged(this->pos(), this->oldLength(), QHexEditData::Remove);
                 }
 
                 virtual void redo()
@@ -182,7 +225,7 @@ class QHexEditData : public QObject
                         this->owner()->_modlist.insert(this->index() + i, this->_newml.at(i));
 
                     if(this->canNotify())
-                        emit this->owner()->dataChanged(this->pos(), this->newLength(), QHexEditData::Remove);
+                        this->notifyDataChanged(this->pos(), this->newLength(), QHexEditData::Remove);
                 }
         };
 
@@ -231,7 +274,7 @@ class QHexEditData : public QObject
                     }
 
                     if(this->canNotify())
-                        emit this->owner()->dataChanged(this->pos(), this->_data.length(), QHexEditData::Replace);
+                        this->notifyDataChanged(this->pos(), this->_data.length(), QHexEditData::Replace);
                 }
 
             private:
@@ -243,10 +286,11 @@ class QHexEditData : public QObject
 
     private:
         explicit QHexEditData(QIODevice* iodevice, QObject *parent = 0);
+        ~QHexEditData();
 
     public:
-        enum ActionType { None = 0, Insert = 1, Remove = 2, Replace = 3 };
         QUndoStack* undoStack();
+        QIODevice* device();
         uchar at(qint64 pos);
         qint64 indexOf(const QByteArray& ba, qint64 start);
         void append(const QByteArray& ba);
@@ -275,6 +319,7 @@ class QHexEditData : public QObject
         QHexEditData::ModifiedItem *modifiedItem(qint64 pos, qint64 *datapos = nullptr, int* index = nullptr);
         qint64 updateBuffer(const QByteArray& ba);
         void bufferizeData(qint64 pos);
+        bool inBuffer(qint64 pos);
         bool needsBuffering(qint64 pos);
         bool canOptimize(QHexEditData::ActionType at, qint64 pos);
         void recordAction(QHexEditData::ActionType at, qint64 pos);
@@ -284,16 +329,21 @@ class QHexEditData : public QObject
 
     private:        
         static const qint64 BUFFER_SIZE;
+        bool _dirtybuffer;
         ModifyList _modlist;
         QIODevice* _iodevice;
         QByteArray _modbuffer;
         QByteArray _buffereddata;
         qint64 _buffereddatapos;
         qint64 _length;
+        qint64 _devicelength;
         qint64 _lastpos;
         QHexEditData::ActionType _lastaction;
+        QHexEditData::QHexEditDataDevice _hexeditdatadevice;
         QUndoStack _undostack;
+        QReadWriteLock _rwlock;
 
+    friend class QHexEditData::AbstractCommand;
 };
 
 #endif // QHEXEDITDATA_H

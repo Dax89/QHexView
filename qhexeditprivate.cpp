@@ -22,7 +22,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SLOT(onVScrollBarValueChanged(int)));
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
 
-    QFont f("Courier", 10);
+    QFont f("Monospace", 10);
     f.setStyleHint(QFont::TypeWriter); /* Use monospace fonts! */
 
     this->setFont(f);
@@ -239,7 +239,7 @@ void QHexEditPrivate::setSelection(qint64 start, qint64 end)
     if(end == -1)
         end = this->_hexeditdata->length();
 
-    this->_selectionstart = start;
+    this->setCursorPos(start); /* Updates selectionstart too */
     this->setSelectionEnd(end, 0);
 
     this->ensureVisible();
@@ -303,7 +303,7 @@ void QHexEditPrivate::setVerticalScrollBarValue(int value)
     this->_vscrollbar->setValue(value);
 }
 
-qint64 QHexEditPrivate::indexOf(QByteArray &ba, bool start)
+qint64 QHexEditPrivate::indexOf(QByteArray &ba, qint64 start)
 {
     if(this->_hexeditdata)
         return this->_hexeditdata->indexOf(ba, start);
@@ -641,6 +641,8 @@ bool QHexEditPrivate::processInsOvrEvents(QKeyEvent *event)
     if((event->key() == Qt::Key_Insert) && (event->modifiers() == Qt::NoModifier))
     {
         this->_insmode = (this->_insmode == QHexEditPrivate::Overwrite ? QHexEditPrivate::Insert : QHexEditPrivate::Overwrite);
+        this->_blink = true;
+        this->update();
         return true;
     }
 
@@ -712,7 +714,7 @@ void QHexEditPrivate::updateCursorXY(qint64 pos, int charidx)
 {
     this->_cursorY = ((pos - (this->verticalSliderPosition64() * QHexEditPrivate::BYTES_PER_LINE)) / QHexEditPrivate::BYTES_PER_LINE) * this->_charheight;
 
-    if(this->_selpart == AddressPart || this->_selpart == HexPart)
+    if(this->_selpart == QHexEditPrivate::AddressPart || this->_selpart == QHexEditPrivate::HexPart)
     {
         qint64 x = pos % QHexEditPrivate::BYTES_PER_LINE;
         this->_cursorX = x * (3 * this->_charwidth) + this->_xposhex;
@@ -891,7 +893,22 @@ void QHexEditPrivate::colorize(uchar b, qint64 pos, QColor &bchex, QColor &fchex
         QColor bc, fc;
         this->_highlighter->colors(pos, bc, fc);
 
-        bchex = bcascii = bc;
+        if((this->_selpart == QHexEditPrivate::AsciiPart || this->_selpart == QHexEditPrivate::HexPart) && (this->_selectionstart == this->_selectionend) && (pos == this->_cursorpos))
+        {
+            if(this->_selpart == QHexEditPrivate::AsciiPart)
+            {
+                bchex = QColor(Qt::lightGray);
+                bcascii = bc;
+            }
+            else /* if(this->_selpart == QHexEditPrivate::HexPart) */
+            {
+                bchex = bc;
+                bcascii = QColor(Qt::lightGray);
+            }
+        }
+        else
+            bchex = bcascii = bc;
+
         fchex = (b ? fc : QColor(Qt::darkGray));
         fcascii = (QChar(b).isPrint() ? fc : QColor(Qt::darkGray));
     }

@@ -39,7 +39,7 @@ class QHexEditPrivate : public QWidget
         int addressWidth();
         int visibleLinesCount();
         int wheelScrollLines();
-        qint64 indexOf(QByteArray& ba, bool start);
+        qint64 indexOf(QByteArray& ba, qint64 start);
         qint64 baseAddress();
         qint64 cursorPos();
         qint64 selectionStart();
