@@ -823,12 +823,12 @@ void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line,
 
     for(qint64 i = 0; i < QHexEditPrivate::BYTES_PER_LINE; i++)
     {
-        qint64 pos = (line * QHexEditPrivate::BYTES_PER_LINE) + i;
+        qint64 pos = linestart + i;
 
         if(pos >= this->_hexeditdata->length())
             return; /* Reached EOF */
 
-        uchar b = this->_hexeditdata->at(linestart + i);
+        uchar b = this->_hexeditdata->at(pos);
 
         if(this->_comments->isCommented(pos))
         {
