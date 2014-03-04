@@ -302,6 +302,11 @@ void QHexEditPrivate::setVerticalScrollBarValue(int value)
     this->_vscrollbar->setValue(value);
 }
 
+void QHexEditPrivate::scroll(QWheelEvent *event)
+{
+    this->wheelEvent(event);
+}
+
 qint64 QHexEditPrivate::indexOf(QByteArray &ba, qint64 start)
 {
     if(this->_hexeditdata)

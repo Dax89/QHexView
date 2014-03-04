@@ -48,6 +48,7 @@ class QHexEdit : public QFrame
         void clearHighlight(qint64 start, qint64 end);
         void clearHighlight();
         void setVerticalScrollBarValue(int value);
+        void scroll(QWheelEvent *event);
 
     private:
         QHexEditPrivate* _hexedit_p;

@@ -70,6 +70,11 @@ void QHexEdit::setVerticalScrollBarValue(int value)
     this->_hexedit_p->setVerticalScrollBarValue(value);
 }
 
+void QHexEdit::scroll(QWheelEvent *event)
+{
+    this->_hexedit_p->scroll(event);
+}
+
 void QHexEdit::setCursorPos(qint64 pos)
 {
     this->_hexedit_p->setCursorPos(pos);

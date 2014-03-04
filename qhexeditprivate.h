@@ -35,6 +35,7 @@ class QHexEditPrivate : public QWidget
         void setAlternateLineColor(const QColor& c);
         void setSelectedCursorBrush(const QBrush &b);
         void setVerticalScrollBarValue(int value);
+        void scroll(QWheelEvent *event);
         bool readOnly();
         int addressWidth();
         int visibleLinesCount();
