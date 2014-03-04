@@ -35,4 +35,13 @@ hexedit->highlightForeground(0, 15, QColor(Qt::darkBLue)); /* Highlight from 0 t
 
 /* Clear Highlighting */
 hexedit->clearHighlight();
+
+/* Apply Comment */
+hexedit->commentRange(0, 12, "I'm a comment!");
+
+/* Remove a comment */
+hexedit->uncommentRange(0, 5);
+
+/* Clear all comments */
+hexedit->clearComments();
 ```

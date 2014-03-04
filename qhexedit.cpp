@@ -65,6 +65,21 @@ void QHexEdit::clearHighlight()
     this->_hexedit_p->clearHighlight();
 }
 
+void QHexEdit::commentRange(qint64 start, qint64 end, const QString &comment)
+{
+    this->_hexedit_p->commentRange(start, end, comment);
+}
+
+void QHexEdit::uncommentRange(qint64 start, qint64 end)
+{
+    this->_hexedit_p->uncommentRange(start, end);
+}
+
+void QHexEdit::clearComments()
+{
+    this->_hexedit_p->clearComments();
+}
+
 void QHexEdit::setVerticalScrollBarValue(int value)
 {
     this->_hexedit_p->setVerticalScrollBarValue(value);

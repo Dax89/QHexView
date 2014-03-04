@@ -11,6 +11,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
 
     this->_lastkeyevent = nullptr;
     this->_highlighter = nullptr;
+    this->_comments = nullptr;
     this->_hexeditdata = nullptr;
     this->_scrollarea = scrollarea;
     this->_vscrollbar = vscrollbar;
@@ -25,6 +26,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
     QFont f("Monospace", 10);
     f.setStyleHint(QFont::TypeWriter); /* Use monospace fonts! */
 
+    this->setMouseTracking(true);
     this->setFont(f);
     this->setWheelScrollLines(5); /* By default: scroll 5 lines */
     this->setAddressWidth(8);
@@ -121,12 +123,18 @@ void QHexEditPrivate::setBaseAddress(qint64 ba)
 void QHexEditPrivate::setData(QHexEditData *hexeditdata)
 {
     if(this->_hexeditdata) /* Disconnect previous HexEditData Signals, if any */
+    {
+        this->_hexeditdata->setParent(nullptr);
         disconnect(this->_hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), this, SLOT(hexEditDataChanged(qint64,qint64,QHexEditData::ActionType)));
+    }
 
     if(hexeditdata)
     {
         this->_hexeditdata = hexeditdata;
-        this->_highlighter = new QHexEditHighlighter(hexeditdata, QColor(Qt::transparent), this->palette().color(QPalette::WindowText));
+        this->_highlighter = new QHexEditHighlighter(hexeditdata, QColor(Qt::transparent), this->palette().color(QPalette::WindowText), this);
+        this->_comments = new QHexEditComments(this);
+
+        this->_hexeditdata->setParent(this);
         connect(hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), SLOT(hexEditDataChanged(qint64,qint64,QHexEditData::ActionType)));
 
         /* Check Max Address Width */
@@ -277,6 +285,30 @@ void QHexEditPrivate::clearHighlight()
 {
     if(this->_hexeditdata)
         this->clearHighlight(0, this->_hexeditdata->length());
+}
+
+void QHexEditPrivate::commentRange(qint64 start, qint64 end, const QString &comment)
+{
+    if(!this->_comments)
+        return;
+
+    this->_comments->commentRange(start, end, comment);
+}
+
+void QHexEditPrivate::uncommentRange(qint64 start, qint64 end)
+{
+    if(!this->_comments)
+        return;
+
+    this->_comments->uncommentRange(start, end);
+}
+
+void QHexEditPrivate::clearComments()
+{
+    if(!this->_comments)
+        return;
+
+    this->_comments->clearComments();
 }
 
 void QHexEditPrivate::setFont(const QFont &font)
@@ -798,6 +830,15 @@ void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line,
 
         uchar b = this->_hexeditdata->at(linestart + i);
 
+        if(this->_comments->isCommented(pos))
+        {
+            QFont f = this->font();
+            f.setBold(true);
+            painter.setFont(f);
+        }
+        else
+            painter.setFont(this->font());
+
         QColor bchex, fchex, bcascii, fcascii;
         this->colorize(b, pos, bchex, fchex, bcascii, fcascii);
 
@@ -861,13 +902,15 @@ void QHexEditPrivate::drawAscii(QPainter &painter, QFontMetrics &fm, const QColo
 qint64 QHexEditPrivate::cursorPosFromPoint(const QPoint &pt, int *charindex)
 {
     qint64 y = (this->verticalSliderPosition64() + (pt.y() / this->_charheight)) * QHexEditPrivate::BYTES_PER_LINE, x = 0;
-    *charindex = 0;
+
+    if(charindex)
+        *charindex = 0;
 
     if(this->_selpart == HexPart)
     {
         x = (pt.x() - this->_xposhex) / this->_charwidth;
 
-        if((x % 3) != 0) /* Is Second Nibble Selected? */
+        if(charindex && (x % 3) != 0) /* Is Second Nibble Selected? */
             *charindex = 1;
 
         x = x / 3;
@@ -985,7 +1028,16 @@ void QHexEditPrivate::mouseMoveEvent(QMouseEvent* event)
 {
     if(this->_hexeditdata)
     {
-        if(event->buttons() & Qt::LeftButton)
+        if((event->buttons() == Qt::NoButton) && this->_comments)
+        {
+            qint64 offset = this->cursorPosFromPoint(event->pos(), nullptr);
+
+            if(this->_comments->isCommented(offset))
+                this->_comments->displayNote(this->mapToGlobal(event->pos()), offset);
+            else
+                this->_comments->hideNote();
+        }
+        else if(event->buttons() & Qt::LeftButton)
         {
             QPoint pos = event->pos();
 

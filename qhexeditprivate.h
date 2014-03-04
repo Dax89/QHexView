@@ -5,6 +5,7 @@
 #include <QtWidgets>
 #include "qhexeditdata.h"
 #include "qhexedithighlighter.h"
+#include "qhexeditcomments.h"
 
 class QHexEditPrivate : public QWidget
 {
@@ -28,6 +29,9 @@ class QHexEditPrivate : public QWidget
         void highlightBackground(qint64 start, qint64 end, const QColor& color);
         void clearHighlight(qint64 start, qint64 end);
         void clearHighlight();
+        void commentRange(qint64 start, qint64 end, const QString& comment);
+        void uncommentRange(qint64 start, qint64 end);
+        void clearComments();
         void setFont(const QFont& font);
         void setLineColor(const QColor& c);
         void setAddressForeColor(const QColor& c);
@@ -109,6 +113,7 @@ class QHexEditPrivate : public QWidget
         enum SelectedPart { AddressPart = 0, HexPart = 1, AsciiPart = 2 };
         enum InsertMode { Overwrite = 0, Insert = 1 };
         QHexEditHighlighter* _highlighter;
+        QHexEditComments* _comments;
         QKeyEvent* _lastkeyevent;
         QHexEditData* _hexeditdata;
         QScrollArea* _scrollarea;

@@ -47,6 +47,9 @@ class QHexEdit : public QFrame
         void highlightForeground(qint64 start, qint64 end, const QColor& color);
         void clearHighlight(qint64 start, qint64 end);
         void clearHighlight();
+        void commentRange(qint64 start, qint64 end, const QString& comment);
+        void uncommentRange(qint64 start, qint64 end);
+        void clearComments();
         void setVerticalScrollBarValue(int value);
         void scroll(QWheelEvent *event);
 
