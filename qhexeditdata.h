@@ -241,7 +241,7 @@ class QHexEditData : public QObject
                     this->_remcmd->undo();
 
                     if(this->canNotify())
-                        emit this->owner()->dataChanged(this->pos(), this->_data.length(), QHexEditData::Replace);
+                        emit this->notifyDataChanged(this->pos(), this->_data.length(), QHexEditData::Replace);
                 }
 
                 virtual void redo()
