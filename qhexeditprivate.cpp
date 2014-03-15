@@ -226,7 +226,7 @@ void QHexEditPrivate::adjust()
 
 void QHexEditPrivate::setSelectionEnd(qint64 pos, int charidx)
 {
-    qint64 oldselend = this->selectionEnd();
+    qint64 oldselendlength = this->selectionEnd() - this->selectionStart();
 
     if(pos >= this->_hexeditdata->length())
         pos = this->_hexeditdata->length();
@@ -234,10 +234,12 @@ void QHexEditPrivate::setSelectionEnd(qint64 pos, int charidx)
     this->_selectionend = pos;
     this->_charidx = charidx;
 
-    this->updateCursorXY(this->selectionEnd(), charidx);
+    this->updateCursorXY(pos, charidx);
     this->update();
 
-    if(oldselend != pos)
+    qint64 len = this->selectionEnd() - this->selectionStart();
+
+    if(oldselendlength != len)
         emit selectionChanged(qMax(this->selectionStart(), pos) - qMin(this->selectionStart(), pos));
 }
 
