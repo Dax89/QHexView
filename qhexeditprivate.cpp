@@ -23,7 +23,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SLOT(onVScrollBarValueChanged(int)));
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
 
-    QFont f("Monospace", 10);
+    QFont f("Monospace", qApp->font().pointSize());
     f.setStyleHint(QFont::TypeWriter); /* Use monospace fonts! */
 
     this->setMouseTracking(true);

@@ -2,6 +2,7 @@
 #define QHEXEDITPRIVATE_H
 
 #include <QtCore>
+#include <QtGui>
 #include <QtWidgets>
 #include "qhexeditdata.h"
 #include "qhexedithighlighter.h"
