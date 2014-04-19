@@ -139,6 +139,28 @@ QByteArray QHexEditData::read(qint64 pos, qint64 len)
     return resba;
 }
 
+QString QHexEditData::readString(qint64 pos, qint64 maxlen)
+{
+    QString s;
+
+    if(maxlen == -1)
+        maxlen = this->length();
+    else
+        maxlen = qMin(this->length(), maxlen);
+
+    for(qint64 i = 0; i < maxlen; i++)
+    {
+        QChar ch(this->at(pos + i));
+
+        if(!ch.isPrint())
+            break;
+
+        s.append(ch);
+    }
+
+    return s;
+}
+
 quint16 QHexEditData::readUInt16(qint64 pos, QSysInfo::Endian endian)
 {
     QByteArray ba = this->read(pos, 2);

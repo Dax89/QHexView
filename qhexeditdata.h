@@ -308,6 +308,7 @@ class QHexEditData : public QObject
         void replace(qint64 pos, const QByteArray& ba);
         void replace(qint64 pos, qint64 len, const QByteArray& ba);
         QByteArray read(qint64 pos, qint64 len);
+        QString readString(qint64 pos, qint64 maxlen = -1);
         quint16 readUInt16(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
         quint32 readUInt32(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
         quint64 readUInt64(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
