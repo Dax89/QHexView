@@ -115,7 +115,9 @@ QByteArray QHexEditData::read(qint64 pos, qint64 len)
 {
     QReadLocker(&this->_rwlock);
 
-    if(len > this->_length)
+    if(pos >= this->_length)
+        return QByteArray();
+    else if(len > this->_length)
         len = this->_length;
 
     QByteArray resba(len, 0x00);
