@@ -139,6 +139,96 @@ QByteArray QHexEditData::read(qint64 pos, qint64 len)
     return resba;
 }
 
+quint16 QHexEditData::readUInt16(qint64 pos, QSysInfo::Endian endian)
+{
+    QByteArray ba = this->read(pos, 2);
+    QDataStream ds(ba);
+
+    if(endian == QSysInfo::LittleEndian)
+        ds.setByteOrder(QDataStream::LittleEndian);
+    else
+        ds.setByteOrder(QDataStream::BigEndian);
+
+    quint16 val;
+    ds >> val;
+    return val;
+}
+
+quint32 QHexEditData::readUInt32(qint64 pos, QSysInfo::Endian endian)
+{
+    QByteArray ba = this->read(pos, 4);
+    QDataStream ds(ba);
+
+    if(endian == QSysInfo::LittleEndian)
+        ds.setByteOrder(QDataStream::LittleEndian);
+    else
+        ds.setByteOrder(QDataStream::BigEndian);
+
+    quint32 val;
+    ds >> val;
+    return val;
+}
+
+quint64 QHexEditData::readUInt64(qint64 pos, QSysInfo::Endian endian)
+{
+    QByteArray ba = this->read(pos, 8);
+    QDataStream ds(ba);
+
+    if(endian == QSysInfo::LittleEndian)
+        ds.setByteOrder(QDataStream::LittleEndian);
+    else
+        ds.setByteOrder(QDataStream::BigEndian);
+
+    quint64 val;
+    ds >> val;
+    return val;
+}
+
+qint16 QHexEditData::readInt16(qint64 pos, QSysInfo::Endian endian)
+{
+    QByteArray ba = this->read(pos, 2);
+    QDataStream ds(ba);
+
+    if(endian == QSysInfo::LittleEndian)
+        ds.setByteOrder(QDataStream::LittleEndian);
+    else
+        ds.setByteOrder(QDataStream::BigEndian);
+
+    qint16 val;
+    ds >> val;
+    return val;
+}
+
+qint32 QHexEditData::readInt32(qint64 pos, QSysInfo::Endian endian)
+{
+    QByteArray ba = this->read(pos, 4);
+    QDataStream ds(ba);
+
+    if(endian == QSysInfo::LittleEndian)
+        ds.setByteOrder(QDataStream::LittleEndian);
+    else
+        ds.setByteOrder(QDataStream::BigEndian);
+
+    qint32 val;
+    ds >> val;
+    return val;
+}
+
+qint64 QHexEditData::readInt64(qint64 pos, QSysInfo::Endian endian)
+{
+    QByteArray ba = this->read(pos, 8);
+    QDataStream ds(ba);
+
+    if(endian == QSysInfo::LittleEndian)
+        ds.setByteOrder(QDataStream::LittleEndian);
+    else
+        ds.setByteOrder(QDataStream::BigEndian);
+
+    qint64 val;
+    ds >> val;
+    return val;
+}
+
 qint64 QHexEditData::length() const
 {
     return this->_length;
