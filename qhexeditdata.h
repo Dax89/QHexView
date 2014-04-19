@@ -34,8 +34,14 @@ class QHexEditData : public QObject
                         return 0;
 
                     QByteArray ba = this->_hexeditdata->read(this->pos(), maxlen);
-                    memcpy(data, ba.data(), ba.length());
-                    return ba.length();
+
+                    if(!ba.isEmpty())
+                    {
+                        memcpy(data, ba.data(), ba.length());
+                        return ba.length();
+                    }
+
+                    return -1;
                 }
 
                 qint64 writeData(const char *data, qint64 len)
