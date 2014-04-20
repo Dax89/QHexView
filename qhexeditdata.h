@@ -180,6 +180,10 @@ class QHexEditData : public QObject
                     for(int i = 0; i < this->_oldml.length(); i++)
                         this->owner()->_modlist.insert(this->index() + i, this->_oldml[i]);
 
+                    /* Update HexEditData's length */
+                    this->owner()->_length -= this->newLength();
+                    this->owner()->_length += this->oldLength();
+
                     if(this->canNotify())
                         this->notifyDataChanged(this->pos(), this->oldLength(), QHexEditData::Insert);
                 }
@@ -218,6 +222,10 @@ class QHexEditData : public QObject
 
                     for(int i = 0; i < this->_oldml.length(); i++)
                         this->owner()->_modlist.insert(this->index() + i, this->_oldml.at(i));
+
+                    /* Update HexEditData's length */
+                    this->owner()->_length -= this->newLength();
+                    this->owner()->_length += this->oldLength();
 
                     if(this->canNotify())
                         this->notifyDataChanged(this->pos(), this->oldLength(), QHexEditData::Remove);
