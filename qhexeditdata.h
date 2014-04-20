@@ -135,12 +135,12 @@ class QHexEditData : public QObject
 
             private:
                 int _index;
-                qint64 _oldlength;
-                qint64 _newlength;
 
             protected:
                 QHexEditData::ModifyList _oldml;
                 QHexEditData::ModifyList _newml;
+                qint64 _oldlength;
+                qint64 _newlength;
         };
 
         class InsertCommand: public ModifyRangeCommand
@@ -163,6 +163,7 @@ class QHexEditData : public QObject
                             oldmi = this->_newml[1];
 
                         ModifiedItem* newmi = ic->_newml.last();
+                        this->_newlength += ic->_newlength;
 
                         oldmi->updateLen(newmi->length());
                         this->notifyDataChanged(ic->pos(), ic->newLength(), QHexEditData::Insert);
