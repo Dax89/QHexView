@@ -150,6 +150,9 @@ QString QHexEditData::readString(qint64 pos, qint64 maxlen)
 
     for(qint64 i = 0; i < maxlen; i++)
     {
+        if((pos + i) >= this->length())
+            break;
+
         QChar ch(this->at(pos + i));
 
         if(!ch.isPrint())
