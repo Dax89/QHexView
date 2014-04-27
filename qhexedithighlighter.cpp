@@ -34,7 +34,7 @@ QColor QHexEditHighlighter::foreColor(qint64 pos) const
     if(!this->_foregroundmap.contains(pos))
         return this->_foredefault;
 
-    return this->_foregroundmap.contains(pos);
+    return this->_foregroundmap[pos];
 }
 
 void QHexEditHighlighter::highlightForeground(qint64 start, qint64 end, const QColor& color)
