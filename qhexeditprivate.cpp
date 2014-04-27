@@ -958,7 +958,11 @@ void QHexEditPrivate::colorize(uchar b, qint64 pos, QColor &bchex, QColor &fchex
         else
             bchex = bcascii = bc;
 
-        fchex = (b ? fc : QColor(Qt::darkGray));
+        if(b == 0x00 || b == 0xFF)
+            fchex = QColor(Qt::darkGray);
+        else
+            fchex = fc;
+
         fcascii = (QChar(b).isPrint() ? fc : QColor(Qt::darkGray));
     }
 }
