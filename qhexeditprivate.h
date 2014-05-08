@@ -5,6 +5,8 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "qhexeditdata.h"
+#include "qhexeditdatareader.h"
+#include "qhexeditdatawriter.h"
 #include "qhexedithighlighter.h"
 #include "qhexeditcomments.h"
 
@@ -117,6 +119,8 @@ class QHexEditPrivate : public QWidget
         QHexEditComments* _comments;
         QKeyEvent* _lastkeyevent;
         QHexEditData* _hexeditdata;
+        QHexEditDataReader* _reader;
+        QHexEditDataWriter* _writer;
         QScrollArea* _scrollarea;
         QScrollBar* _vscrollbar;
         QTimer* _timBlink;

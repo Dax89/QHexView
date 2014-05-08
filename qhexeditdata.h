@@ -20,44 +20,6 @@ class QHexEditData : public QObject
         enum ActionType { None = 0, Insert = 1, Remove = 2, Replace = 3 };
 
     private:
-        class QHexEditDataDevice: public QIODevice
-        {
-            public:
-                QHexEditDataDevice(QObject* parent = 0): QIODevice(parent), _hexeditdata(nullptr) { }
-                void setData(QHexEditData* hexeditdata) { this->_hexeditdata = hexeditdata; }
-                virtual qint64 size() { return this->_hexeditdata->length(); }
-
-            protected:
-                qint64 readData(char *data, qint64 maxlen)
-                {
-                    if(!this->_hexeditdata)
-                        return 0;
-
-                    QByteArray ba = this->_hexeditdata->read(this->pos(), maxlen);
-
-                    if(!ba.isEmpty())
-                    {
-                        memcpy(data, ba.data(), ba.length());
-                        return ba.length();
-                    }
-
-                    return -1;
-                }
-
-                qint64 writeData(const char *data, qint64 len)
-                {
-                    if(!this->_hexeditdata)
-                        return 0;
-
-                    this->_hexeditdata->replace(this->pos(), QByteArray::fromRawData(data, len));
-                    return len; /* Append if needed */
-                }
-
-            private:
-                QHexEditData* _hexeditdata;
-        };
-
-    private:
         class ModifiedItem
         {
             public:
@@ -72,19 +34,6 @@ class QHexEditData : public QObject
                 qint64 _pos;
                 qint64 _len;
                 bool _mod;
-        };
-
-        class ByteRef
-        {
-            public:
-                ByteRef(qint64 pos, QHexEditData* o): _owner(o), _pos(pos) { }
-                ByteRef(const ByteRef& br): _owner(br._owner), _pos(br._pos) { }
-                ByteRef& operator =(uchar b) { this->_owner->replace(this->_pos, b); return *this; }
-                operator uchar() { return this->_owner->at(this->_pos); }
-
-            private:
-                QHexEditData* _owner;
-                qint64 _pos;
         };
 
         typedef QList<ModifiedItem*> ModifyList;
@@ -104,7 +53,6 @@ class QHexEditData : public QObject
             protected:
                 void notifyDataChanged(qint64 offset, qint64 size, QHexEditData::ActionType reason)
                 {
-                    this->owner()->_dirtybuffer = true;
                     emit this->owner()->dataChanged(offset, size, reason);
                 }
 
@@ -305,25 +253,6 @@ class QHexEditData : public QObject
 
     public:
         QUndoStack* undoStack();
-        QIODevice* device();
-        uchar at(qint64 pos);
-        qint64 indexOf(const QByteArray& ba, qint64 start);
-        void append(const QByteArray& ba);
-        void insert(qint64 pos, uchar ch);
-        void insert(qint64 pos, const QByteArray& ba);
-        void remove(qint64 pos, qint64 len);
-        void replace(qint64 pos, uchar b);
-        void replace(qint64 pos, qint64 len, uchar b);
-        void replace(qint64 pos, const QByteArray& ba);
-        void replace(qint64 pos, qint64 len, const QByteArray& ba);
-        QByteArray read(qint64 pos, qint64 len);
-        QString readString(qint64 pos, qint64 maxlen = -1);
-        quint16 readUInt16(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
-        quint32 readUInt32(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
-        quint64 readUInt64(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
-        qint16 readInt16(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
-        qint32 readInt32(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
-        qint64 readInt64(qint64 pos, QSysInfo::Endian endian = QSysInfo::ByteOrder);
         qint64 length() const;
 
     public slots:
@@ -337,12 +266,9 @@ class QHexEditData : public QObject
 
     private:
         InsertCommand* internalInsert(qint64 pos, const QByteArray& ba, QHexEditData::ActionType act);
-        RemoveCommand* internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType); /* TODO: QHexEditData::internalRemove(): Optimization Needed */
+        RemoveCommand* internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType act); /* TODO: QHexEditData::internalRemove(): Optimization Needed */
         QHexEditData::ModifiedItem *modifiedItem(qint64 pos, qint64 *datapos = nullptr, int* index = nullptr);
         qint64 updateBuffer(const QByteArray& ba);
-        void bufferizeData(qint64 pos);
-        bool inBuffer(qint64 pos);
-        bool needsBuffering(qint64 pos);
         bool canOptimize(QHexEditData::ActionType at, qint64 pos);
         void recordAction(QHexEditData::ActionType at, qint64 pos);
 
@@ -351,21 +277,19 @@ class QHexEditData : public QObject
 
     private:        
         static const qint64 BUFFER_SIZE;
-        bool _dirtybuffer;
         ModifyList _modlist;
         QIODevice* _iodevice;
         QByteArray _modbuffer;
-        QByteArray _buffereddata;
-        qint64 _buffereddatapos;
         qint64 _length;
         qint64 _devicelength;
         qint64 _lastpos;
         QHexEditData::ActionType _lastaction;
-        QHexEditData::QHexEditDataDevice _hexeditdatadevice;
         QUndoStack _undostack;
-        QReadWriteLock _rwlock;
+        QMutex _mutex;
 
     friend class QHexEditData::AbstractCommand;
+    friend class QHexEditDataReader;
+    friend class QHexEditDataWriter;
 };
 
 #endif // QHEXEDITDATA_H

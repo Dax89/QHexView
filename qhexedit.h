@@ -5,6 +5,9 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "qhexeditprivate.h"
+#include "qhexeditdatareader.h"
+#include "qhexeditdatawriter.h"
+#include "qhexeditdatadevice.h"
 
 class QHexEdit : public QFrame
 {
