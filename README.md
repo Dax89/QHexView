@@ -44,4 +44,17 @@ hexedit->uncommentRange(0, 5);
 
 /* Clear all comments */
 hexedit->clearComments();
+
+/* Getting data */
+QHexEditReader reader(hexeditdata);
+quint32 a = reader.readUInt32(23); /* Read a 32 bit unsigned int from offset 23 using platform's byte order */
+qint16 b = reader.readInt16(46, QSysInfo::BigEndian); /* Read a 16 bit unsigned short from offset 46 and convert it in Big Endian */
+QByteArray data = reader.read(24, 78); /* Read 78 bytes starting from offset 24 */
+
+/* Writing data */
+QHexEditWriter writer(hexeditdata);
+writer.insert(4, QString("Hello QHexEdit").toUTF8()); /* Insert an UTF-8 string from offset 4 */
+writer.remove(6, 10);/* Delete bytes from offset 6 to offset 10 */
+writer.replace(30, 12, QString("New Data").toUTF8()); /* Replace 12 bytes from offset 30 with the UTF-8 string "New Data" */
+
 ```
