@@ -145,6 +145,11 @@ qint64 QHexEdit::selectionEnd()
     return this->_hexedit_p->selectionEnd();
 }
 
+qint64 QHexEdit::selectionLength()
+{
+    return this->_hexedit_p->selectionEnd() - this->_hexedit_p->selectionStart();
+}
+
 void QHexEdit::setFont(const QFont &f)
 {
     this->_hexedit_p->setFont(f);
