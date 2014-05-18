@@ -40,9 +40,19 @@ void QHexEdit::setData(QHexEditData *hexeditdata)
     this->_hexedit_p->setData(hexeditdata);
 }
 
+void QHexEdit::selectPos(qint64 pos)
+{
+    this->setSelectionRange(pos, 1);
+}
+
 void QHexEdit::setSelection(qint64 start, qint64 end)
 {
     this->_hexedit_p->setSelection(start, end);
+}
+
+void QHexEdit::setSelectionRange(qint64 start, qint64 length)
+{
+    this->setSelection(start, start + length);
 }
 
 void QHexEdit::highlightBackground(qint64 start, qint64 end, const QColor &color)
