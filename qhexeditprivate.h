@@ -86,7 +86,7 @@ class QHexEditPrivate : public QWidget
         void drawParts(QPainter& painter);
         void drawLineBackground(QPainter& painter, qint64 line, qint64 linestart, int y);
         void drawLine(QPainter& painter, QFontMetrics& fm, qint64 line, int y);
-        void drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, int y);
+        void drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, qint64 linestart, int y);
         void drawHex(QPainter &painter, QFontMetrics &fm, const QColor& bc, const QColor& fc, uchar b, qint64 i, int& x, int y);
         void drawAscii(QPainter &painter, QFontMetrics &fm, const QColor& bc, const QColor& fc, uchar b, int& x, int y);
         void setSelectionEnd(qint64 pos, int charidx);

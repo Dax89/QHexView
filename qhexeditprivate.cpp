@@ -826,7 +826,7 @@ void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line,
 
     painter.setBackgroundMode(Qt::TransparentMode);
     this->drawLineBackground(painter, line, linestart, y);
-    this->drawAddress(painter, fm, line, y);
+    this->drawAddress(painter, fm, line, linestart, y);
 
     for(qint64 i = 0; i < QHexEditPrivate::BYTES_PER_LINE; i++)
     {
@@ -854,7 +854,7 @@ void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line,
     }
 }
 
-void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, int y)
+void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, qint64 linestart, int y)
 {
     qint64 linemax = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
     painter.fillRect(0, y, this->_xposhex - (this->_charwidth / 2), this->_charheight, this->_addressbackcolor);
@@ -862,7 +862,12 @@ void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 li
     if((this->_hexeditdata && line == 0) || (line < linemax))
     {
         QString addr = QString("%1").arg(this->_baseaddress + (line * QHexEditPrivate::BYTES_PER_LINE), this->_addressWidth, 16, QLatin1Char('0')).toUpper();
-        painter.setPen(this->_addressforecolor);
+
+        if((this->_cursorpos >= linestart) && (this->_cursorpos < (linestart + QHexEditPrivate::BYTES_PER_LINE))) /* This is the Selected Line */
+            painter.setPen(Qt::red);
+        else
+            painter.setPen(this->_addressforecolor);
+
         painter.drawText(0, y, fm.width(addr), this->_charheight, Qt::AlignLeft | Qt::AlignTop, addr);
     }
 }
