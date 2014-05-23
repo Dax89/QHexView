@@ -65,3 +65,43 @@ void QHexEditDataWriter::replace(qint64 pos, qint64 len, const QByteArray &ba)
     this->_hexeditdata->_undostack.push(new QHexEditData::ReplaceCommand(pos, len, ba, this->_hexeditdata));
     this->_hexeditdata->recordAction(QHexEditData::Replace, pos + ba.length());
 }
+
+void QHexEditDataWriter::writeUInt8(qint64 pos, char d)
+{
+   this->replace(pos, QByteArray().append(d));
+}
+
+void QHexEditDataWriter::writeUInt16(qint64 pos, quint16 d, QSysInfo::Endian endian)
+{
+    this->writeType(pos, d, endian);
+}
+
+void QHexEditDataWriter::writeUInt32(qint64 pos, quint32 d, QSysInfo::Endian endian)
+{
+    this->writeType(pos, d, endian);
+}
+
+void QHexEditDataWriter::writeUInt64(qint64 pos, quint64 d, QSysInfo::Endian endian)
+{
+    this->writeType(pos, d, endian);
+}
+
+void QHexEditDataWriter::writeInt8(qint64 pos, uchar d)
+{
+    this->replace(pos, QByteArray().append(d));
+}
+
+void QHexEditDataWriter::writeInt16(qint64 pos, qint16 d, QSysInfo::Endian endian)
+{
+    this->writeType(pos, d, endian);
+}
+
+void QHexEditDataWriter::writeInt32(qint64 pos, qint32 d, QSysInfo::Endian endian)
+{
+    this->writeType(pos, d, endian);
+}
+
+void QHexEditDataWriter::writeInt64(qint64 pos, qint64 d, QSysInfo::Endian endian)
+{
+    this->writeType(pos, d, endian);
+}
