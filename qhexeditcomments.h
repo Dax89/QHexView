@@ -4,6 +4,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+#include "sparserangemap.h"
 
 class QHexEditComments : public QObject
 {
@@ -19,7 +20,7 @@ class QHexEditComments : public QObject
         void hideNote();
 
     private:
-        QHash<qint64, QString> _notes;
+        SparseRangeMap<QString> _notes;
 };
 
 #endif // QHEXEDITCOMMENTS_H
