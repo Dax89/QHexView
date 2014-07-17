@@ -99,47 +99,46 @@ int SparseRangeMap<T>::internalClearRange(qint64 start, qint64 end)
     int insertAt = 0;
     bool findEnd = false;
 
-    for(int i=0; i<_sortedRanges.size(); i++)
+    for(insertAt=0; insertAt<_sortedRanges.size(); insertAt++)
     {
-        if(end < _sortedRanges[i]._start)
+        Range& r = _sortedRanges[insertAt];
+        if(end < r._start)
         {
-            insertAt = i;
             break;
         }
-        else if(start <= _sortedRanges[i]._start)
+        else if(start <= r._start)
         {
-            if(end < _sortedRanges[i]._end)
+            if(end < r._end)
             {
                 // Shrink start of existing and add new
-                _sortedRanges[i]._start = end+1;
+                r._start = end+1;
             }
             else // end >= _sortedRanges[i]._end
             {
                 // We will replace existing and possibly others
                 findEnd = true;
             }
-            insertAt = i;
             break;
         }
-        else if(start <= _sortedRanges[i]._end)
+        else if(start <= r._end)
         {
-            if(end < _sortedRanges[i]._end)
+            if(end < r._end)
             {
                 // Split existing and insert new in between
-                Range endPart(_sortedRanges[i]);
+                Range endPart(r);
                 endPart._start = end+1;
 
-                _sortedRanges[i]._end = start-1;
-                _sortedRanges.insert(i+1, endPart);
+                r._end = start-1;
+                _sortedRanges.insert(insertAt+1, endPart);
             }
             else
             {
                 // Shrink end of existing and search for end
-                _sortedRanges[i]._end = start-1;
+                r._end = start-1;
 
                 findEnd = true;
             }
-            insertAt = i+1;
+            insertAt++;
             break;
         }
     }
