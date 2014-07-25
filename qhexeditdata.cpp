@@ -4,6 +4,7 @@ const qint64 QHexEditData::BUFFER_SIZE = 8192;
 
 QHexEditData::QHexEditData(QIODevice *iodevice, QObject *parent): QObject(parent), _iodevice(iodevice), _length(iodevice->size()), _devicelength(iodevice->size()), _lastpos(-1), _lastaction(QHexEditData::None)
 {
+    qRegisterMetaType<QHexEditData::ActionType>("QHexEditData::ActionType");
     this->_modlist.append(new ModifiedItem(0, iodevice->size(), false));
 }
 

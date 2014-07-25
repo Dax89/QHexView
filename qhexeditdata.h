@@ -292,4 +292,6 @@ class QHexEditData : public QObject
     friend class QHexEditDataWriter;
 };
 
+Q_DECLARE_METATYPE(QHexEditData::ActionType)
+
 #endif // QHEXEDITDATA_H
