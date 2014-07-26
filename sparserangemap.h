@@ -155,6 +155,10 @@ int SparseRangeMap<T>::internalClearRange(qint64 start, qint64 end)
             {
                 // Shrink start of existing
                 _sortedRanges[i]._start = end+1;
+
+                if(_sortedRanges[i]._start > _sortedRanges[i]._end) // This is an invalid Range
+                    _sortedRanges.remove(i);
+
                 break;
             }
             else
