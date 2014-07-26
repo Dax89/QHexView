@@ -186,8 +186,8 @@ void QHexEditPrivate::ensureVisible()
     qint64 vislines = this->height() / this->_charheight;
     qint64 currline = this->verticalSliderPosition64() + (this->_cursorY / this->_charheight);
 
-    if((currline + 1) < this->verticalSliderPosition64() || (currline + 1) > (this->verticalSliderPosition64() + vislines))
-        this->_vscrollbar->setValue((currline + 1) - vislines);
+    if(currline <= this->verticalSliderPosition64() || currline >= (this->verticalSliderPosition64() + vislines))
+        this->_vscrollbar->setValue(qMax(currline - (vislines / 2), qint64(0)));
 }
 
 void QHexEditPrivate::adjust()
