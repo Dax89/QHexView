@@ -82,7 +82,7 @@ QString QHexEditDataReader::readString(qint64 pos, qint64 maxlen)
 
         QChar ch(this->at(pos + i));
 
-        if(!ch.isPrint())
+        if(!ch.unicode() || ch.unicode() >= 128)
             break;
 
         s.append(ch);
