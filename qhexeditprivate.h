@@ -139,7 +139,7 @@ class QHexEditPrivate : public QWidget
         qint64 _lastvscrollpos;
         int _whellscrolllines;
         int _cursorX;
-        int _cursorY;
+        qint64 _cursorY;
         int _addressWidth;
         int _xposascii;
         int _xposhex;
