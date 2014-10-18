@@ -45,7 +45,7 @@ void QHexEditHighlighter::highlightForeground(qint64 start, qint64 end, const QC
     if(end > this->_hexeditdata->length())
         end = this->_hexeditdata->length() - 1;
 
-    _foregroundmap.addRange(start, end, color);
+    this->_foregroundmap.addRange(start, end, color);
 }
 
 void QHexEditHighlighter::highlightBackground(qint64 start, qint64 end, const QColor& color)
@@ -56,7 +56,7 @@ void QHexEditHighlighter::highlightBackground(qint64 start, qint64 end, const QC
     if(end > this->_hexeditdata->length())
         end = this->_hexeditdata->length() - 1;
 
-    _backgroundmap.addRange(start, end, color);
+    this->_backgroundmap.addRange(start, end, color);
 }
 
 void QHexEditHighlighter::clearHighlight(qint64 start, qint64 end)
@@ -67,6 +67,6 @@ void QHexEditHighlighter::clearHighlight(qint64 start, qint64 end)
     if(end > this->_hexeditdata->length())
         end = this->_hexeditdata->length() - 1;
 
-    _foregroundmap.clearRange(start, end);
-    _backgroundmap.clearRange(start, end);
+    this->_foregroundmap.clearRange(start, end);
+    this->_backgroundmap.clearRange(start, end);
 }

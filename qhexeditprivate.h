@@ -131,8 +131,8 @@ class QHexEditPrivate : public QWidget
         QBrush _selcursorbrush;
         SelectedPart _selpart;
         InsertMode _insmode;
-        qint64 _selectionstart;
-        qint64 _selectionend;
+        qint64 _selectionstart; /* Start of Selection (Inclusive)   */
+        qint64 _selectionend;   /* End of Selection (NOT Inclusive) */
         qint64 _cursorpos;
         qint64 _baseaddress;
         qint64 _lastvisiblelines;
