@@ -125,16 +125,11 @@ void QHexEditPrivate::setBaseAddress(qint64 ba)
 void QHexEditPrivate::setData(QHexEditData *hexeditdata)
 {
     if(this->_hexeditdata) /* Disconnect previous HexEditData Signals, if any */
-    {
-        this->_hexeditdata->setParent(nullptr);
         disconnect(this->_hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), this, SLOT(hexEditDataChanged(qint64,qint64,QHexEditData::ActionType)));
-    }
 
     if(hexeditdata)
     {
         this->_hexeditdata = hexeditdata;
-        this->_hexeditdata->setParent(this);
-
         this->_reader = new QHexEditDataReader(hexeditdata, hexeditdata);
         this->_writer = new QHexEditDataWriter(hexeditdata, hexeditdata);
         this->_highlighter = new QHexEditHighlighter(hexeditdata, QColor(Qt::transparent), this->palette().color(QPalette::WindowText), this);
