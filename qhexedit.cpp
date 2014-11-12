@@ -52,7 +52,7 @@ void QHexEdit::setSelection(qint64 start, qint64 end)
 
 void QHexEdit::setSelectionRange(qint64 start, qint64 length)
 {
-    this->setSelection(start, start + length);
+    this->setSelection(start, (start + length) - 1);
 }
 
 void QHexEdit::highlightBackground(qint64 start, qint64 end, const QColor &color)
