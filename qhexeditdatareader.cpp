@@ -1,6 +1,6 @@
 #include "qhexeditdatareader.h"
 
-QHexEditDataReader::QHexEditDataReader(QHexEditData *hexeditdata, QObject *parent): QObject(parent), _bufferpos(-1), _hexeditdata(hexeditdata)
+QHexEditDataReader::QHexEditDataReader(QHexEditData *hexeditdata, QObject *parent): QObject(parent), _dirtybuffer(false), _bufferpos(-1), _hexeditdata(hexeditdata)
 {
     connect(hexeditdata, SIGNAL(dataChanged(qint64,qint64,QHexEditData::ActionType)), this, SLOT(onDataChanged(qint64,qint64,QHexEditData::ActionType)));
     this->_buffereddata.resize(QHexEditData::BUFFER_SIZE);
