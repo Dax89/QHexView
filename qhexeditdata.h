@@ -201,7 +201,9 @@ class QHexEditData : public QObject
                 virtual void undo()
                 {
                     this->_inscmd->undo();
-                    this->_remcmd->undo();
+
+                    if(this->_remcmd) /* 'remcmd' is NULL if the replace command is done at EOF */
+                        this->_remcmd->undo();
 
                     if(this->canNotify())
                         emit this->notifyDataChanged(this->pos(), this->_data.length(), QHexEditData::Replace);
