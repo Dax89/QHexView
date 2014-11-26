@@ -91,7 +91,7 @@ void QHexEditPrivate::copy()
     {
         QClipboard* cpbd = qApp->clipboard();
         QByteArray ba = this->_reader->read(start, end - start);
-        cpbd->setText(QString(ba));
+        cpbd->setText(QString::fromLatin1(ba.constData(), ba.length()));
     }
 }
 
@@ -105,9 +105,12 @@ void QHexEditPrivate::paste()
         QByteArray ba = s.toLatin1();
         qint64 start = qMin(this->_selectionstart, this->_selectionend);
         qint64 end = qMax(this->_selectionstart, this->_selectionend);
+        qint64 len = end - start;
 
-        if(end - start)
-            this->_writer->replace(start, end - start, ba);
+        if(len)
+            this->_writer->replace(start, len, ba);
+        else if(this->_insmode == QHexEditPrivate::Overwrite)
+            this->_writer->replace(start, ba.length(), ba);
         else
             this->_writer->insert(start, ba);
 
