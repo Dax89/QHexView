@@ -20,7 +20,9 @@ class QHexEditPrivate : public QWidget
         void redo();
         void cut();
         void copy();
+        void copyHex();
         void paste();
+        void pasteHex();
         void setBaseAddress(qint64 ba);
         void setCursorPos(qint64 pos);
         void setData(QHexEditData *hexeditdata);
