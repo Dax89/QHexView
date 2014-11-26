@@ -29,6 +29,11 @@ qint64 QHexEditData::length() const
     return this->_length;
 }
 
+bool QHexEditData::isReadOnly() const
+{
+    return !this->_iodevice->isWritable();
+}
+
 bool QHexEditData::save()
 {
     return this->saveTo(this->_iodevice);
@@ -75,8 +80,13 @@ QHexEditData *QHexEditData::fromDevice(QIODevice *iodevice)
 
 QHexEditData *QHexEditData::fromFile(QString filename)
 {
+    QFileInfo fi(filename);
     QFile* f = new QFile(filename);
-    f->open(QFile::ReadWrite);
+
+    if(fi.isWritable())
+        f->open(QFile::ReadWrite);
+    else
+        f->open(QFile::ReadOnly);
 
     return QHexEditData::fromDevice(f);
 }
