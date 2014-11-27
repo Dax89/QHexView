@@ -49,7 +49,7 @@ class QHexEdit : public QFrame
         void setData(QHexEditData *hexeditdata);
         void selectPos(qint64 pos);
         void setSelection(qint64 start, qint64 end);
-        void setSelectionRange(qint64 start, qint64 length);
+        void setSelectionLength(qint64 start, qint64 length);
         void highlightBackground(qint64 start, qint64 end, const QColor& color);
         void highlightForeground(qint64 start, qint64 end, const QColor& color);
         void clearHighlight(qint64 start, qint64 end);
