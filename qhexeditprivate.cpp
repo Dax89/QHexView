@@ -104,7 +104,7 @@ void QHexEditPrivate::copyHex()
     {
         QClipboard* cpbd = qApp->clipboard();
         QByteArray ba = this->_reader->read(start, end - start);
-        cpbd->setText(QString(ba.toHex()));
+        cpbd->setText(QString(ba.toHex()).toUpper());
     }
 }
 
