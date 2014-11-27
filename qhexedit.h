@@ -42,7 +42,9 @@ class QHexEdit : public QFrame
         void redo();
         void cut();
         void copy();
+        void copyHex();
         void paste();
+        void pasteHex();
         void selectAll();
         void setReadOnly(bool b);
         void setCursorPos(qint64 pos);
