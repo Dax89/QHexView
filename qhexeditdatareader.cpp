@@ -202,7 +202,9 @@ void QHexEditDataReader::bufferizeData(qint64 pos)
 
     int i = -1;
     qint64 currpos = pos, mipos = 0, copied = 0;
-    this->_hexeditdata->modifiedItem(pos, &mipos, &i);
+
+    if(!this->_hexeditdata->modifiedItem(pos, &mipos, &i))
+        return;
 
     while((copied < QHexEditData::BUFFER_SIZE) && (i < this->_hexeditdata->_modlist.length()))
     {
