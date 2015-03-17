@@ -37,8 +37,12 @@ class QHexEditPrivate : public QWidget
         void commentRange(qint64 start, qint64 end, const QString& comment);
         void uncommentRange(qint64 start, qint64 end);
         void clearComments();
+
         void setFont(const QFont& font);
         void setLineColor(const QColor& c);
+        void setHexColor(const QColor &c);
+        void setAlternateHexColor(const QColor &c);
+        void setHighlightColor(const QColor &c);
         void setAddressForeColor(const QColor& c);
         void setAddressBackColor(const QColor& c);
         void setAlternateLineColor(const QColor& c);
@@ -129,6 +133,9 @@ class QHexEditPrivate : public QWidget
         QColor _sellinecolor;
         QColor _addressforecolor;
         QColor _alternatelinecolor;
+        QColor _alternatehexcolor;
+        QColor _hexcolor;
+        QColor _selhighlightcolor;
         QColor _addressbackcolor;
         QBrush _selcursorbrush;
         SelectedPart _selpart;

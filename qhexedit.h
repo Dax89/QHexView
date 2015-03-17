@@ -27,7 +27,16 @@ class QHexEdit : public QFrame
         qint64 selectionLength();
         qint64 visibleStartOffset();
         qint64 visibleEndOffset();
+
         void setFont(const QFont &f);
+        void setLineColor(const QColor& c);
+        void setHexColor(const QColor &c);
+        void setAlternateHexColor(const QColor &c);
+        void setHighlightColor(const QColor &c);
+        void setAddressForeColor(const QColor& c);
+        void setAddressBackColor(const QColor& c);
+        void setAlternateLineColor(const QColor& c);
+
         void setBaseAddress(qint64 ba);
 
     signals:

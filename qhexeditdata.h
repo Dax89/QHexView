@@ -103,7 +103,7 @@ class QHexEditData : public QObject
 
                     if(ic->optimized())
                     {
-                        ModifiedItem* oldmi = nullptr;
+                        ModifiedItem* oldmi = NULL;
 
                         if(this->_newml.length() == 1) /* Single Item */
                             oldmi = this->_newml[0];
@@ -195,7 +195,7 @@ class QHexEditData : public QObject
         class ReplaceCommand: public AbstractCommand
         {
             public:
-                ReplaceCommand(qint64 pos, qint64 len, const QByteArray& ba, QHexEditData* owner, QUndoCommand* parent = 0): AbstractCommand(pos, owner, parent), _len(len), _data(ba), _remcmd(nullptr), _inscmd(nullptr) { }
+                ReplaceCommand(qint64 pos, qint64 len, const QByteArray& ba, QHexEditData* owner, QUndoCommand* parent = 0): AbstractCommand(pos, owner, parent), _len(len), _data(ba), _remcmd(NULL), _inscmd(NULL) { }
                 virtual int id() const { return QHexEditData::Replace; }
 
                 virtual void undo()
@@ -270,7 +270,7 @@ class QHexEditData : public QObject
     private:
         InsertCommand* internalInsert(qint64 pos, const QByteArray& ba, QHexEditData::ActionType act);
         RemoveCommand* internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType act); /* TODO: QHexEditData::internalRemove(): Optimization Needed */
-        QHexEditData::ModifiedItem *modifiedItem(qint64 pos, qint64 *datapos = nullptr, int* index = nullptr);
+        QHexEditData::ModifiedItem *modifiedItem(qint64 pos, qint64 *datapos = NULL, int* index = NULL);
         qint64 updateBuffer(const QByteArray& ba);
         bool canOptimize(QHexEditData::ActionType at, qint64 pos);
         void recordAction(QHexEditData::ActionType at, qint64 pos);

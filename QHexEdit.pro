@@ -5,12 +5,10 @@
 TEMPLATE = lib
 TARGET = QHexEdit
 INCLUDEPATH += .
+CONFIG += staticlib
 
 QT += gui widgets
 
-QMAKE_CXXFLAGS += -std=c++11
-
-# Input
 HEADERS += qhexedit.h \
            qhexeditcomments.h \
            qhexeditdata.h \
