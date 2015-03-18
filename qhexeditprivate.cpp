@@ -240,6 +240,9 @@ void QHexEditPrivate::adjust()
     this->_xposascii = this->_xposhex + (this->_charwidth * ((QHexEditPrivate::BYTES_PER_LINE * 3) + 2) + 3);
     this->_xPosend = this->_xposascii + (this->_charwidth * QHexEditPrivate::BYTES_PER_LINE);
 
+    int width = this->_xPosend + this->_charwidth + this->_vscrollbar->sizeHint().width();
+    emit widthChanged(width); /* Notify that the minimum width is changed */
+
     if(this->_hexeditdata)
     {
         /* Setup ScrollBars */
@@ -267,6 +270,11 @@ void QHexEditPrivate::adjust()
         this->_vscrollbar->hide();
         this->setMinimumWidth(0);
     }
+}
+
+QSize QHexEditPrivate::sizeHint() const
+{
+    return size();
 }
 
 void QHexEditPrivate::setSelectionEnd(qint64 pos, int charidx)

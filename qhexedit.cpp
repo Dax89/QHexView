@@ -11,6 +11,7 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
     connect(this->_hexedit_p, SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(selectionChanged(qint64)), this, SIGNAL(selectionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(verticalScrollBarValueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
+    connect(this->_hexedit_p, SIGNAL(widthChanged(int)), this, SIGNAL(widthChanged(int)));
 
     this->_scrollarea->setFocusPolicy(Qt::NoFocus);
     this->_scrollarea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff); /* Do not show vertical QScrollBar!!! */
@@ -29,8 +30,7 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
     this->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     this->setLayout(this->_hlayout);
 
-    qDebug() << this->size();
-    qDebug() << this->_scrollarea->size();
+//    this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
 }
 
 void QHexEdit::undo()

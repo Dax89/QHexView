@@ -45,6 +45,7 @@ class QHexEdit : public QFrame
         void selectionChanged(qint64 length);
         void bytesChanged(qint64 pos);
         void verticalScrollBarValueChanged(int value);
+        void widthChanged(int width);
 
     public slots:
         void undo();

@@ -37,6 +37,7 @@ class QHexEditPrivate : public QWidget
         void commentRange(qint64 start, qint64 end, const QString& comment);
         void uncommentRange(qint64 start, qint64 end);
         void clearComments();
+        QSize sizeHint() const;
 
         void setFont(const QFont& font);
         void setLineColor(const QColor& c);
@@ -117,6 +118,7 @@ class QHexEditPrivate : public QWidget
         void positionChanged(qint64 offset);
         void selectionChanged(qint64 length);
         void verticalScrollBarValueChanged(int value);
+        void widthChanged(int width);
 
     private:
         enum SelectedPart { AddressPart = 0, HexPart = 1, AsciiPart = 2 };
