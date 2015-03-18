@@ -237,7 +237,7 @@ void QHexEditPrivate::adjust()
     this->_charheight = fm.height();
 
     this->_xposhex =  this->_charwidth * (this->_addressWidth + 1) + 3;
-    this->_xposascii = this->_xposhex + (this->_charwidth * ((QHexEditPrivate::BYTES_PER_LINE * 3) + 2) + 3);
+    this->_xposascii = this->_xposhex + (this->_charwidth * ((QHexEditPrivate::BYTES_PER_LINE * 3) + 1) + 3);
     this->_xPosend = this->_xposascii + (this->_charwidth * QHexEditPrivate::BYTES_PER_LINE);
 
     int width = this->_xPosend + this->_charwidth + this->_vscrollbar->sizeHint().width();
@@ -1020,16 +1020,8 @@ void QHexEditPrivate::colorize(uchar b, qint64 pos, QColor &bchex, QColor &fchex
 
         if((this->_selpart == QHexEditPrivate::AsciiPart || this->_selpart == QHexEditPrivate::HexPart) && (this->_selectionstart == this->_selectionend) && (pos == this->_cursorpos))
         {
-            if(this->_selpart == QHexEditPrivate::AsciiPart)
-            {
-                bchex = _hexcolor;
-                bcascii = bc;
-            }
-            else /* if(this->_selpart == QHexEditPrivate::HexPart) */
-            {
-                bchex = bc;
-                bcascii = _hexcolor;
-            }
+            bchex   = _addressforecolor;
+            bcascii = _addressforecolor;
         }
         else
             bchex = bcascii = bc;
