@@ -8,6 +8,7 @@ INCLUDEPATH += .
 CONFIG += staticlib
 
 QT += gui widgets
+CONFIG -= debug_and_release
 
 HEADERS += qhexedit.h \
            qhexeditcomments.h \
