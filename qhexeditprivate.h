@@ -37,8 +37,13 @@ class QHexEditPrivate : public QWidget
         void commentRange(qint64 start, qint64 end, const QString& comment);
         void uncommentRange(qint64 start, qint64 end);
         void clearComments();
+        QSize sizeHint() const;
+
         void setFont(const QFont& font);
         void setLineColor(const QColor& c);
+        void setHexColor(const QColor &c);
+        void setAlternateHexColor(const QColor &c);
+        void setHighlightColor(const QColor &c);
         void setAddressForeColor(const QColor& c);
         void setAddressBackColor(const QColor& c);
         void setAlternateLineColor(const QColor& c);
@@ -113,6 +118,7 @@ class QHexEditPrivate : public QWidget
         void positionChanged(qint64 offset);
         void selectionChanged(qint64 length);
         void verticalScrollBarValueChanged(int value);
+        void widthChanged(int width);
 
     private:
         enum SelectedPart { AddressPart = 0, HexPart = 1, AsciiPart = 2 };
@@ -129,6 +135,9 @@ class QHexEditPrivate : public QWidget
         QColor _sellinecolor;
         QColor _addressforecolor;
         QColor _alternatelinecolor;
+        QColor _alternatehexcolor;
+        QColor _hexcolor;
+        QColor _selhighlightcolor;
         QColor _addressbackcolor;
         QBrush _selcursorbrush;
         SelectedPart _selpart;
@@ -151,6 +160,10 @@ class QHexEditPrivate : public QWidget
         int _charheight;
         bool _readonly;
         bool _blink;
+		qint64 _vscrollvalue;
+        int _vscrollmultiplier;
+        qint64 _vscrollrange;
+        bool _vscrollupdating;
 
     private slots:
         void blinkCursor();

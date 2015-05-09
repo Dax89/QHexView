@@ -36,7 +36,7 @@ template<class T> class SparseRangeMap
             if(idx >= 0)
                 return &this->_sortedranges[idx]._item;
 
-            return nullptr;
+            return NULL;
         }
 
         void clear(){ _sortedranges.clear(); }
