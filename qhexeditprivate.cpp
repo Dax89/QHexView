@@ -1219,7 +1219,7 @@ void QHexEditPrivate::blinkCursor()
     this->update(this->_cursorX, this->_cursorY, this->_charwidth, this->_charheight);
 }
 
-void QHexEditPrivate::onVScrollBarValueChanged(int)
+void QHexEditPrivate::onVScrollBarValueChanged(int val)
 {
 	if(!this->_vscrollupdating)
         this->_vscrollvalue = static_cast<qint64>(val) * this->_vscrollmultiplier;
