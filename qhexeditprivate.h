@@ -160,6 +160,10 @@ class QHexEditPrivate : public QWidget
         int _charheight;
         bool _readonly;
         bool _blink;
+		qint64 _vscrollvalue;
+        int _vscrollmultiplier;
+        qint64 _vscrollrange;
+        bool _vscrollupdating;
 
     private slots:
         void blinkCursor();
