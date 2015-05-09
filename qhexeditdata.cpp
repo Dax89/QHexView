@@ -103,7 +103,7 @@ QHexEditData *QHexEditData::fromMemory(const QByteArray &ba)
 QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByteArray &ba, QHexEditData::ActionType act)
 {
     if(pos < 0 || pos > this->length() || !ba.length())
-        return nullptr;
+        return NULL;
 
     int i;
     qint64 datapos;
@@ -114,7 +114,7 @@ QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByt
         mi = this->modifiedItem(pos, &datapos, &i);
 
         if(!mi)
-            return nullptr;
+            return NULL;
     }
     else
     {
@@ -149,14 +149,14 @@ QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByt
 QHexEditData::RemoveCommand* QHexEditData::internalRemove(qint64 pos, qint64 len, QHexEditData::ActionType act)
 {
     if(pos < 0 || !len || pos >= this->length() || pos > (this->length() - len))
-        return nullptr;
+        return NULL;
 
     int i;
     qint64 datapos;
     ModifiedItem* mi = this->modifiedItem(pos, &datapos, &i);
 
     if(!mi)
-        return nullptr;
+        return NULL;
 
     QList<ModifiedItem*> olditems, newitems;
     qint64 remoffset = pos - datapos, remlength = len;
@@ -212,7 +212,7 @@ QHexEditData::ModifiedItem* QHexEditData::modifiedItem(qint64 pos, qint64* datap
 {
     int i = -1;
     qint64 currpos = 0;
-    ModifiedItem* mi = nullptr;
+    ModifiedItem* mi = NULL;
 
     for(i = 0; i < this->_modlist.length(); i++)
     {
@@ -243,5 +243,5 @@ QHexEditData::ModifiedItem* QHexEditData::modifiedItem(qint64 pos, qint64* datap
         return mi;
     }
 
-    return nullptr;
+    return NULL;
 }

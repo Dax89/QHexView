@@ -1,5 +1,7 @@
 #include "qhexeditprivate.h"
 
+#include <climits>
+
 QString QHexEditPrivate::UNPRINTABLE_CHAR;
 const int QHexEditPrivate::CURSOR_BLINK_INTERVAL = 500; /* 0.5 sec */
 const qint64 QHexEditPrivate::BYTES_PER_LINE = 0x10;
@@ -9,23 +11,28 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
     if(QHexEditPrivate::UNPRINTABLE_CHAR.isEmpty())
         QHexEditPrivate::UNPRINTABLE_CHAR = ".";
 
-    this->_lastkeyevent = nullptr;
-    this->_writer = nullptr;
-    this->_reader = nullptr;
-    this->_highlighter = nullptr;
-    this->_comments = nullptr;
-    this->_hexeditdata = nullptr;
+    this->_lastkeyevent = NULL;
+    this->_writer = NULL;
+    this->_reader = NULL;
+    this->_highlighter = NULL;
+    this->_comments = NULL;
+    this->_hexeditdata = NULL;
     this->_scrollarea = scrollarea;
     this->_vscrollbar = vscrollbar;
     this->_blink = this->_readonly = false;
     this->_lastvisiblelines = this->_lastvscrollpos = this->_baseaddress = this->_cursorX = this->_cursorY = this->_cursorpos = this->_selectionstart = this->_selectionend = this->_charidx = this->_charheight = this->_charwidth = 0;
     this->_selpart = QHexEditPrivate::HexPart;
     this->_insmode = QHexEditPrivate::Overwrite;
+	this->_vscrollvalue = 0;
+	this->_vscrollrange = 0;
+	this->_vscrollmultiplier = 1;
+	this->_vscrollupdating = false;
 
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SLOT(onVScrollBarValueChanged(int)));
     connect(this->_vscrollbar, SIGNAL(valueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
 
     QFont f("Monospace", qApp->font().pointSize());
+	f.setFamily("Courier");
     f.setStyleHint(QFont::TypeWriter); /* Use monospace fonts! */
 
     this->setMouseTracking(true);
@@ -35,11 +42,14 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
     this->setCursor(Qt::IBeamCursor);
     this->setFocusPolicy(Qt::StrongFocus);
     this->setBackgroundRole(QPalette::Base);
-    this->setSelectedCursorBrush(Qt::lightGray);
+    this->setSelectedCursorBrush(Qt::blue);
     this->setLineColor(QColor(0xFF, 0xFF, 0xA0));
     this->setAddressForeColor(Qt::darkBlue);
     this->setAddressBackColor(QColor(0xF0, 0xF0, 0xFE));
     this->setAlternateLineColor(QColor(0xF0, 0xF0, 0xFE));
+    this->setHexColor(QColor(Qt::lightGray));
+    this->setAlternateHexColor(QColor(Qt::darkGray));
+    this->setHighlightColor(QColor(Qt::red));
 
     this->_timBlink = new QTimer();
     this->_timBlink->setInterval(QHexEditPrivate::CURSOR_BLINK_INTERVAL);
@@ -187,7 +197,7 @@ void QHexEditPrivate::setData(QHexEditData *hexeditdata)
         this->setCursorPos(0); /* Make a Selection */
     }
     else
-        this->_hexeditdata = nullptr;
+        this->_hexeditdata = NULL;
 
     this->adjust();
     this->update();
@@ -223,7 +233,12 @@ void QHexEditPrivate::ensureVisible()
     qint64 currline = this->verticalSliderPosition64() + (this->_cursorY / this->_charheight);
 
     if(currline <= this->verticalSliderPosition64() || currline >= (this->verticalSliderPosition64() + vislines))
-        this->_vscrollbar->setValue(qMax(currline - (vislines / 2), qint64(0)));
+    {
+        this->_vscrollvalue = qMax(currline - (vislines / 2), qint64(0));
+        this->_vscrollupdating = true;
+        this->_vscrollbar->setSliderPosition(this->_vscrollvalue / this->_vscrollmultiplier);
+        this->_vscrollupdating = false;
+    }
 }
 
 void QHexEditPrivate::adjust()
@@ -233,9 +248,12 @@ void QHexEditPrivate::adjust()
     this->_charwidth = fm.width(" ");
     this->_charheight = fm.height();
 
-    this->_xposhex =  this->_charwidth * (this->_addressWidth + 1);
-    this->_xposascii = this->_xposhex + (this->_charwidth * (QHexEditPrivate::BYTES_PER_LINE * 3));
+    this->_xposhex =  this->_charwidth * (this->_addressWidth + 1) + 3;
+    this->_xposascii = this->_xposhex + (this->_charwidth * ((QHexEditPrivate::BYTES_PER_LINE * 3) + 1) + 3);
     this->_xPosend = this->_xposascii + (this->_charwidth * QHexEditPrivate::BYTES_PER_LINE);
+
+    int width = this->_xPosend + this->_charwidth + this->_vscrollbar->sizeHint().width();
+    emit widthChanged(width); /* Notify that the minimum width is changed */
 
     if(this->_hexeditdata)
     {
@@ -246,7 +264,17 @@ void QHexEditPrivate::adjust()
         /* Setup Vertical ScrollBar */
         if(totLines > visLines)
         {
-            this->_vscrollbar->setRange(0, (totLines - visLines) + 1);
+            this->_vscrollrange = (totLines - visLines) + 1;
+            if(_vscrollrange < INT_MAX)
+            {
+                this->_vscrollmultiplier = 1;
+                this->_vscrollbar->setRange(0, this->_vscrollrange);
+            }
+            else
+            {
+                this->_vscrollmultiplier = (this->_vscrollrange / INT_MAX) + 1;
+                this->_vscrollbar->setRange(0, this->_vscrollrange / this->_vscrollmultiplier);
+            }
             this->_vscrollbar->setSingleStep(1);
             this->_vscrollbar->setPageStep(visLines);
             this->_vscrollbar->show();
@@ -256,6 +284,7 @@ void QHexEditPrivate::adjust()
 
         /* Setup Horizontal ScrollBar */
         this->setMinimumWidth(this->_xPosend);
+        this->setMaximumWidth(this->_xPosend);
     }
     else
     {
@@ -263,6 +292,11 @@ void QHexEditPrivate::adjust()
         this->_vscrollbar->hide();
         this->setMinimumWidth(0);
     }
+}
+
+QSize QHexEditPrivate::sizeHint() const
+{
+    return size();
 }
 
 void QHexEditPrivate::setSelectionEnd(qint64 pos, int charidx)
@@ -374,6 +408,7 @@ void QHexEditPrivate::setSelectedCursorBrush(const QBrush &b)
 
 void QHexEditPrivate::setVerticalScrollBarValue(int value)
 {
+	//this->_vscrollvalue = value * this->_vscrolldivisor;
     this->_vscrollbar->setValue(value);
 }
 
@@ -444,6 +479,24 @@ qint64 QHexEditPrivate::visibleEndOffset()
 QHexEditData *QHexEditPrivate::data()
 {
     return this->_hexeditdata;
+}
+
+void QHexEditPrivate::setHexColor(const QColor &c)
+{
+    this->_hexcolor = c;
+    this->update();
+}
+
+void QHexEditPrivate::setAlternateHexColor(const QColor &c)
+{
+    this->_alternatehexcolor = c;
+    this->update();
+}
+
+void QHexEditPrivate::setHighlightColor(const QColor &c)
+{
+    this->_selhighlightcolor = c;
+    this->update();
 }
 
 void QHexEditPrivate::setAddressForeColor(const QColor &c)
@@ -812,10 +865,10 @@ void QHexEditPrivate::drawParts(QPainter &painter)
 {
     int span = this->_charwidth / 2;
     painter.setBackgroundMode(Qt::TransparentMode);
-    painter.setPen(this->palette().color(QPalette::WindowText));
-    painter.drawLine(this->_xposhex - span, 0, this->_xposhex - span, this->height());
-    painter.drawLine(this->_xposascii - span, 0, this->_xposascii - span, this->height());
-    painter.drawLine(this->_xPosend + span, 0, this->_xPosend + span, this->height());
+//    painter.setPen(this->palette().color(QPalette::WindowText));
+//    painter.drawLine(this->_xposhex - span, 0, this->_xposhex - span, this->height());
+//    painter.drawLine(this->_xposascii - span, 0, this->_xposascii - span, this->height());
+//    painter.drawLine(this->_xPosend + span, 0, this->_xPosend + span, this->height());
 }
 
 void QHexEditPrivate::drawLineBackground(QPainter &painter, qint64 line, qint64 linestart, int y)
@@ -900,7 +953,7 @@ void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 li
         QString addr = QString("%1").arg(this->_baseaddress + (line * QHexEditPrivate::BYTES_PER_LINE), this->_addressWidth, 16, QLatin1Char('0')).toUpper();
 
         if((this->_cursorpos >= linestart) && (this->_cursorpos < (linestart + QHexEditPrivate::BYTES_PER_LINE))) /* This is the Selected Line */
-            painter.setPen(Qt::red);
+            painter.setPen(_selhighlightcolor);
         else
             painter.setPen(this->_addressforecolor);
 
@@ -990,26 +1043,18 @@ void QHexEditPrivate::colorize(uchar b, qint64 pos, QColor &bchex, QColor &fchex
 
         if((this->_selpart == QHexEditPrivate::AsciiPart || this->_selpart == QHexEditPrivate::HexPart) && (this->_selectionstart == this->_selectionend) && (pos == this->_cursorpos))
         {
-            if(this->_selpart == QHexEditPrivate::AsciiPart)
-            {
-                bchex = QColor(Qt::lightGray);
-                bcascii = bc;
-            }
-            else /* if(this->_selpart == QHexEditPrivate::HexPart) */
-            {
-                bchex = bc;
-                bcascii = QColor(Qt::lightGray);
-            }
+            bchex   = _addressforecolor;
+            bcascii = _addressforecolor;
         }
         else
             bchex = bcascii = bc;
 
         if(b == 0x00 || b == 0xFF)
-            fchex = QColor(Qt::darkGray);
+            fchex = _alternatehexcolor;
         else
             fchex = fc;
 
-        fcascii = (QChar(b).isPrint() ? fc : QColor(Qt::darkGray));
+        fcascii = (QChar(b).isPrint() ? fc : _hexcolor);
     }
 }
 
@@ -1082,7 +1127,7 @@ void QHexEditPrivate::mouseMoveEvent(QMouseEvent* event)
     {
         if((event->buttons() == Qt::NoButton) && this->_comments)
         {
-            qint64 offset = this->cursorPosFromPoint(event->pos(), nullptr);
+            qint64 offset = this->cursorPosFromPoint(event->pos(), NULL);
 
             if(this->_comments->isCommented(offset))
                 this->_comments->displayNote(this->mapToGlobal(event->pos()), offset);
@@ -1115,8 +1160,8 @@ void QHexEditPrivate::wheelEvent(QWheelEvent *event)
 
         if(event->orientation() == Qt::Vertical)
         {
-            int pos = this->verticalSliderPosition64() - (numSteps * this->_whellscrolllines);
-            int maxlines = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
+            qint64 pos = this->verticalSliderPosition64() - (numSteps * this->_whellscrolllines);
+            qint64 maxlines = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
 
             /* Bounds Check */
             if(pos < 0)
@@ -1124,7 +1169,10 @@ void QHexEditPrivate::wheelEvent(QWheelEvent *event)
             else if(pos > maxlines)
                 pos = maxlines;
 
-            this->_vscrollbar->setSliderPosition(pos);
+            this->_vscrollvalue = pos;
+            this->_vscrollupdating = true;
+            this->_vscrollbar->setValue(pos / this->_vscrollmultiplier);
+            this->_vscrollupdating = false;
             this->updateCursorXY(this->cursorPos(), this->_charidx);
             this->update();
 
@@ -1171,8 +1219,11 @@ void QHexEditPrivate::blinkCursor()
     this->update(this->_cursorX, this->_cursorY, this->_charwidth, this->_charheight);
 }
 
-void QHexEditPrivate::onVScrollBarValueChanged(int)
+void QHexEditPrivate::onVScrollBarValueChanged(int val)
 {
+	if(!this->_vscrollupdating)
+        this->_vscrollvalue = static_cast<qint64>(val) * this->_vscrollmultiplier;
+	
     this->checkVisibleLines();
     this->update();
 }

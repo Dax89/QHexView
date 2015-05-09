@@ -11,6 +11,7 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
     connect(this->_hexedit_p, SIGNAL(positionChanged(qint64)), this, SIGNAL(positionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(selectionChanged(qint64)), this, SIGNAL(selectionChanged(qint64)));
     connect(this->_hexedit_p, SIGNAL(verticalScrollBarValueChanged(int)), this, SIGNAL(verticalScrollBarValueChanged(int)));
+    connect(this->_hexedit_p, SIGNAL(widthChanged(int)), this, SIGNAL(widthChanged(int)));
 
     this->_scrollarea->setFocusPolicy(Qt::NoFocus);
     this->_scrollarea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff); /* Do not show vertical QScrollBar!!! */
@@ -28,6 +29,8 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
 
     this->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     this->setLayout(this->_hlayout);
+
+//    this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
 }
 
 void QHexEdit::undo()
@@ -213,4 +216,43 @@ void QHexEdit::cut()
 void QHexEdit::redo()
 {
     this->_hexedit_p->redo();
+}
+
+void QHexEdit::setLineColor(const QColor& c)
+{
+    this->_hexedit_p->setLineColor(c);
+}
+
+void QHexEdit::setAddressForeColor(const QColor& c)
+{
+    this->_hexedit_p->setAddressForeColor(c);
+}
+
+void QHexEdit::setAddressBackColor(const QColor& c)
+{
+    this->_hexedit_p->setAddressBackColor(c);
+}
+
+void QHexEdit::setAlternateLineColor(const QColor& c)
+{
+    this->_hexedit_p->setAlternateLineColor(c);
+}
+
+void QHexEdit::setHexColor(const QColor &c)
+{
+    this->_hexedit_p->setHexColor(c);
+
+    QPalette p = this->_hexedit_p->palette();
+    p.setColor(QPalette::WindowText, c); // the lines on the side
+    this->_hexedit_p->setPalette(p);
+}
+
+void QHexEdit::setAlternateHexColor(const QColor &c)
+{
+    this->_hexedit_p->setAlternateHexColor(c);
+}
+
+void QHexEdit::setHighlightColor(const QColor &c)
+{
+    this->_hexedit_p->setHighlightColor(c);
 }
