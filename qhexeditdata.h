@@ -263,9 +263,9 @@ class QHexEditData : public QObject
         bool saveTo(QIODevice* iodevice);
 
     public:
-        static QHexEditData* fromDevice(QIODevice* iodevice);
-        static QHexEditData* fromFile(QString filename);
-        static QHexEditData* fromMemory(const QByteArray& ba);
+        static QHexEditData* fromDevice(QIODevice* iodevice, QObject *parent = 0);
+        static QHexEditData* fromFile(QString filename, QObject *parent = 0);
+        static QHexEditData* fromMemory(const QByteArray& ba, QObject *parent = 0);
 
     private:
         InsertCommand* internalInsert(qint64 pos, const QByteArray& ba, QHexEditData::ActionType act);
