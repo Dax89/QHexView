@@ -70,15 +70,15 @@ bool QHexEditData::saveTo(QIODevice *iodevice)
     return true;
 }
 
-QHexEditData *QHexEditData::fromDevice(QIODevice *iodevice)
+QHexEditData *QHexEditData::fromDevice(QIODevice *iodevice, QObject *parent)
 {
     if(!iodevice->isOpen())
         iodevice->open(QFile::ReadWrite);
 
-    return new QHexEditData(iodevice);
+    return new QHexEditData(iodevice, parent);
 }
 
-QHexEditData *QHexEditData::fromFile(QString filename)
+QHexEditData *QHexEditData::fromFile(QString filename, QObject *parent)
 {
     QFileInfo fi(filename);
     QFile* f = new QFile(filename);
@@ -88,16 +88,16 @@ QHexEditData *QHexEditData::fromFile(QString filename)
     else
         f->open(QFile::ReadOnly);
 
-    return QHexEditData::fromDevice(f);
+    return QHexEditData::fromDevice(f, parent);
 }
 
-QHexEditData *QHexEditData::fromMemory(const QByteArray &ba)
+QHexEditData *QHexEditData::fromMemory(const QByteArray &ba, QObject *parent)
 {
     QBuffer* b = new QBuffer();
     b->setData(ba);
     b->open(QFile::ReadOnly);
 
-    return QHexEditData::fromDevice(b);
+    return QHexEditData::fromDevice(b, parent);
 }
 
 QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByteArray &ba, QHexEditData::ActionType act)
