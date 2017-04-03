@@ -88,7 +88,9 @@ QHexEditData *QHexEditData::fromFile(QString filename, QObject *parent)
     else
         f->open(QFile::ReadOnly);
 
-    return QHexEditData::fromDevice(f, parent);
+    QHexEditData* data = QHexEditData::fromDevice(f, parent);
+    f->setParent(data);
+    return data;
 }
 
 QHexEditData *QHexEditData::fromMemory(const QByteArray &ba, QObject *parent)
@@ -97,7 +99,9 @@ QHexEditData *QHexEditData::fromMemory(const QByteArray &ba, QObject *parent)
     b->setData(ba);
     b->open(QFile::ReadOnly);
 
-    return QHexEditData::fromDevice(b, parent);
+    QHexEditData* data = QHexEditData::fromDevice(b, parent);
+    b->setParent(data);
+    return data;
 }
 
 QHexEditData::InsertCommand* QHexEditData::internalInsert(qint64 pos, const QByteArray &ba, QHexEditData::ActionType act)
