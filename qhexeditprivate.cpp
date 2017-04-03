@@ -892,7 +892,7 @@ void QHexEditPrivate::drawLine(QPainter &painter, QFontMetrics &fm, qint64 line,
 
 void QHexEditPrivate::drawAddress(QPainter &painter, QFontMetrics &fm, qint64 line, qint64 linestart, int y)
 {
-    qint64 linemax = this->_hexeditdata->length() / QHexEditPrivate::BYTES_PER_LINE;
+    qint64 linemax = (this->_hexeditdata->length() + BYTES_PER_LINE - 1) / BYTES_PER_LINE;
     painter.fillRect(0, y, this->_xposhex - (this->_charwidth / 2), this->_charheight, this->_addressbackcolor);
 
     if((this->_hexeditdata && line == 0) || (line < linemax))
