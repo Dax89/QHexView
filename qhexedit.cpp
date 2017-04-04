@@ -186,6 +186,11 @@ qint64 QHexEdit::visibleEndOffset()
     return this->_hexedit_p->visibleEndOffset();
 }
 
+QHexEdit::SelectedPart QHexEdit::selectedPart() const
+{
+    return this->_hexedit_p->selectedPart();
+}
+
 bool QHexEdit::readOnly()
 {
     return this->_hexedit_p->readOnly();
