@@ -4,6 +4,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+#include "qhexedit.h"
 #include "qhexeditdata.h"
 #include "qhexeditdatareader.h"
 #include "qhexeditdatawriter.h"
@@ -56,6 +57,7 @@ class QHexEditPrivate : public QWidget
         qint64 selectionEnd();
         qint64 visibleStartOffset();
         qint64 visibleEndOffset();
+        QHexEdit::SelectedPart selectedPart() const;
         QHexEditData *data();
         QColor& lineColor();
         QColor& addressForeColor();
@@ -115,7 +117,6 @@ class QHexEditPrivate : public QWidget
         void verticalScrollBarValueChanged(int value);
 
     private:
-        enum SelectedPart { AddressPart = 0, HexPart = 1, AsciiPart = 2 };
         enum InsertMode { Overwrite = 0, Insert = 1 };
         QHexEditHighlighter* _highlighter;
         QHexEditComments* _comments;
@@ -131,7 +132,7 @@ class QHexEditPrivate : public QWidget
         QColor _alternatelinecolor;
         QColor _addressbackcolor;
         QBrush _selcursorbrush;
-        SelectedPart _selpart;
+        QHexEdit::SelectedPart _selpart;
         InsertMode _insmode;
         qint64 _selectionstart; /* Start of Selection (Inclusive)   */
         qint64 _selectionend;   /* End of Selection (NOT Inclusive) */

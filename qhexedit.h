@@ -4,16 +4,19 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
-#include "qhexeditprivate.h"
 #include "qhexeditdatareader.h"
 #include "qhexeditdatawriter.h"
 #include "qhexeditdatadevice.h"
+
+class QHexEditPrivate;
 
 class QHexEdit : public QFrame
 {
     Q_OBJECT
 
     public:
+        enum SelectedPart { AddressPart = 0, HexPart = 1, AsciiPart = 2 };
+
         explicit QHexEdit(QWidget *parent = 0);
         bool readOnly();
         int addressWidth();
@@ -27,6 +30,7 @@ class QHexEdit : public QFrame
         qint64 selectionLength();
         qint64 visibleStartOffset();
         qint64 visibleEndOffset();
+        SelectedPart selectedPart() const;
         void setFont(const QFont &f);
         void setBaseAddress(qint64 ba);
 

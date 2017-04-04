@@ -1,4 +1,5 @@
 #include "qhexedit.h"
+#include "qhexeditprivate.h"
 
 QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
 {
@@ -183,6 +184,11 @@ qint64 QHexEdit::visibleStartOffset()
 qint64 QHexEdit::visibleEndOffset()
 {
     return this->_hexedit_p->visibleEndOffset();
+}
+
+QHexEdit::SelectedPart QHexEdit::selectedPart() const
+{
+    return this->_hexedit_p->selectedPart();
 }
 
 bool QHexEdit::readOnly()
