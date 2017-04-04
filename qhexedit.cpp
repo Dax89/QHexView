@@ -19,6 +19,7 @@ QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
     this->_scrollarea->setWidget(this->_hexedit_p);
 
     this->setFocusPolicy(Qt::NoFocus);
+    this->setFocusProxy(this->_hexedit_p);
 
     this->_hlayout = new QHBoxLayout();
     this->_hlayout->setSpacing(0);
