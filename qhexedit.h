@@ -4,10 +4,11 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
-#include "qhexeditprivate.h"
 #include "qhexeditdatareader.h"
 #include "qhexeditdatawriter.h"
 #include "qhexeditdatadevice.h"
+
+class QHexEditPrivate;
 
 class QHexEdit : public QFrame
 {

@@ -1,4 +1,5 @@
 #include "qhexedit.h"
+#include "qhexeditprivate.h"
 
 QHexEdit::QHexEdit(QWidget *parent): QFrame(parent)
 {

@@ -4,6 +4,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+#include "qhexedit.h"
 #include "qhexeditdata.h"
 #include "qhexeditdatareader.h"
 #include "qhexeditdatawriter.h"
