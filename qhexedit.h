@@ -1,12 +1,10 @@
 #ifndef QHEXEDIT_H
 #define QHEXEDIT_H
 
-#include <QtCore>
-#include <QtGui>
-#include <QtWidgets>
-#include "qhexeditdatareader.h"
-#include "qhexeditdatawriter.h"
-#include "qhexeditdatadevice.h"
+#include <QHBoxLayout>
+#include <QScrollArea>
+#include <QFrame>
+#include "document/qhexdocument.h"
 
 class QHexEditPrivate;
 
@@ -15,56 +13,18 @@ class QHexEdit : public QFrame
     Q_OBJECT
 
     public:
-        enum SelectedPart { AddressPart = 0, HexPart = 1, AsciiPart = 2 };
-
         explicit QHexEdit(QWidget *parent = 0);
-        bool readOnly();
-        int addressWidth();
-        int visibleLinesCount();
-        QHexEditData *data();
-        qint64 indexOf(QByteArray& ba, qint64 start = 0);
-        qint64 baseAddress();
-        qint64 cursorPos();
-        qint64 selectionStart();
-        qint64 selectionEnd();
-        qint64 selectionLength();
-        qint64 visibleStartOffset();
-        qint64 visibleEndOffset();
-        SelectedPart selectedPart() const;
-        void setFont(const QFont &f);
-        void setBaseAddress(qint64 ba);
-
-    signals:
-        void visibleLinesChanged();
-        void positionChanged(qint64 offset);
-        void selectionChanged(qint64 length);
-        void bytesChanged(qint64 pos);
-        void verticalScrollBarValueChanged(int value);
+        QHexDocument *document() const;
+        bool readOnly() const;
 
     public slots:
-        void undo();
-        void redo();
-        void cut();
-        void copy();
-        void copyHex();
-        void paste();
-        void pasteHex();
-        void selectAll();
         void setReadOnly(bool b);
-        void setCursorPos(qint64 pos);
-        void setData(QHexEditData *hexeditdata);
-        void selectPos(qint64 pos);
-        void setSelection(qint64 start, qint64 end);
-        void setSelectionLength(qint64 start, qint64 length);
-        void highlightBackground(qint64 start, qint64 end, const QColor& color);
-        void highlightForeground(qint64 start, qint64 end, const QColor& color);
-        void clearHighlight(qint64 start, qint64 end);
-        void clearHighlight();
-        void commentRange(qint64 start, qint64 end, const QString& comment);
-        void uncommentRange(qint64 start, qint64 end);
-        void clearComments();
-        void setVerticalScrollBarValue(int value);
+        void setDocument(QHexDocument *document);
         void scroll(QWheelEvent *event);
+
+    signals:
+        void verticalScroll(integer_t value);
+        void visibleLinesChanged();
 
     private:
         QHexEditPrivate* _hexedit_p;
