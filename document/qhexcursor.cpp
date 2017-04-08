@@ -57,7 +57,7 @@ integer_t QHexCursor::selectionEnd() const
 
 integer_t QHexCursor::selectionLength() const
 {
-    return qAbs(this->_selectionstart - this->_offset);
+    return this->selectionEnd() - this->selectionStart();
 }
 
 QHexCursor::SelectedPart QHexCursor::selectedPart() const
@@ -178,7 +178,7 @@ void QHexCursor::setSelection(integer_t startoffset, integer_t endoffset)
 
 void QHexCursor::setSelectionRange(integer_t startoffset, integer_t length)
 {
-    this->setSelection(startoffset, startoffset + length - 1);
+    this->setSelection(startoffset, startoffset + length);
 }
 
 void QHexCursor::setSelectedPart(QHexCursor::SelectedPart sp)
