@@ -5,6 +5,7 @@
 #include <QScrollArea>
 #include <QFrame>
 #include "document/qhexdocument.h"
+#include "paint/qhexmetrics.h"
 
 class QHexEditPrivate;
 
@@ -15,6 +16,7 @@ class QHexEdit : public QFrame
     public:
         explicit QHexEdit(QWidget *parent = 0);
         QHexDocument *document() const;
+        QHexMetrics *metrics() const;
         bool readOnly() const;
 
     public slots:

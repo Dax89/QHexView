@@ -31,6 +31,11 @@ QHexDocument *QHexEditPrivate::document() const
     return this->_document;
 }
 
+QHexMetrics *QHexEditPrivate::metrics() const
+{
+    return this->_metrics;
+}
+
 bool QHexEditPrivate::readOnly() const
 {
     return this->_readonly;

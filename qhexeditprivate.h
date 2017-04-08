@@ -16,6 +16,7 @@ class QHexEditPrivate : public QWidget
     public:
         explicit QHexEditPrivate(QScrollArea* scrollarea, QScrollBar* vscrollbar, QWidget *parent = 0);
         QHexDocument* document() const;
+        QHexMetrics* metrics() const;
         bool readOnly() const;
         void setDocument(QHexDocument* document);
         void setReadOnly(bool b);

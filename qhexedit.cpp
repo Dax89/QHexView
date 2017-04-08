@@ -34,6 +34,11 @@ QHexDocument *QHexEdit::document() const
     return this->_hexedit_p->document();
 }
 
+QHexMetrics *QHexEdit::metrics() const
+{
+    return this->_hexedit_p->metrics();
+}
+
 bool QHexEdit::readOnly() const
 {
     return this->_hexedit_p->readOnly();
