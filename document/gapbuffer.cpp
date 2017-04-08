@@ -1,8 +1,8 @@
 #include "gapbuffer.h"
 #include <cstring>
 
-//#define BASE_GAP_SIZE 65536 // 64k buffer
-#define BASE_GAP_SIZE 4
+#define BASE_GAP_SIZE 65536 // 64k buffer
+//#define BASE_GAP_SIZE 4
 
 GapBuffer::GapBuffer(): _gapstart(0), _gapend(BASE_GAP_SIZE), _gapminlength(BASE_GAP_SIZE)
 {
@@ -75,13 +75,17 @@ QByteArray GapBuffer::read(integer_t index, integer_t len) const
     QByteArray ba;
     ba.reserve(len);
 
-    if((index + len) >= this->_gapstart)
+    if(index < this->_gapstart)
     {
-        ba.append(this->_buffer.mid(index, this->_gapstart - index));
+        ba.append(this->_buffer.mid(index, std::min(len, this->_gapstart - index)));
+        index += ba.length();
         len -= ba.length();
     }
 
-    ba.append(this->_buffer.mid(this->_gapend, len));
+    if(index >= this->_gapstart)
+        index = this->_gapend;
+
+    ba.append(this->_buffer.mid(index, len));
     return ba;
 }
 
