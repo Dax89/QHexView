@@ -55,6 +55,7 @@ class QHexDocument: public QObject
         void commentRange(integer_t offset, integer_t length, const QString& s);
         void clearHighlighting();
         void clearComments();
+        void clearMetadata();
         void beginMetadata();
         void endMetadata();
         QByteArray read(integer_t offset, integer_t len) const;

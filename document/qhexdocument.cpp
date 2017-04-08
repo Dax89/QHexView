@@ -15,6 +15,7 @@ static void removeMetadata(MetadataMultiHash& metadata, std::function<bool(QHexM
 
     while(it.hasNext())
     {
+        it.next();
         sinteger_t i = 0;
         MetadataList values = metadata.values(it.key());
 
@@ -308,6 +309,13 @@ void QHexDocument::clearComments()
     });
 
     emit documentChanged();
+}
+
+void QHexDocument::clearMetadata()
+{
+    this->beginMetadata();
+    this->_metadata.clear();
+    this->endMetadata();
 }
 
 void QHexDocument::beginMetadata()
