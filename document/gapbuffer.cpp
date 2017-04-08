@@ -83,7 +83,7 @@ QByteArray GapBuffer::read(integer_t index, integer_t len) const
     }
 
     if(index >= this->_gapstart)
-        index = this->_gapend;
+        index += this->_gapend;
 
     ba.append(this->_buffer.mid(index, len));
     return ba;
