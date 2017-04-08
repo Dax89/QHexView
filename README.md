@@ -1,6 +1,5 @@
 QHexEdit
 ========
-
 QHexEdit is a hexadecimal widget for Qt5
 
 <p align="center">
@@ -54,6 +53,6 @@ document->remove(6, 10);                                 // Delete bytes from of
 document->replace(30, 12, QString("New Data").toUTF8()); // Replace 12 bytes from offset 30 with the UTF-8 string "New Data"
 ```
 
-Licence
+License
 -----
-QHexEdit is released under MIT licence
+QHexEdit is released under MIT license
