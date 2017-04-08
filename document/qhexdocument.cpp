@@ -127,9 +127,9 @@ QHexDocument *QHexDocument::fromFile(QString filename)
     else
         f->open(QFile::ReadOnly);
 
-    QHexDocument* hexeditdata = QHexDocument::fromDevice(f);
-    f->setParent(hexeditdata);
-    return hexeditdata;
+    QHexDocument* document = QHexDocument::fromDevice(f);
+    f->setParent(document);
+    return document;
 }
 
 QHexDocument *QHexDocument::fromMemory(const QByteArray &ba)
@@ -138,9 +138,9 @@ QHexDocument *QHexDocument::fromMemory(const QByteArray &ba)
     b->setData(ba);
     b->open(QFile::ReadOnly);
 
-    QHexDocument* hexeditdata = QHexDocument::fromDevice(b);
-    b->setParent(hexeditdata);
-    return hexeditdata;
+    QHexDocument* document = QHexDocument::fromDevice(b);
+    b->setParent(document);
+    return document;
 }
 
 void QHexDocument::undo()
