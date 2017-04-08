@@ -170,6 +170,17 @@ void QHexCursor::setSelectionEnd(integer_t offset)
     emit offsetChanged();
 }
 
+void QHexCursor::setSelection(integer_t startoffset, integer_t endoffset)
+{
+    this->setOffset(startoffset);
+    this->setSelectionEnd(endoffset);
+}
+
+void QHexCursor::setSelectionRange(integer_t startoffset, integer_t length)
+{
+    this->setSelection(startoffset, startoffset + length - 1);
+}
+
 void QHexCursor::setSelectedPart(QHexCursor::SelectedPart sp)
 {
     if(sp == this->_selectedpart)
