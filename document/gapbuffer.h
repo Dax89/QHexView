@@ -4,7 +4,7 @@
 #include <QByteArray>
 #include <QIODevice>
 
-#define GAP_BUFFER_TIDY
+//#define GAP_BUFFER_TIDY
 
 typedef int64_t  sinteger_t;
 typedef uint64_t integer_t;
