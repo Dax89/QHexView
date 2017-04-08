@@ -76,6 +76,7 @@ void QHexPainter::drawLine(QPainter *painter, QHexTheme* theme, integer_t line, 
     integer_t linestart = line * QHexMetrics::BYTES_PER_LINE;
 
     painter->setBackgroundMode(Qt::TransparentMode);
+    painter->setFont(containerWidget->font());
     this->drawLineBackground(painter, theme, line, linestart, y);
     this->drawAddress(painter, theme, line, linestart, y);
 
