@@ -27,6 +27,21 @@ QSize QHexMetrics::charSize() const
     return QSize(this->_charwidth, this->_charheight);
 }
 
+integer_t QHexMetrics::visibleStartOffset() const
+{
+    return qMin(this->_vscrollbar->sliderPosition() * QHexMetrics::BYTES_PER_LINE, this->_document->length());
+}
+
+integer_t QHexMetrics::visibleEndOffset() const
+{
+    integer_t endoffset = this->_vscrollbar->sliderPosition() + (this->visibleLines() * QHexMetrics::BYTES_PER_LINE);
+
+    if(endoffset)
+        endoffset--;
+
+    return qMin(endoffset, this->_document->length());
+}
+
 integer_t QHexMetrics::visibleLines() const
 {
     return currentContainer->height() / this->_charheight;

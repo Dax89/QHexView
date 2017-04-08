@@ -15,6 +15,8 @@ class QHexMetrics : public QObject
         QHexDocument* document() const;
         QScrollBar* verticalScrollBar() const;
         QSize charSize() const;
+        integer_t visibleStartOffset() const;
+        integer_t visibleEndOffset() const;
         integer_t visibleLines() const;
         integer_t currentLine() const;
         integer_t addressWidth() const;
