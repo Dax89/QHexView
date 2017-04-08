@@ -10,6 +10,9 @@ QHexPainter::QHexPainter(QHexMetrics *metrics, QWidget *parent) : QObject(parent
 {
     if(QHexPainter::UNPRINTABLE_CHAR.isEmpty())
         QHexPainter::UNPRINTABLE_CHAR = ".";
+
+    this->_boldfont = containerWidget->font();
+    this->_boldfont.setBold(true);
 }
 
 void QHexPainter::paint(QPaintEvent *e, QHexTheme *theme)
@@ -176,27 +179,6 @@ void QHexPainter::drawAscii(QPainter *painter, uchar b, integer_t offset, intege
     x += w;
 }
 
-void QHexPainter::colorize(QPainter *painter, integer_t pos, uchar b)
-{
-    QHexCursor* cursor = this->_document->cursor();
-
-    if(cursor->isSelected(pos))
-    {
-        const QPalette& palette = containerWidget->palette();
-        painter->setBackgroundMode(Qt::OpaqueMode);
-        painter->setBackground(palette.highlight());
-        painter->setPen(palette.highlightedText().color());
-        return;
-    }
-
-    painter->setBackgroundMode(Qt::TransparentMode);
-
-    if((b == 0x00) || (b == 0xFF))
-        painter->setPen(Qt::darkGray);
-    else
-        painter->setPen(Qt::black);
-}
-
 bool QHexPainter::mark(QPainter *painter, const QRect &r, integer_t offset, QHexCursor::SelectedPart part)
 {
     QHexCursor* cursor = this->_document->cursor();
@@ -207,4 +189,68 @@ bool QHexPainter::mark(QPainter *painter, const QRect &r, integer_t offset, QHex
     painter->fillRect(r, Qt::darkGray);
     painter->setPen(Qt::white);
     return true;
+}
+
+bool QHexPainter::applyMetadata(QPainter *painter, integer_t offset)
+{
+    bool applied = false;
+
+    for(auto it = this->_currentmetadata.begin(); it != this->_currentmetadata.end(); it++)
+    {
+        QHexMetadata* metadata = *it;
+
+        if(!metadata->contains(offset))
+            continue;
+
+        applied = true;
+
+        if(metadata->hasBackColor())
+        {
+            painter->setBackgroundMode(Qt::OpaqueMode);
+            painter->setBackground(QBrush(metadata->backColor()));
+        }
+
+        if(metadata->hasForeColor())
+            painter->setPen(metadata->foreColor());
+
+        if(metadata->hasComment())
+            painter->setFont(this->_boldfont);
+    }
+
+    return applied;
+}
+
+void QHexPainter::colorize(QPainter *painter, integer_t offset, uchar b)
+{
+    QHexCursor* cursor = this->_document->cursor();
+
+    if(cursor->isSelected(offset))
+    {
+        const QPalette& palette = containerWidget->palette();
+        painter->setBackgroundMode(Qt::OpaqueMode);
+        painter->setBackground(palette.highlight());
+        painter->setPen(palette.highlightedText().color());
+        return;
+    }
+
+    // Prepare default palette
+    painter->setBackgroundMode(Qt::TransparentMode);
+    painter->setPen(Qt::black);
+
+    const MetadataMultiHash& metadata = this->_document->metadata();
+
+    if(metadata.contains(offset))
+    {
+        this->_currentmetadata = metadata.values(offset);
+        this->applyMetadata(painter, offset);
+        return;
+    }
+
+    if(this->applyMetadata(painter, offset))
+        return;
+    else
+        this->_currentmetadata.clear();
+
+    if((b == 0x00) || (b == 0xFF))
+        painter->setPen(Qt::darkGray);
 }

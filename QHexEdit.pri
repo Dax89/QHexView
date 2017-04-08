@@ -8,7 +8,8 @@ HEADERS += $$PWD/*.h \
     $$PWD/document/qhexcursor.h \
     $$PWD/document/qhextheme.h \
     $$PWD/paint/qhexmetrics.h \
-    $$PWD/paint/qhexpainter.h
+    $$PWD/paint/qhexpainter.h \
+    $$PWD/document/qhexmetadata.h
 
 SOURCES += $$PWD/*.cpp \
     $$PWD/document/commands/hexcommand.cpp \
@@ -20,6 +21,7 @@ SOURCES += $$PWD/*.cpp \
     $$PWD/document/qhexcursor.cpp \
     $$PWD/document/qhextheme.cpp \
     $$PWD/paint/qhexmetrics.cpp \
-    $$PWD/paint/qhexpainter.cpp
+    $$PWD/paint/qhexpainter.cpp \
+    $$PWD/document/qhexmetadata.cpp
 
 INCLUDEPATH += $$PWD

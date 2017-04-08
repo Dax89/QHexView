@@ -1,6 +1,7 @@
 #include "qhexeditprivate.h"
 #include "paint/qhexpainter.h"
 #include <QKeyEvent>
+#include <QToolTip>
 
 const integer_t QHexEditPrivate::WHELL_SCROLL_LINES = 5;
 
@@ -336,6 +337,17 @@ integer_t QHexEditPrivate::offsetFromPoint(const QPoint &pt, integer_t *bitindex
     return y + x;
 }
 
+void QHexEditPrivate::toggleComment(const QPoint& pos)
+{
+    integer_t offset = this->offsetFromPoint(pos);
+    QString comment = this->_document->commentString(offset);
+
+    if(comment.isEmpty())
+        QToolTip::hideText();
+    else
+        QToolTip::showText(this->mapToGlobal(pos), comment, this);
+}
+
 void QHexEditPrivate::paintEvent(QPaintEvent* pe)
 {
     QHexPainter hexpainter(this->_metrics, this);
@@ -363,8 +375,7 @@ void QHexEditPrivate::mousePressEvent(QMouseEvent* event)
     else
         cursor->setSelectedPart(QHexCursor::HexPart);
 
-    integer_t bitidx = 0;
-    integer_t offset = this->offsetFromPoint(pos, &bitidx);
+    integer_t bitidx = 0, offset = this->offsetFromPoint(pos, &bitidx);
 
     if(event->modifiers() == Qt::ShiftModifier)
         cursor->setSelectionEnd(offset);
@@ -374,17 +385,22 @@ void QHexEditPrivate::mousePressEvent(QMouseEvent* event)
 
 void QHexEditPrivate::mouseMoveEvent(QMouseEvent* event)
 {
-    if(!this->_document || !(event->buttons() & Qt::LeftButton))
+    if(!this->_document)
         return;
 
-    QHexCursor* cursor = this->_document->cursor();
-    QPoint pos = event->pos();
+    if(event->buttons() & Qt::LeftButton)
+    {
+        QHexCursor* cursor = this->_document->cursor();
+        QPoint pos = event->pos();
 
-    if(!pos.x() && !pos.y())
-        return;
+        if(!pos.x() && !pos.y())
+            return;
 
-    integer_t offset = this->offsetFromPoint(pos, NULL);
-    cursor->setSelectionEnd(offset);
+        integer_t offset = this->offsetFromPoint(pos);
+        cursor->setSelectionEnd(offset);
+    }
+    else if(event->buttons() == Qt::NoButton)
+        this->toggleComment(event->pos());
 }
 
 void QHexEditPrivate::wheelEvent(QWheelEvent *event)
