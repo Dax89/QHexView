@@ -139,7 +139,12 @@ void GapBuffer::expandGap(integer_t cap)
     this->_buffer.reserve(this->_buffer.length() + delta);
 
     this->_gapend = this->_gapstart + this->_gapminlength;
-    this->_buffer.insert(this->_gapstart, delta, 0x00); // NOTE: How to insert uninitialized data?
+
+    #ifdef GAP_BUFFER_TIDY
+        this->_buffer.insert(this->_gapstart, QByteArray(delta, Qt::Uninitialized));
+    #else
+        this->_buffer.insert(this->_gapstart, QByteArray(delta, char(0)));
+    #endif
 }
 
 void GapBuffer::init(QIODevice *device)
@@ -148,7 +153,7 @@ void GapBuffer::init(QIODevice *device)
         device->open(QIODevice::ReadWrite);
 
     #ifdef GAP_BUFFER_TIDY
-        this->_buffer.append(device->size() + this->gapLength(), '\0');
+        this->_buffer.append(QByteArray(device->size() + this->gapLength(), '\0'));
     #else
         this->_buffer.resize(device->size() + this->gapLength());
     #endif
