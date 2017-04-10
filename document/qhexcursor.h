@@ -45,7 +45,7 @@ class QHexCursor : public QObject
         void setSelectedPart(SelectedPart sp);
         void clearSelection();
         bool removeSelection();
-        void moveOffset(sinteger_t c);
+        void moveOffset(sinteger_t c, bool bybit = false);
         void moveSelection(sinteger_t c);
         void blink(bool b);
         void switchMode();

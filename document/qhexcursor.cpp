@@ -200,17 +200,40 @@ bool QHexCursor::removeSelection()
     return true;
 }
 
-void QHexCursor::moveOffset(sinteger_t c)
+void QHexCursor::moveOffset(sinteger_t c, bool bybit)
 {
     if(!c)
         return;
+
+    if(qAbs(c) > 1)
+        bybit = false;
+
+    integer_t bitindex = 0;
+
+    if(bybit)
+    {
+        if(!this->_bitindex)
+        {
+            if(c > 0)
+                c = 0;
+
+            bitindex = 1;
+        }
+        else
+        {
+            if(c < 0)
+                c = 0;
+
+            bitindex = 0;
+        }
+    }
 
     integer_t offset = this->_offset + c;
 
     if(offset >= currentDocument->length())
         offset = c > 0 ? currentDocument->length() : 0;
 
-    this->setOffset(offset);
+    this->setOffset(offset, bitindex);
 }
 
 void QHexCursor::moveSelection(sinteger_t c)

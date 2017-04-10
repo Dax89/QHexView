@@ -142,7 +142,7 @@ void QHexEditPrivate::processHexPart(int key)
     if((cursor->isInsertMode()) && !cursor->bitIndex()) // Insert a new byte
     {
         this->_document->insert(cursor->offset(), val << 4); // X0 byte
-        cursor->moveOffset(1);
+        cursor->moveOffset(1, true);
         return;
     }
 
@@ -156,7 +156,7 @@ void QHexEditPrivate::processHexPart(int key)
             hexval = (hexval & 0x0F) + (val << 4);
 
         this->_document->replace(cursor->offset(), hexval);
-        cursor->moveOffset(1);
+        cursor->moveOffset(1, true);
     }
 }
 
@@ -178,9 +178,9 @@ bool QHexEditPrivate::processMoveEvents(QKeyEvent *event)
     QHexCursor* cursor = this->_document->cursor();
 
     if(event->matches(QKeySequence::MoveToNextChar))
-        cursor->moveOffset(1);
+        cursor->moveOffset(1, true);
     else if(event->matches(QKeySequence::MoveToPreviousChar))
-        cursor->moveOffset(-1);
+        cursor->moveOffset(-1, true);
     else if(event->matches(QKeySequence::MoveToNextLine))
         cursor->moveOffset(QHexMetrics::BYTES_PER_LINE);
     else if(event->matches(QKeySequence::MoveToPreviousLine))
