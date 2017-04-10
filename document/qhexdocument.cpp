@@ -177,11 +177,13 @@ void QHexDocument::copy()
 
 void QHexDocument::paste()
 {
-    this->_cursor->removeSelection();
-
     QClipboard* c = qApp->clipboard();
     QByteArray data = c->text().toUtf8();
 
+    if(data.isEmpty())
+        return;
+
+    this->_cursor->removeSelection();
     this->insert(this->_cursor->offset(), data);
     this->_cursor->moveOffset(data.length());
 }
