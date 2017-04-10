@@ -26,7 +26,7 @@ void QHexPainter::paint(QPaintEvent *e, QHexTheme *theme)
 
 void QHexPainter::drawCursor(QPainter *painter)
 {
-    if(!this->_document)
+    if(!this->_document || !containerWidget->hasFocus())
         return;
 
     QHexCursor* cursor = this->_document->cursor();
