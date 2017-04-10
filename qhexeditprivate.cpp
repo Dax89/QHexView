@@ -66,7 +66,7 @@ void QHexEditPrivate::setDocument(QHexDocument *document)
 
     connect(document->cursor(), &QHexCursor::offsetChanged, [this]() {
         QHexCursor* cursor = this->_document->cursor();
-        this->updateCaret(cursor->offset(), cursor->bitIndex());
+        this->updateCaret(cursor->offset(), cursor->nibbleIndex());
 
         if(!this->_metrics->ensureVisible())
             this->update();
@@ -103,7 +103,7 @@ void QHexEditPrivate::processDeleteEvents()
         {
             uchar hexval = this->_document->at(cursor->offset());
 
-            if(cursor->bitIndex() == 1) // Change Low Part
+            if(cursor->nibbleIndex() == 1) // Change Low Part
                 hexval = (hexval & 0xF0);
             else // Change High Part
                 hexval = (hexval & 0x0F);
@@ -139,18 +139,18 @@ void QHexEditPrivate::processHexPart(int key)
 
     cursor->removeSelection();
 
-    if((cursor->isInsertMode()) && !cursor->bitIndex()) // Insert a new byte
+    if((cursor->isInsertMode()) && !cursor->nibbleIndex()) // Insert a new byte
     {
         this->_document->insert(cursor->offset(), val << 4); // X0 byte
         cursor->moveOffset(1, true);
         return;
     }
 
-    if((cursor->isOverwriteMode() && !this->_document->isEmpty()) || cursor->bitIndex()) // Override mode, or update low nibble
+    if((cursor->isOverwriteMode() && !this->_document->isEmpty()) || cursor->nibbleIndex()) // Override mode, or update low nibble
     {
         uchar hexval = this->_document->at(cursor->offset());
 
-        if(cursor->bitIndex() == 1) // Change Low Part
+        if(cursor->nibbleIndex() == 1) // Change Low Part
             hexval = (hexval & 0xF0) + val;
         else // Change High Part
             hexval = (hexval & 0x0F) + (val << 4);
@@ -288,7 +288,7 @@ bool QHexEditPrivate::processClipboardKeys(QKeyEvent *event)
     return true;
 }
 
-void QHexEditPrivate::updateCaret(integer_t offset, integer_t bitindex)
+void QHexEditPrivate::updateCaret(integer_t offset, integer_t nibbleindex)
 {
     if(!this->_document)
         return;
@@ -302,7 +302,7 @@ void QHexEditPrivate::updateCaret(integer_t offset, integer_t bitindex)
         sinteger_t x = offset % QHexMetrics::BYTES_PER_LINE;
         cursorx = x * (3 * this->_metrics->charWidth()) + this->_metrics->xPosHex();
 
-        if(bitindex)
+        if(nibbleindex)
             cursorx += this->_metrics->charWidth();
     }
     else // AsciiPart
@@ -316,7 +316,7 @@ void QHexEditPrivate::updateCaret(integer_t offset, integer_t bitindex)
     cursor->blink(true);
 }
 
-integer_t QHexEditPrivate::offsetFromPoint(const QPoint &pt, integer_t *bitindex) const
+integer_t QHexEditPrivate::offsetFromPoint(const QPoint &pt, integer_t *nibbleindex) const
 {
     if(!this->_document)
         return 0;
@@ -324,15 +324,15 @@ integer_t QHexEditPrivate::offsetFromPoint(const QPoint &pt, integer_t *bitindex
     QHexCursor* cursor = this->_document->cursor();
     integer_t y = (this->_vscrollbar->sliderPosition() + (pt.y() / this->_metrics->charHeight())) * QHexMetrics::BYTES_PER_LINE, x = 0;
 
-    if(bitindex)
-        *bitindex = 0;
+    if(nibbleindex)
+        *nibbleindex = 0;
 
     if(cursor->isHexPartSelected())
     {
         x = (pt.x() - this->_metrics->xPosHex()) / this->_metrics->charWidth();
 
-        if(bitindex && (x % 3) != 0) // Is second nibble selected?
-            *bitindex = 1;
+        if(nibbleindex && (x % 3) != 0) // Is second nibble selected?
+            *nibbleindex = 1;
 
         x = x / 3;
     }
@@ -380,12 +380,12 @@ void QHexEditPrivate::mousePressEvent(QMouseEvent* event)
     else
         cursor->setSelectedPart(QHexCursor::HexPart);
 
-    integer_t bitidx = 0, offset = this->offsetFromPoint(pos, &bitidx);
+    integer_t nibbleidx = 0, offset = this->offsetFromPoint(pos, &nibbleidx);
 
     if(event->modifiers() == Qt::ShiftModifier)
         cursor->setSelectionEnd(offset);
     else
-        cursor->setOffset(offset, bitidx);
+        cursor->setOffset(offset, nibbleidx);
 }
 
 void QHexEditPrivate::mouseMoveEvent(QMouseEvent* event)
@@ -427,7 +427,7 @@ void QHexEditPrivate::wheelEvent(QWheelEvent *event)
         pos = maxlines;
 
     this->_vscrollbar->setSliderPosition(pos);
-    this->updateCaret(cursor->offset(), cursor->bitIndex());
+    this->updateCaret(cursor->offset(), cursor->nibbleIndex());
     this->update();
     event->accept();
 }

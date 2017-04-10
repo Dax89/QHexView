@@ -25,7 +25,7 @@ class QHexEditPrivate : public QWidget
     private:
         integer_t offsetFromPoint(const QPoint& pt, integer_t* bitindex = NULL) const;
         void toggleComment(const QPoint &pos);
-        void updateCaret(integer_t offset, integer_t bitindex);
+        void updateCaret(integer_t offset, integer_t nibbleindex);
         void processDeleteEvents();
         void processBackspaceEvents();
         void processHexPart(int key);

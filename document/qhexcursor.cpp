@@ -11,7 +11,7 @@ const int QHexCursor::CURSOR_BLINK_INTERVAL = 500; // 5ms
 QHexCursor::QHexCursor(QObject *parent) : QObject(parent), _selectedpart(QHexCursor::HexPart), _insertionmode(QHexCursor::OverwriteMode)
 {
     this->_cursorx = this->_cursory = 0;
-    this->_selectionstart = this->_offset = this->_bitindex = 0;
+    this->_selectionstart = this->_offset = this->_nibbleindex = 0;
     this->_timerid = this->startTimer(QHexCursor::CURSOR_BLINK_INTERVAL);
 }
 
@@ -40,9 +40,9 @@ integer_t QHexCursor::offset() const
     return this->_offset;
 }
 
-integer_t QHexCursor::bitIndex() const
+integer_t QHexCursor::nibbleIndex() const
 {
-    return this->_bitindex;
+    return this->_nibbleindex;
 }
 
 integer_t QHexCursor::selectionStart() const
@@ -143,11 +143,11 @@ void QHexCursor::setOffset(integer_t offset)
     this->setOffset(offset, 0);
 }
 
-void QHexCursor::setOffset(integer_t offset, integer_t bitindex)
+void QHexCursor::setOffset(integer_t offset, integer_t nibbleindex)
 {
     offset = qMin(offset, currentDocument->length()); // Check EOF
     this->_selectionstart = offset;
-    this->_bitindex = bitindex;
+    this->_nibbleindex = nibbleindex;
 
     this->setSelectionEnd(offset);
 }
@@ -200,31 +200,31 @@ bool QHexCursor::removeSelection()
     return true;
 }
 
-void QHexCursor::moveOffset(sinteger_t c, bool bybit)
+void QHexCursor::moveOffset(sinteger_t c, bool bynibble)
 {
     if(!c)
         return;
 
     if(qAbs(c) > 1)
-        bybit = false;
+        bynibble = false;
 
-    integer_t bitindex = 0;
+    integer_t nindex = 0;
 
-    if(bybit)
+    if(bynibble)
     {
-        if(!this->_bitindex)
+        if(!this->_nibbleindex)
         {
             if(c > 0)
                 c = 0;
 
-            bitindex = 1;
+            nindex = 1;
         }
         else
         {
             if(c < 0)
                 c = 0;
 
-            bitindex = 0;
+            nindex = 0;
         }
     }
 
@@ -233,7 +233,7 @@ void QHexCursor::moveOffset(sinteger_t c, bool bybit)
     if(offset >= currentDocument->length())
         offset = c > 0 ? currentDocument->length() : 0;
 
-    this->setOffset(offset, bitindex);
+    this->setOffset(offset, nindex);
 }
 
 void QHexCursor::moveSelection(sinteger_t c)
