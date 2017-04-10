@@ -125,8 +125,7 @@ void QHexCursor::selectEnd()
 
 void QHexCursor::selectAll()
 {
-    this->setSelectionEnd(0);
-    this->setOffset(currentDocument->length());
+    this->setSelection(0, currentDocument->length());
 }
 
 void QHexCursor::setPosition(sinteger_t x, sinteger_t y)
