@@ -184,7 +184,12 @@ void QHexDocument::paste()
         return;
 
     this->_cursor->removeSelection();
-    this->insert(this->_cursor->offset(), data);
+
+    if(this->_cursor->isInsertMode())
+        this->insert(this->_cursor->offset(), data);
+    else
+        this->replace(this->_cursor->offset(), data);
+
     this->_cursor->moveOffset(data.length());
 }
 
