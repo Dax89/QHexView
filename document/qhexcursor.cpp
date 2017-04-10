@@ -155,9 +155,9 @@ void QHexCursor::setOffset(integer_t offset, integer_t nibbleindex)
 void QHexCursor::setSelectionEnd(integer_t offset)
 {
     offset = qMin(offset, currentDocument->length()); // Check EOF
-    emit selectionChanged();
-
     this->_offset = offset;
+
+    emit selectionChanged();
     emit offsetChanged();
 }
 
