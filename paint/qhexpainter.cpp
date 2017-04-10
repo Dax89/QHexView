@@ -242,7 +242,7 @@ void QHexPainter::colorize(QPainter *painter, integer_t offset, uchar b)
 
     if(metadata.contains(offset))
     {
-        this->_currentmetadata = metadata.values(offset);
+        this->_currentmetadata += metadata.values(offset);
         this->applyMetadata(painter, offset);
         return;
     }
