@@ -173,7 +173,6 @@ void QHexDocument::copy()
 
     QClipboard* c = qApp->clipboard();
     c->setText(QString(this->selectedBytes()));
-    this->_cursor->removeSelection();
 }
 
 void QHexDocument::paste()
