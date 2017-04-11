@@ -180,47 +180,6 @@ void QHexPainter::drawAscii(QPainter *painter, uchar b, integer_t offset, intege
     x += w;
 }
 
-bool QHexPainter::mark(QPainter *painter, const QRect &r, integer_t offset, QHexCursor::SelectedPart part)
-{
-    QHexCursor* cursor = this->_document->cursor();
-
-    if((offset != cursor->offset()) || cursor->isAddressPartSelected() || (cursor->selectedPart() == part))
-        return false;
-
-    painter->fillRect(r, Qt::darkGray);
-    painter->setPen(Qt::white);
-    return true;
-}
-
-bool QHexPainter::applyMetadata(QPainter *painter, integer_t offset)
-{
-    bool applied = false;
-
-    for(auto it = this->_currentmetadata.begin(); it != this->_currentmetadata.end(); it++)
-    {
-        QHexMetadata* metadata = *it;
-
-        if(!metadata->contains(offset))
-            continue;
-
-        applied = true;
-
-        if(metadata->hasBackColor())
-        {
-            painter->setBackgroundMode(Qt::OpaqueMode);
-            painter->setBackground(QBrush(metadata->backColor()));
-        }
-
-        if(metadata->hasForeColor())
-            painter->setPen(metadata->foreColor());
-
-        if(metadata->hasComment())
-            painter->setFont(this->_boldfont);
-    }
-
-    return applied;
-}
-
 void QHexPainter::colorize(QPainter *painter, integer_t offset, uchar b)
 {
     QHexCursor* cursor = this->_document->cursor();
@@ -238,20 +197,50 @@ void QHexPainter::colorize(QPainter *painter, integer_t offset, uchar b)
     painter->setBackgroundMode(Qt::TransparentMode);
     painter->setPen(Qt::black);
 
-    const MetadataMultiHash& metadata = this->_document->metadata();
-
-    if(metadata.contains(offset))
-    {
-        this->_currentmetadata += metadata.values(offset);
-        this->applyMetadata(painter, offset);
-        return;
-    }
-
     if(this->applyMetadata(painter, offset))
         return;
-    else
-        this->_currentmetadata.clear();
 
     if((b == 0x00) || (b == 0xFF))
         painter->setPen(Qt::darkGray);
+}
+
+bool QHexPainter::applyMetadata(QPainter *painter, integer_t offset)
+{
+    QHexMetadata* metadata = this->_document->metadata();
+    MetadataList metalist = metadata->fromOffset(offset);
+    bool applied = false;
+
+    foreach(QHexMetadataItem* metaitem, metalist)
+    {
+        if(!metaitem->contains(offset))
+            continue;
+
+        applied = true;
+
+        if(metaitem->hasBackColor())
+        {
+            painter->setBackgroundMode(Qt::OpaqueMode);
+            painter->setBackground(QBrush(metaitem->backColor()));
+        }
+
+        if(metaitem->hasForeColor())
+            painter->setPen(metaitem->foreColor());
+
+        if(metaitem->hasComment())
+            painter->setFont(this->_boldfont);
+    }
+
+    return applied;
+}
+
+bool QHexPainter::mark(QPainter *painter, const QRect &r, integer_t offset, QHexCursor::SelectedPart part)
+{
+    QHexCursor* cursor = this->_document->cursor();
+
+    if((offset != cursor->offset()) || cursor->isAddressPartSelected() || (cursor->selectedPart() == part))
+        return false;
+
+    painter->fillRect(r, Qt::darkGray);
+    painter->setPen(Qt::white);
+    return true;
 }

@@ -2,39 +2,19 @@
 #include "commands/insertcommand.h"
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
-#include <functional>
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QFileInfo>
 #include <QBuffer>
 #include <QFile>
 
-static void removeMetadata(MetadataMultiHash& metadata, std::function<bool(QHexMetadata*)> cb)
+QHexDocument::QHexDocument(QIODevice *device, QObject *parent): QObject(parent), _baseaddress(0)
 {
-    MetadataHashIterator it(metadata);
-
-    while(it.hasNext())
-    {
-        it.next();
-        sinteger_t i = 0;
-        MetadataList values = metadata.values(it.key());
-
-        while(i < values.length())
-        {
-            if(cb(values[i]))
-                values.removeAt(i);
-            else
-                i++;
-        }
-    }
-}
-
-QHexDocument::QHexDocument(QIODevice *device, QObject *parent): QObject(parent)
-{
-    this->_baseaddress = 0;
     this->_gapbuffer = new GapBuffer(device);
     this->_cursor = new QHexCursor(this);
+    this->_metadata = new QHexMetadata(this);
 
+    connect(this->_metadata, &QHexMetadata::metadataChanged, this, &QHexDocument::documentChanged);
     connect(&this->_undostack, &QUndoStack::canUndoChanged, this, &QHexDocument::canUndoChanged);
     connect(&this->_undostack, &QUndoStack::canRedoChanged, this, &QHexDocument::canRedoChanged);
 }
@@ -50,7 +30,7 @@ QHexCursor *QHexDocument::cursor() const
     return this->_cursor;
 }
 
-const MetadataMultiHash &QHexDocument::metadata() const
+QHexMetadata *QHexDocument::metadata() const
 {
     return this->_metadata;
 }
@@ -86,14 +66,6 @@ QByteArray QHexDocument::selectedBytes() const
         return QByteArray();
 
     return this->_gapbuffer->read(this->_cursor->selectionStart(), this->_cursor->selectionEnd());
-}
-
-QString QHexDocument::commentString(integer_t offset) const
-{
-    if(!this->_comments.contains(offset))
-        return QString();
-
-    return this->_comments[offset]->comment();
 }
 
 char QHexDocument::at(integer_t offset) const
@@ -226,12 +198,9 @@ void QHexDocument::highlightFore(integer_t startoffset, integer_t endoffset, con
     if((startoffset == endoffset) || !c.isValid())
         return;
 
-    QHexMetadata* metadata = new QHexMetadata(startoffset, endoffset, this);
-    metadata->setForeColor(c);
-    this->_metadata.insert(startoffset, metadata);
-
-    if(!this->_bulkmetadata)
-        emit documentChanged();
+    QHexMetadataItem* metaitem = new QHexMetadataItem(startoffset, endoffset, this->_metadata);
+    metaitem->setForeColor(c);
+    this->_metadata->insert(metaitem);
 }
 
 void QHexDocument::highlightBack(integer_t startoffset, integer_t endoffset, const QColor &c)
@@ -239,12 +208,9 @@ void QHexDocument::highlightBack(integer_t startoffset, integer_t endoffset, con
     if((startoffset == endoffset) || !c.isValid())
         return;
 
-    QHexMetadata* metadata = new QHexMetadata(startoffset, endoffset, this);
-    metadata->setBackColor(c);
-    this->_metadata.insert(startoffset, metadata);
-
-    if(!this->_bulkmetadata)
-        emit documentChanged();
+    QHexMetadataItem* metaitem = new QHexMetadataItem(startoffset, endoffset, this->_metadata);
+    metaitem->setBackColor(c);
+    this->_metadata->insert(metaitem);
 }
 
 void QHexDocument::highlightForeRange(integer_t offset, integer_t length, const QColor &c)
@@ -262,15 +228,9 @@ void QHexDocument::comment(integer_t startoffset, integer_t endoffset, const QSt
     if((startoffset == endoffset) || s.isEmpty())
         return;
 
-    QHexMetadata* metadata = new QHexMetadata(startoffset, endoffset, this);
-    metadata->setComment(s);
-    this->_metadata.insert(startoffset, metadata);
-
-    for(integer_t i = startoffset; i <= endoffset; i++) // NOTE: Find a better algorithm
-        this->_comments[i] = metadata;
-
-    if(!this->_bulkmetadata)
-        emit documentChanged();
+    QHexMetadataItem* metaitem = new QHexMetadataItem(startoffset, endoffset, this->_metadata);
+    metaitem->setComment(s);
+    this->_metadata->insert(metaitem);
 }
 
 void QHexDocument::commentRange(integer_t offset, integer_t length, const QString &s)
@@ -280,59 +240,30 @@ void QHexDocument::commentRange(integer_t offset, integer_t length, const QStrin
 
 void QHexDocument::clearHighlighting()
 {
-    if(this->_metadata.isEmpty())
-        return;
-
-    removeMetadata(this->_metadata, [](QHexMetadata* metadata) -> bool {
-            if(metadata->hasComment()) {
-                metadata->clearColors();
-                return false;
-            }
-
-            return true;
-    });
-
-    emit documentChanged();
+    this->_metadata->clearHighlighting();
 }
 
 void QHexDocument::clearComments()
 {
-    if(this->_metadata.isEmpty())
-        return;
-
-    removeMetadata(this->_metadata, [this](QHexMetadata* metadata) -> bool {
-            bool doremove = false;
-
-            if(metadata->hasForeColor() || metadata->hasBackColor())
-                metadata->clearComment();
-            else
-                doremove = true;
-
-            for(integer_t i = metadata->startOffset(); i <= metadata->endOffset(); i++) // NOTE: Find a better algorithm
-                this->_comments.remove(i);
-
-            return doremove;
-    });
-
-    emit documentChanged();
+    this->_metadata->clearComments();
 }
 
 void QHexDocument::clearMetadata()
 {
     this->beginMetadata();
-    this->_metadata.clear();
+    this->_metadata->clearComments();
+    this->_metadata->clearHighlighting();
     this->endMetadata();
 }
 
 void QHexDocument::beginMetadata()
 {
-    this->_bulkmetadata = true;
+    this->_metadata->beginMetadata();
 }
 
 void QHexDocument::endMetadata()
 {
-    this->_bulkmetadata = false;
-    emit documentChanged();
+    this->_metadata->endMetadata();
 }
 
 QByteArray QHexDocument::read(integer_t offset, integer_t len) const

@@ -1,17 +1,17 @@
-#ifndef QHEXMETADATA_H
-#define QHEXMETADATA_H
+#ifndef QHEXMETADATAITEM_H
+#define QHEXMETADATAITEM_H
 
-#include <QMultiHash>
+#include <QMap>
 #include <QObject>
 #include <QColor>
-#include "gapbuffer.h"
+#include "../gapbuffer.h"
 
-class QHexMetadata : public QObject
+class QHexMetadataItem : public QObject
 {
     Q_OBJECT
 
     public:
-        explicit QHexMetadata(integer_t startoffset, integer_t endoffset, QObject *parent = 0);
+        explicit QHexMetadataItem(integer_t startoffset, integer_t endoffset, QObject *parent = 0);
         integer_t startOffset() const;
         integer_t endOffset() const;
         bool contains(integer_t offset) const;
@@ -33,8 +33,4 @@ class QHexMetadata : public QObject
         QString _comment;
 };
 
-typedef QMultiHash<integer_t, QHexMetadata*> MetadataMultiHash;
-typedef QMutableHashIterator<integer_t, QHexMetadata*> MetadataHashIterator;
-typedef QList<QHexMetadata*> MetadataList;
-
-#endif // QHEXMETADATA_H
+#endif // QHEXMETADATAITEM_H

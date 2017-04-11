@@ -345,7 +345,7 @@ integer_t QHexEditPrivate::offsetFromPoint(const QPoint &pt, integer_t *nibblein
 void QHexEditPrivate::toggleComment(const QPoint& pos)
 {
     integer_t offset = this->offsetFromPoint(pos);
-    QString comment = this->_document->commentString(offset);
+    QString comment = this->_document->metadata()->commentString(offset);
 
     if(comment.isEmpty())
         QToolTip::hideText();
