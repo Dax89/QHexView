@@ -1,23 +1,14 @@
 #include "qhextheme.h"
 #include <QGuiApplication>
+#include <QFontDatabase>
 #include <QPalette>
 #include <QWidget>
-#include <QFont>
-
-#ifdef Q_OS_MAC
-    #define MONOSPACE_FONT "Courier"
-#else
-    #define MONOSPACE_FONT "Monospace"
-#endif
 
 QHexTheme::QHexTheme(QObject *parent): QObject(parent)
 {
     QWidget* container = static_cast<QWidget*>(parent);
 
-    QFont f(MONOSPACE_FONT, qApp->font().pointSize());
-    f.setStyleHint(QFont::TypeWriter); // Use monospace fonts
-
-    container->setFont(f);
+    container->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     container->setBackgroundRole(QPalette::Base);
 
     this->_selectedcursor = QColor(Qt::lightGray);
