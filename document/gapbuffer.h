@@ -1,6 +1,8 @@
 #ifndef GAPBUFFER_H
 #define GAPBUFFER_H
 
+#include <cstdint>
+
 #include <QByteArray>
 #include <QIODevice>
 
