@@ -33,6 +33,7 @@ class QHexDocument: public QObject
     public:
         static QHexDocument* fromDevice(QIODevice* iodevice);
         static QHexDocument* fromFile(QString filename);
+        static QHexDocument* fromMemory(const char *data, integer_t length);
         static QHexDocument* fromMemory(const QByteArray& ba);
 
     public slots:

@@ -105,6 +105,11 @@ QHexDocument *QHexDocument::fromFile(QString filename)
     return document;
 }
 
+QHexDocument *QHexDocument::fromMemory(const char *data, integer_t length)
+{
+    return QHexDocument::fromMemory(QByteArray::fromRawData(data, length));
+}
+
 QHexDocument *QHexDocument::fromMemory(const QByteArray &ba)
 {
     QBuffer* b = new QBuffer();
