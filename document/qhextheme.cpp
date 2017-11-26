@@ -8,7 +8,11 @@ QHexTheme::QHexTheme(QObject *parent): QObject(parent)
 {
     QWidget* container = static_cast<QWidget*>(parent);
 
-    container->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    f.setPointSize(12);
+    f.setStyleHint(QFont::TypeWriter);
+
+    container->setFont(f);
     container->setBackgroundRole(QPalette::Base);
 
     this->_selectedcursor = QColor(Qt::lightGray);
