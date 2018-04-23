@@ -39,6 +39,16 @@ QHexMetrics *QHexEdit::metrics() const
     return this->_hexedit_p->metrics();
 }
 
+bool QHexEdit::overwriteOnly() const
+{
+    return this->_hexedit_p->overwriteOnly();
+}
+
+void QHexEdit::setOverwriteOnly(bool b)
+{
+    this->_hexedit_p->setOverwriteOnly(b);
+}
+
 bool QHexEdit::readOnly() const
 {
     return this->_hexedit_p->readOnly();

@@ -43,6 +43,7 @@ class QHexCursor : public QObject
         void setSelection(integer_t startoffset, integer_t endoffset);
         void setSelectionRange(integer_t startoffset, integer_t length);
         void setSelectedPart(SelectedPart sp);
+        void setInsertionMode(InsertionMode mode);
         void clearSelection();
         bool removeSelection();
         void moveOffset(sinteger_t c, bool bynibble = false);

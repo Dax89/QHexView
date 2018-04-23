@@ -181,6 +181,15 @@ void QHexCursor::setSelectedPart(QHexCursor::SelectedPart sp)
     emit selectedPartChanged();
 }
 
+void QHexCursor::setInsertionMode(QHexCursor::InsertionMode mode)
+{
+	bool differentmode = (this->_insertionmode != mode);
+	this->_insertionmode = mode;
+
+	if (differentmode)
+		emit insertionModeChanged();
+}
+
 void QHexCursor::clearSelection()
 {
     if(this->_selectionstart == this->_offset)
