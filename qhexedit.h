@@ -17,9 +17,11 @@ class QHexEdit : public QFrame
         explicit QHexEdit(QWidget *parent = 0);
         QHexDocument *document() const;
         QHexMetrics *metrics() const;
+        bool overwriteOnly() const;
         bool readOnly() const;
 
     public slots:
+        void setOverwriteOnly(bool b);
         void setReadOnly(bool b);
         void setDocument(QHexDocument *document);
         void scroll(QWheelEvent *event);

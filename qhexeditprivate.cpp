@@ -14,6 +14,7 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *scrollarea, QScrollBar *vscrollbar
 
     this->_scrollarea = scrollarea;
     this->_vscrollbar = vscrollbar;
+    this->_overwriteonly = false;
     this->_readonly = false;
 
     connect(this->_vscrollbar, &QScrollBar::valueChanged, [this] { this->update(); });
@@ -34,6 +35,11 @@ QHexDocument *QHexEditPrivate::document() const
 QHexMetrics *QHexEditPrivate::metrics() const
 {
     return this->_metrics;
+}
+
+bool QHexEditPrivate::overwriteOnly() const
+{
+    return this->_overwriteonly;
 }
 
 bool QHexEditPrivate::readOnly() const
@@ -78,6 +84,17 @@ void QHexEditPrivate::setDocument(QHexDocument *document)
     });
 
     this->update();
+}
+
+void QHexEditPrivate::setOverwriteOnly(bool b)
+{
+    this->_overwriteonly = b;
+    if (b && this->_document != NULL)
+    {
+        QHexCursor* cursor = this->_document->cursor();
+        if (cursor != NULL)
+            cursor->setInsertionMode(QHexCursor::OverwriteMode);
+    }
 }
 
 void QHexEditPrivate::setReadOnly(bool b)
@@ -254,9 +271,12 @@ bool QHexEditPrivate::processInsOvrEvents(QKeyEvent *event)
 {
     if((event->key() == Qt::Key_Insert) && (event->modifiers() == Qt::NoModifier))
     {
-        QHexCursor* cursor = this->_document->cursor();
-        cursor->switchMode();
-        cursor->blink(true);
+        if (!this->_overwriteonly)
+        {
+            QHexCursor* cursor = this->_document->cursor();
+            cursor->switchMode();
+            cursor->blink(true);
+        }
         return true;
     }
 

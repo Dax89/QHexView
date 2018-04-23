@@ -17,8 +17,10 @@ class QHexEditPrivate : public QWidget
         explicit QHexEditPrivate(QScrollArea* scrollarea, QScrollBar* vscrollbar, QWidget *parent = 0);
         QHexDocument* document() const;
         QHexMetrics* metrics() const;
+        bool overwriteOnly() const;
         bool readOnly() const;
         void setDocument(QHexDocument* document);
+        void setOverwriteOnly(bool b);
         void setReadOnly(bool b);
         void scroll(QWheelEvent *event);
 
@@ -56,6 +58,7 @@ class QHexEditPrivate : public QWidget
         QHexDocument* _document;
         QHexMetrics* _metrics;
         QHexTheme* _theme;
+        bool _overwriteonly;
         bool _readonly;
 };
 
