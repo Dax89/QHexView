@@ -146,7 +146,8 @@ void QHexEditPrivate::processHexPart(int key)
         return;
     }
 
-    if((cursor->isOverwriteMode() && !this->_document->isEmpty()) || cursor->nibbleIndex()) // Override mode, or update low nibble
+    if((cursor->isOverwriteMode() || cursor->nibbleIndex()) // Override mode, or update low nibble
+        && cursor->offset() < this->_document->length())
     {
         uchar hexval = this->_document->at(cursor->offset());
 
