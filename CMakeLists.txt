@@ -1,0 +1,35 @@
+project(QHexEdit)
+
+set(QHEXEDIT_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadataitem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadata.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/gapbuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhextheme.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexmetrics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexpainter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/qhexedit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/qhexeditprivate.cpp
+    PARENT_SCOPE)
+
+set(QHEXEDIT_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadataitem.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadata.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/gapbuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhextheme.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexmetrics.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexpainter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/qhexedit.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/qhexeditprivate.h
+    PARENT_SCOPE)
