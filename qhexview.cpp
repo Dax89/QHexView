@@ -23,6 +23,8 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_renderer(NU
     m_blinktimer = new QTimer(this);
     m_blinktimer->setInterval(CURSOR_BLINK_INTERVAL);
 
+    connect(m_blinktimer, &QTimer::timeout, this, &QHexView::blinkCursor);
+
     this->setDocument(QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), this));
 }
 
@@ -38,8 +40,6 @@ void QHexView::setDocument(QHexDocument *document)
 
     m_document = document;
     m_renderer = new QHexRenderer(m_document, this->fontMetrics(), this);
-
-    connect(m_blinktimer, &QTimer::timeout, this, &QHexView::blinkCursor);
 
     connect(m_document, &QHexDocument::documentChanged, [&]() {
         this->adjustScrollBars();
@@ -259,6 +259,9 @@ void QHexView::moveToSelection()
 
 void QHexView::blinkCursor()
 {
+    if(!m_renderer)
+        return;
+
     m_renderer->blinkCursor();
     this->renderCurrentLine();
 }
