@@ -93,6 +93,20 @@ void QHexCursor::select(int line, int column, int nibbleindex)
     emit positionChanged();
 }
 
+void QHexCursor::moveToOffset(int offset)
+{
+    int line = offset / HEX_LINE_LENGTH;
+    this->moveTo(line, offset - (line * HEX_LINE_LENGTH));
+}
+
+void QHexCursor::select(int length) { this->select(m_position.line, m_position.column + length - 1); }
+
+void QHexCursor::selectOffset(int offset, int length)
+{
+    int line = offset / HEX_LINE_LENGTH;
+    this->select(line, (offset - (line * HEX_LINE_LENGTH)) + length);
+}
+
 void QHexCursor::setInsertionMode(QHexCursor::InsertionMode mode)
 {
     bool differentmode = (m_insertionmode != mode);
