@@ -52,7 +52,7 @@ class QHexCursor : public QObject
     public:
         void moveTo(const QHexPosition& pos);
         void moveTo(int line, int column, int nibbleindex = 1);
-        void moveToOffset(int offset);
+        void moveTo(int offset);
         void select(const QHexPosition& pos);
         void select(int line, int column, int nibbleindex = 1);
         void select(int length);
