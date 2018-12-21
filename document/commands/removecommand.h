@@ -6,7 +6,7 @@
 class RemoveCommand: public HexCommand
 {
     public:
-        RemoveCommand(GapBuffer* gapbuffer, integer_t offset, integer_t length, QUndoCommand* parent = 0);
+        RemoveCommand(QHexBuffer* buffer, int offset, int length, QUndoCommand* parent = 0);
         virtual void undo();
         virtual void redo();
 };

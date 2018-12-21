@@ -1,18 +1,15 @@
 #include "removecommand.h"
 
-RemoveCommand::RemoveCommand(GapBuffer *gapbuffer, integer_t offset, integer_t length, QUndoCommand *parent): HexCommand(gapbuffer, parent)
+RemoveCommand::RemoveCommand(QHexBuffer *buffer, int offset, int length, QUndoCommand *parent): HexCommand(buffer, parent)
 {
-    this->_offset = offset;
-    this->_length = length;
+    m_offset = offset;
+    m_length = length;
 }
 
-void RemoveCommand::undo()
-{
-    this->_gapbuffer->insert(this->_offset, this->_data);
-}
+void RemoveCommand::undo() { m_buffer->insert(m_offset, m_data); }
 
 void RemoveCommand::redo()
 {
-    this->_data = this->_gapbuffer->read(this->_offset, this->_length); // Backup data
-    this->_gapbuffer->remove(this->_offset, this->_length);
+    m_data = m_buffer->read(m_offset, m_length); // Backup data
+    m_buffer->remove(m_offset, m_length);
 }

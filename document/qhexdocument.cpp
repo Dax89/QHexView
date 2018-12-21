@@ -2,157 +2,103 @@
 #include "commands/insertcommand.h"
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
-#include <QGuiApplication>
+#include <QApplication>
 #include <QClipboard>
-#include <QFileInfo>
 #include <QBuffer>
 #include <QFile>
 
-QHexDocument::QHexDocument(QIODevice *device, QObject *parent): QObject(parent), _baseaddress(0)
+QHexDocument::QHexDocument(QHexBuffer *buffer, QObject *parent): QObject(parent), m_baseaddress(0)
 {
-    this->_gapbuffer = new GapBuffer(device);
-    this->_cursor = new QHexCursor(this);
-    this->_metadata = new QHexMetadata(this);
+    m_buffer = buffer;
+    m_buffer->setParent(this); // Take Ownership
 
-    connect(this->_metadata, &QHexMetadata::metadataChanged, this, &QHexDocument::documentChanged);
-    connect(&this->_undostack, &QUndoStack::canUndoChanged, this, &QHexDocument::canUndoChanged);
-    connect(&this->_undostack, &QUndoStack::canRedoChanged, this, &QHexDocument::canRedoChanged);
+    m_cursor = new QHexCursor(this);
+    m_metadata = new QHexMetadata(this);
+
+    connect(m_metadata, &QHexMetadata::metadataChanged, this, &QHexDocument::lineChanged);
+    connect(m_metadata, &QHexMetadata::metadataCleared, this, &QHexDocument::documentChanged);
+
+    connect(&m_undostack, &QUndoStack::canUndoChanged, this, &QHexDocument::canUndoChanged);
+    connect(&m_undostack, &QUndoStack::canRedoChanged, this, &QHexDocument::canRedoChanged);
 }
 
-QHexDocument::~QHexDocument()
-{
-    delete this->_gapbuffer;
-    this->_gapbuffer = NULL;
-}
+bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
+bool QHexDocument::atEnd() const { return m_cursor->position().offset() >= m_buffer->length(); }
+bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }
+bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
+int QHexDocument::length() const { return m_buffer->length(); }
+int QHexDocument::baseAddress() const { return m_baseaddress; }
+QHexCursor *QHexDocument::cursor() const { return m_cursor; }
 
-QHexCursor *QHexDocument::cursor() const
-{
-    return this->_cursor;
-}
+QHexMetadata *QHexDocument::metadata() const { return m_metadata; }
+QByteArray QHexDocument::read(int offset, int len) { return m_buffer->read(offset, len); }
 
-QHexMetadata *QHexDocument::metadata() const
+void QHexDocument::removeSelection()
 {
-    return this->_metadata;
-}
+    if(!m_cursor->hasSelection())
+        return;
 
-integer_t QHexDocument::length() const
-{
-    return this->_gapbuffer->length();
-}
-
-integer_t QHexDocument::baseAddress() const
-{
-    return this->_baseaddress;
-}
-
-bool QHexDocument::canUndo() const
-{
-    return this->_undostack.canUndo();
-}
-
-bool QHexDocument::canRedo() const
-{
-    return this->_undostack.canRedo();
-}
-
-QByteArray QHexDocument::read(integer_t offset, integer_t len)
-{
-    return this->_gapbuffer->read(offset, len);
+    this->remove(m_cursor->selectionStart().offset(), m_cursor->selectionLength());
+    m_cursor->clearSelection();
 }
 
 QByteArray QHexDocument::selectedBytes() const
 {
-    if(!this->_cursor->hasSelection())
+    if(!m_cursor->hasSelection())
         return QByteArray();
 
-    return this->_gapbuffer->read(this->_cursor->selectionStart(), this->_cursor->selectionEnd());
+    return m_buffer->read(m_cursor->selectionStart().offset(), m_cursor->selectionLength());
 }
 
-char QHexDocument::at(integer_t offset) const
-{
-    return this->_gapbuffer->at(offset);
-}
+char QHexDocument::at(int offset) const { return m_buffer->at(offset); }
 
-void QHexDocument::setBaseAddress(integer_t baseaddress)
+void QHexDocument::setBaseAddress(int baseaddress)
 {
-    if(this->_baseaddress == baseaddress)
+    if(m_baseaddress == baseaddress)
         return;
 
-    this->_baseaddress = baseaddress;
-    emit baseAddressChanged();
+    m_baseaddress = baseaddress;
+    emit documentChanged();
 }
 
-QHexDocument *QHexDocument::fromDevice(QIODevice *iodevice)
-{
-    if(!iodevice->isOpen())
-        iodevice->open(QFile::ReadWrite);
-
-    return new QHexDocument(iodevice);
-}
-
-QHexDocument *QHexDocument::fromFile(QString filename)
-{
-    QFileInfo fi(filename);
-    QFile* f = new QFile(filename);
-
-    if(fi.isWritable())
-        f->open(QFile::ReadWrite);
-    else
-        f->open(QFile::ReadOnly);
-
-    QHexDocument* document = QHexDocument::fromDevice(f);
-    f->setParent(document);
-    return document;
-}
-
-QHexDocument *QHexDocument::fromMemory(const char *data, integer_t length)
-{
-    return QHexDocument::fromMemory(QByteArray::fromRawData(data, length));
-}
-
-QHexDocument *QHexDocument::fromMemory(const QByteArray &ba)
-{
-    QBuffer* b = new QBuffer();
-    b->setData(ba);
-    b->open(QFile::ReadOnly);
-
-    QHexDocument* document = QHexDocument::fromDevice(b);
-    b->setParent(document);
-    return document;
-}
+void QHexDocument::sync() { emit documentChanged(); }
 
 void QHexDocument::undo()
 {
-    this->_undostack.undo();
+    m_undostack.undo();
     emit documentChanged();
 }
 
 void QHexDocument::redo()
 {
-    this->_undostack.redo();
+    m_undostack.redo();
     emit documentChanged();
 }
 
-void QHexDocument::cut()
+void QHexDocument::cut(bool hex)
 {
-    if(!this->_cursor->hasSelection())
+    if(!m_cursor->hasSelection())
+        return;
+
+    this->copy(hex);
+    this->removeSelection();
+}
+
+void QHexDocument::copy(bool hex)
+{
+    if(!m_cursor->hasSelection())
         return;
 
     QClipboard* c = qApp->clipboard();
-    c->setText(QString(this->selectedBytes()));
-    this->_cursor->removeSelection();
+    QByteArray bytes = this->selectedBytes();
+
+    if(hex)
+        bytes = bytes.toHex(' ').toUpper();
+
+    c->setText(bytes);
 }
 
-void QHexDocument::copy()
-{
-    if(!this->_cursor->hasSelection())
-        return;
-
-    QClipboard* c = qApp->clipboard();
-    c->setText(QString(this->selectedBytes()));
-}
-
-void QHexDocument::paste()
+void QHexDocument::paste(bool hex)
 {
     QClipboard* c = qApp->clipboard();
     QByteArray data = c->text().toUtf8();
@@ -160,132 +106,52 @@ void QHexDocument::paste()
     if(data.isEmpty())
         return;
 
-    this->_cursor->removeSelection();
+    this->removeSelection();
 
-    if(this->_cursor->isInsertMode())
-        this->insert(this->_cursor->offset(), data);
+    if(hex)
+        data = QByteArray::fromHex(data);
+
+    if(m_cursor->insertionMode() == QHexCursor::InsertMode)
+        this->insert(m_cursor->position().offset(), data);
     else
-        this->replace(this->_cursor->offset(), data);
-
-    this->_cursor->moveOffset(data.length());
+        this->replace(m_cursor->position().offset(), data);
 }
 
-void QHexDocument::insert(integer_t offset, uchar b)
+void QHexDocument::insert(int offset, uchar b)
 {
     this->insert(offset, QByteArray(1, b));
 }
 
-void QHexDocument::replace(integer_t offset, uchar b)
+void QHexDocument::replace(int offset, uchar b)
 {
     this->replace(offset, QByteArray(1, b));
 }
 
-void QHexDocument::insert(integer_t offset, const QByteArray &data)
+void QHexDocument::insert(int offset, const QByteArray &data)
 {
-    this->_undostack.push(new InsertCommand(this->_gapbuffer, offset, data));
+    m_undostack.push(new InsertCommand(m_buffer, offset, data));
     emit documentChanged();
 }
 
-void QHexDocument::replace(integer_t offset, const QByteArray &data)
+void QHexDocument::replace(int offset, const QByteArray &data)
 {
-    this->_undostack.push(new ReplaceCommand(this->_gapbuffer, offset, data));
+    m_undostack.push(new ReplaceCommand(m_buffer, offset, data));
     emit documentChanged();
 }
 
-void QHexDocument::remove(integer_t offset, integer_t len)
+void QHexDocument::remove(int offset, int len)
 {
-    this->_undostack.push(new RemoveCommand(this->_gapbuffer, offset, len));
+    m_undostack.push(new RemoveCommand(m_buffer, offset, len));
     emit documentChanged();
 }
 
-void QHexDocument::highlightFore(integer_t startoffset, integer_t endoffset, const QColor &c)
-{
-    if((startoffset == endoffset) || !c.isValid())
-        return;
-
-    QHexMetadataItem* metaitem = new QHexMetadataItem(startoffset, endoffset, this->_metadata);
-    metaitem->setForeColor(c);
-    this->_metadata->insert(metaitem);
-}
-
-void QHexDocument::highlightBack(integer_t startoffset, integer_t endoffset, const QColor &c)
-{
-    if((startoffset == endoffset) || !c.isValid())
-        return;
-
-    QHexMetadataItem* metaitem = new QHexMetadataItem(startoffset, endoffset, this->_metadata);
-    metaitem->setBackColor(c);
-    this->_metadata->insert(metaitem);
-}
-
-void QHexDocument::highlightForeRange(integer_t offset, integer_t length, const QColor &c)
-{
-    this->highlightFore(offset, offset + length - 1, c);
-}
-
-void QHexDocument::highlightBackRange(integer_t offset, integer_t length, const QColor &c)
-{
-    this->highlightBack(offset, offset + length - 1, c);
-}
-
-void QHexDocument::comment(integer_t startoffset, integer_t endoffset, const QString &s)
-{
-    if((startoffset == endoffset) || s.isEmpty())
-        return;
-
-    QHexMetadataItem* metaitem = new QHexMetadataItem(startoffset, endoffset, this->_metadata);
-    metaitem->setComment(s);
-    this->_metadata->insert(metaitem);
-}
-
-void QHexDocument::commentRange(integer_t offset, integer_t length, const QString &s)
-{
-    this->comment(offset, offset + length - 1, s);
-}
-
-void QHexDocument::clearHighlighting()
-{
-    this->_metadata->clearHighlighting();
-}
-
-void QHexDocument::clearComments()
-{
-    this->_metadata->clearComments();
-}
-
-void QHexDocument::clearMetadata()
-{
-    this->beginMetadata();
-    this->_metadata->clearComments();
-    this->_metadata->clearHighlighting();
-    this->endMetadata();
-}
-
-void QHexDocument::beginMetadata()
-{
-    this->_metadata->beginMetadata();
-}
-
-void QHexDocument::endMetadata()
-{
-    this->_metadata->endMetadata();
-}
-
-QByteArray QHexDocument::read(integer_t offset, integer_t len) const
-{
-    return this->_gapbuffer->read(offset, len);
-}
+QByteArray QHexDocument::read(int offset, int len) const { return m_buffer->read(offset, len); }
 
 bool QHexDocument::saveTo(QIODevice *device)
 {
     if(!device->isWritable())
         return false;
 
-    device->write(this->_gapbuffer->toByteArray());
+    m_buffer->write(device);
     return true;
-}
-
-bool QHexDocument::isEmpty() const
-{
-    return this->_gapbuffer->length() <= 0;
 }

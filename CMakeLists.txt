@@ -1,35 +1,31 @@
-project(QHexEdit)
+project(QHexView)
 
-set(QHEXEDIT_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadataitem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadata.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/gapbuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhextheme.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexmetrics.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexpainter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/qhexedit.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/qhexeditprivate.cpp
-    PARENT_SCOPE)
-
-set(QHEXEDIT_HEADERS
+set(QHEXVIEW_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadataitem.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/metadata/qhexmetadata.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/gapbuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qhexbuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemoryrefbuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemorybuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhextheme.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexmetrics.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/paint/qhexpainter.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/qhexedit.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/qhexeditprivate.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexmetadata.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexrenderer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/qhexview.h
+    PARENT_SCOPE)
+
+set(QHEXVIEW_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qhexbuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemoryrefbuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemorybuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexmetadata.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexrenderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/qhexview.cpp
     PARENT_SCOPE)

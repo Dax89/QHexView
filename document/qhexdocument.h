@@ -2,9 +2,9 @@
 #define QHEXDOCUMENT_H
 
 #include <QUndoStack>
-#include <QHash>
-#include "gapbuffer.h"
-#include "metadata/qhexmetadata.h"
+#include <QFile>
+#include "buffer/qhexbuffer.h"
+#include "qhexmetadata.h"
 #include "qhexcursor.h"
 
 class QHexDocument: public QObject
@@ -12,69 +12,101 @@ class QHexDocument: public QObject
     Q_OBJECT
 
     private:
-        typedef QHash<integer_t, QHexMetadata*> CommentHash;
-
-    private:
-        explicit QHexDocument(QIODevice* device, QObject *parent = 0);
-        ~QHexDocument();
+        explicit QHexDocument(QHexBuffer* buffer, QObject *parent = NULL);
 
     public:
-        QHexCursor* cursor() const;
-        QHexMetadata* metadata() const;
-        integer_t length() const;
-        integer_t baseAddress() const;
+        bool isEmpty() const;
+        bool atEnd() const;
         bool canUndo() const;
         bool canRedo() const;
-        QByteArray read(integer_t offset, integer_t len = 0);
-        QByteArray selectedBytes() const;
-        char at(integer_t offset) const;
-        void setBaseAddress(integer_t baseaddress);
+        int length() const;
+        int baseAddress() const;
+        QHexCursor* cursor() const;
+        QHexMetadata* metadata() const;
 
     public:
-        static QHexDocument* fromDevice(QIODevice* iodevice);
-        static QHexDocument* fromFile(QString filename);
-        static QHexDocument* fromMemory(const char *data, integer_t length);
-        static QHexDocument* fromMemory(const QByteArray& ba);
+        void removeSelection();
+        QByteArray read(int offset, int len = 0);
+        QByteArray selectedBytes() const;
+        char at(int offset) const;
+        void setBaseAddress(int baseaddress);
+        void sync();
 
     public slots:
         void undo();
         void redo();
-        void cut();
-        void copy();
-        void paste();
-        void insert(integer_t offset, uchar b);
-        void replace(integer_t offset, uchar b);
-        void insert(integer_t offset, const QByteArray& data);
-        void replace(integer_t offset, const QByteArray& data);
-        void remove(integer_t offset, integer_t len);
-        void highlightFore(integer_t startoffset, integer_t endoffset, const QColor &c);
-        void highlightBack(integer_t startoffset, integer_t endoffset, const QColor &c);
-        void highlightForeRange(integer_t offset, integer_t length, const QColor &c);
-        void highlightBackRange(integer_t offset, integer_t length, const QColor &c);
-        void comment(integer_t startoffset, integer_t endoffset, const QString& s);
-        void commentRange(integer_t offset, integer_t length, const QString& s);
-        void clearHighlighting();
-        void clearComments();
-        void clearMetadata();
-        void beginMetadata();
-        void endMetadata();
-        QByteArray read(integer_t offset, integer_t len) const;
+        void cut(bool hex = false);
+        void copy(bool hex = false);
+        void paste(bool hex = false);
+        void insert(int offset, uchar b);
+        void replace(int offset, uchar b);
+        void insert(int offset, const QByteArray& data);
+        void replace(int offset, const QByteArray& data);
+        void remove(int offset, int len);
+        QByteArray read(int offset, int len) const;
         bool saveTo(QIODevice* device);
-        bool isEmpty() const;
+
+    public:
+        template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, QObject* parent = NULL);
+        template<typename T> static QHexDocument* fromFile(QString filename, QObject* parent = NULL);
+        template<typename T> static QHexDocument* fromMemory(char *data, int size, QObject* parent = NULL);
+        template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, QObject* parent = NULL);
 
     signals:
         void canUndoChanged();
         void canRedoChanged();
         void documentChanged();
-        void baseAddressChanged();
+        void lineChanged(int line);
 
     private:
-        CommentHash _comments;
-        QUndoStack _undostack;
-        GapBuffer* _gapbuffer;
-        QHexCursor* _cursor;
-        QHexMetadata* _metadata;
-        integer_t _baseaddress;
+        QHexBuffer* m_buffer;
+        QHexMetadata* m_metadata;
+        QUndoStack m_undostack;
+        QHexCursor* m_cursor;
+        int m_baseaddress;
 };
+
+template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice, QObject *parent)
+{
+    bool needsclose = false;
+
+    if(!iodevice->isOpen())
+    {
+        needsclose = true;
+        iodevice->open(QIODevice::ReadWrite);
+    }
+
+    QHexBuffer* hexbuffer = new T();
+    hexbuffer->read(iodevice);
+
+    if(needsclose)
+        iodevice->close();
+
+    return new QHexDocument(hexbuffer, parent);
+}
+
+template<typename T> QHexDocument* QHexDocument::fromFile(QString filename, QObject *parent)
+{
+    QFile f(filename);
+    f.open(QFile::ReadOnly);
+
+    QHexDocument* doc = QHexDocument::fromDevice<T>(&f, parent);
+    f.close();
+    return doc;
+}
+
+template<typename T> QHexDocument* QHexDocument::fromMemory(char *data, int size, QObject *parent)
+{
+    QHexBuffer* hexbuffer = new T();
+    hexbuffer->read(data, size);
+    return new QHexDocument(hexbuffer, parent);
+}
+
+template<typename T> QHexDocument* QHexDocument::fromMemory(const QByteArray& ba, QObject *parent)
+{
+    QHexBuffer* hexbuffer = new T();
+    hexbuffer->read(ba);
+    return new QHexDocument(hexbuffer, parent);
+}
 
 #endif // QHEXEDITDATA_H

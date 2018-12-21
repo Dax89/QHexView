@@ -1,18 +1,15 @@
 #include "replacecommand.h"
 
-ReplaceCommand::ReplaceCommand(GapBuffer *gapbuffer, integer_t offset, const QByteArray &data, QUndoCommand *parent): HexCommand(gapbuffer, parent)
+ReplaceCommand::ReplaceCommand(QHexBuffer *buffer, int offset, const QByteArray &data, QUndoCommand *parent): HexCommand(buffer, parent)
 {
-    this->_offset = offset;
-    this->_data = data;
+    m_offset = offset;
+    m_data = data;
 }
 
-void ReplaceCommand::undo()
-{
-    this->_gapbuffer->replace(this->_offset, this->_olddata);
-}
+void ReplaceCommand::undo() { m_buffer->replace(m_offset, m_olddata); }
 
 void ReplaceCommand::redo()
 {
-    this->_olddata = this->_gapbuffer->read(this->_offset, this->_data.length());
-    this->_gapbuffer->replace(this->_offset, this->_data);
+    m_olddata = m_buffer->read(m_offset, m_data.length());
+    m_buffer->replace(m_offset, m_data);
 }

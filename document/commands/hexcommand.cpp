@@ -1,6 +1,3 @@
 #include "hexcommand.h"
 
-HexCommand::HexCommand(GapBuffer *gapbuffer, QUndoCommand *parent): QUndoCommand(parent), _gapbuffer(gapbuffer), _offset(0), _length(0)
-{
-
-}
+HexCommand::HexCommand(QHexBuffer *buffer, QUndoCommand *parent): QUndoCommand(parent), m_buffer(buffer), m_offset(0), m_length(0) { }

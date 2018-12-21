@@ -3,7 +3,7 @@ QHexEdit
 QHexEdit is a hexadecimal widget for Qt5
 
 <p align="center">
-<img height="400" src="https://raw.githubusercontent.com/Dax89/QHexEdit/master/screenshots/QHexEdit.png">
+<img height="400" src="https://raw.githubusercontent.com/Dax89/QHexEdit/master/screenshots/QHexView.png">
 </p>
 
 Features

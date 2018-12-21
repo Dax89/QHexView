@@ -6,12 +6,12 @@
 class ReplaceCommand: public HexCommand
 {
     public:
-        ReplaceCommand(GapBuffer* gapbuffer, integer_t offset, const QByteArray& data, QUndoCommand* parent = 0);
+        ReplaceCommand(QHexBuffer* buffer, int offset, const QByteArray& data, QUndoCommand* parent = 0);
         virtual void undo();
         virtual void redo();
 
     private:
-        QByteArray _olddata;
+        QByteArray m_olddata;
 };
 
 #endif // REPLACECOMMAND_H
