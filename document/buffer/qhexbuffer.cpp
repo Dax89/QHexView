@@ -16,13 +16,20 @@ void QHexBuffer::read(char *data, int size)
 {
     QBuffer* buffer = new QBuffer(this);
     buffer->setData(data, size);
+
+    if(!buffer->isOpen())
+        buffer->open(QBuffer::ReadWrite);
+
     this->read(buffer);
 }
 
 void QHexBuffer::read(const QByteArray &ba)
 {
     QBuffer* buffer = new QBuffer(this);
-    buffer->open(QBuffer::ReadWrite);
+
+    if(!buffer->isOpen())
+        buffer->open(QBuffer::ReadWrite);
+
     buffer->setData(ba);
     this->read(buffer);
 }
