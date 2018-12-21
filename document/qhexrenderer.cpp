@@ -5,7 +5,7 @@
 #include <cctype>
 #include <cmath>
 
-#define HEX_UNPRINTABLE_CHAR '.'
+#define HEX_UNPRINTABLE_CHAR     '.'
 
 QHexRenderer::QHexRenderer(QHexDocument* document, const QFontMetrics &fontmetrics, QObject *parent) : QObject(parent), m_document(document), m_fontmetrics(fontmetrics)
 {
@@ -223,8 +223,20 @@ void QHexRenderer::applyDocumentStyles(QPainter *painter, QTextDocument* textdoc
 void QHexRenderer::applyBasicStyle(QTextCursor &textcursor, const QByteArray &rawline, int factor) const
 {
     QPalette palette = qApp->palette();
+    QColor color = palette.color(QPalette::WindowText);
+
+    if(color.lightness() < 50)
+    {
+        if(color == Qt::black)
+            color = Qt::gray;
+        else
+            color = color.lighter();
+    }
+    else
+        color = color.darker();
+
     QTextCharFormat charformat;
-    charformat.setForeground(palette.color(QPalette::WindowText).lighter(350));
+    charformat.setForeground(color);
 
     for(int i = 0; i < rawline.length(); i++)
     {
