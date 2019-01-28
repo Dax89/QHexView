@@ -21,7 +21,7 @@ Features
 
 Buffer Backends
 -----
-There are the available buffer backends:
+These are the available buffer backends:
 - QMemoryBuffer: A simple, flat memory array.
 - QMemoryRefBuffer: QHexView just display the referenced data, editing is disabled.<br>
 <br>
