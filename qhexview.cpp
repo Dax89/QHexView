@@ -41,7 +41,7 @@ void QHexView::setDocument(QHexDocument *document)
     m_document = document;
     m_renderer = new QHexRenderer(m_document, this->fontMetrics(), this);
 
-    connect(m_document, &QHexDocument::documentChanged, [&]() {
+    connect(m_document, &QHexDocument::documentChanged, this, [&]() {
         this->adjustScrollBars();
         this->viewport()->update();
     });
