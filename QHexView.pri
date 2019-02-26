@@ -1,3 +1,5 @@
+QT += widgets
+
 HEADERS += $$PWD/document/commands/hexcommand.h \
            $$PWD/document/commands/insertcommand.h \
            $$PWD/document/commands/removecommand.h \
@@ -21,7 +23,7 @@ SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/qhexcursor.cpp \
            $$PWD/document/qhexdocument.cpp \
            $$PWD/document/qhexmetadata.cpp \
-           $$PWD/paint/qhexrenderer.cpp \
+           $$PWD/document/qhexrenderer.cpp \
            $$PWD/qhexview.cpp
 
 INCLUDEPATH += $$PWD
