@@ -240,7 +240,7 @@ void QHexRenderer::applyBasicStyle(QTextCursor &textcursor, const QByteArray &ra
 
     for(int i = 0; i < rawline.length(); i++)
     {
-        if((rawline[i] != 0x00) && (rawline[i] != 0xFF))
+        if((rawline[i] != 0x00) && (static_cast<uchar>(rawline[i]) != 0xFF))
             continue;
 
         textcursor.setPosition(i * factor);

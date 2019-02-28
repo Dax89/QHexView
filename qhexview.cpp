@@ -12,7 +12,7 @@
 #define CURSOR_BLINK_INTERVAL 500 // ms
 #define DOCUMENT_WHEEL_LINES  3
 
-QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_renderer(NULL), m_document(NULL), m_readonly(false)
+QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_document(NULL), m_renderer(NULL), m_readonly(false)
 {
     this->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     this->setFocusPolicy(Qt::StrongFocus);
