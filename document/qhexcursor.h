@@ -9,6 +9,9 @@
 struct QHexPosition {
     int line, column, nibbleindex;
 
+    QHexPosition() = default;
+    QHexPosition(const QHexPosition&) = default;
+
     QHexPosition& operator=(const QHexPosition& rhs) {
         line = rhs.line;
         column = rhs.column;

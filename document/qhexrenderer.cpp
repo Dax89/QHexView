@@ -159,7 +159,7 @@ int QHexRenderer::getAddressWidth() const
     if(this->rendererLength() <= 0xFFFF)
         return 8;
 
-    if(this->rendererLength() <= 0xFFFFFFFF)
+    if(static_cast<unsigned int>(this->rendererLength()) <= 0xFFFFFFFF)
         return 16;
 
     return QString::number(this->rendererLength(), 16).length();
