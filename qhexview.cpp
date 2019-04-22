@@ -14,7 +14,15 @@
 
 QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_document(NULL), m_renderer(NULL), m_readonly(false)
 {
-    this->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+
+    if(!(f.styleHint() & QFont::Monospace))
+    {
+        f.setFamily("Monospace"); // Force Monospaced font
+        f.setStyleHint(QFont::TypeWriter);
+    }
+
+    this->setFont(f);
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
     this->verticalScrollBar()->setSingleStep(1);
