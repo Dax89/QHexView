@@ -13,7 +13,7 @@ class QHexView : public QAbstractScrollArea
     Q_OBJECT
 
     public:
-        explicit QHexView(QWidget *parent = NULL);
+        explicit QHexView(QWidget *parent = nullptr);
         QHexDocument* document();
         void setDocument(QHexDocument* document);
         void setReadOnly(bool b);

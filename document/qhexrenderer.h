@@ -19,7 +19,7 @@ class QHexRenderer : public QObject
         enum { AddressArea, HexArea, AsciiArea, ExtraArea };
 
     public:
-        explicit QHexRenderer(QHexDocument* document, const QFontMetrics& fontmetrics, QObject *parent = NULL);
+        explicit QHexRenderer(QHexDocument* document, const QFontMetrics& fontmetrics, QObject *parent = nullptr);
         void renderFrame(QPainter* painter);
         void render(QPainter* painter, int start, int count, int firstline);
         void enableCursor(bool b = true);
@@ -38,8 +38,8 @@ class QHexRenderer : public QObject
         QRect getLineRect(int line, int firstline) const;
 
     private:
-        QString hexString(int line, QByteArray *rawline = NULL) const;
-        QString asciiString(int line, QByteArray *rawline = NULL) const;
+        QString hexString(int line, QByteArray *rawline = nullptr) const;
+        QString asciiString(int line, QByteArray *rawline = nullptr) const;
         QByteArray getLine(int line) const;
         int rendererLength() const;
         int getAddressWidth() const;

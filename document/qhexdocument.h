@@ -12,7 +12,7 @@ class QHexDocument: public QObject
     Q_OBJECT
 
     private:
-        explicit QHexDocument(QHexBuffer* buffer, QObject *parent = NULL);
+        explicit QHexDocument(QHexBuffer* buffer, QObject *parent = nullptr);
 
     public:
         bool isEmpty() const;
@@ -47,10 +47,10 @@ class QHexDocument: public QObject
         bool saveTo(QIODevice* device);
 
     public:
-        template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, QObject* parent = NULL);
-        template<typename T> static QHexDocument* fromFile(QString filename, QObject* parent = NULL);
-        template<typename T> static QHexDocument* fromMemory(char *data, int size, QObject* parent = NULL);
-        template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, QObject* parent = NULL);
+        template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, QObject* parent = nullptr);
+        template<typename T> static QHexDocument* fromFile(QString filename, QObject* parent = nullptr);
+        template<typename T> static QHexDocument* fromMemory(char *data, int size, QObject* parent = nullptr);
+        template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, QObject* parent = nullptr);
 
     signals:
         void canUndoChanged();

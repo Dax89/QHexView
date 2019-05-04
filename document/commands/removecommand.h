@@ -7,8 +7,8 @@ class RemoveCommand: public HexCommand
 {
     public:
         RemoveCommand(QHexBuffer* buffer, int offset, int length, QUndoCommand* parent = 0);
-        virtual void undo();
-        virtual void redo();
+        void undo() override;
+        void redo() override;
 };
 
 #endif // REMOVECOMMAND_H

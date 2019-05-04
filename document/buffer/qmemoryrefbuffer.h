@@ -9,13 +9,13 @@ class QMemoryRefBuffer : public QHexBuffer
     Q_OBJECT
 
     public:
-        explicit QMemoryRefBuffer(QObject *parent = NULL);
-        virtual int length() const;
-        virtual void insert(int, const QByteArray&);
-        virtual void remove(int offset, int length);
-        virtual QByteArray read(int offset, int length);
-        virtual void read(QIODevice* device);
-        virtual void write(QIODevice* device);
+        explicit QMemoryRefBuffer(QObject *parent = nullptr);
+        int length() const override;
+        void insert(int, const QByteArray&) override;
+        void remove(int offset, int length) override;
+        QByteArray read(int offset, int length) override;
+        void read(QIODevice* device) override;
+        void write(QIODevice* device) override;
 
     private:
         QBuffer* m_buffer;

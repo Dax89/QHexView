@@ -20,7 +20,7 @@ class QHexMetadata : public QObject
     Q_OBJECT
 
     public:
-        explicit QHexMetadata(QObject *parent = NULL);
+        explicit QHexMetadata(QObject *parent = nullptr);
         const QHexLineMetadata& get(int line) const;
         QString comments(int line) const;
         bool hasMetadata(int line) const;

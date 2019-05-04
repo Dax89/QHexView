@@ -9,7 +9,7 @@ class QHexBuffer : public QObject
     Q_OBJECT
 
     public:
-        explicit QHexBuffer(QObject *parent = NULL);
+        explicit QHexBuffer(QObject *parent = nullptr);
         bool isEmpty() const;
 
     public:

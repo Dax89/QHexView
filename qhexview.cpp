@@ -12,7 +12,7 @@
 #define CURSOR_BLINK_INTERVAL 500 // ms
 #define DOCUMENT_WHEEL_LINES  3
 
-QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_document(NULL), m_renderer(NULL), m_readonly(false)
+QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_document(nullptr), m_renderer(nullptr), m_readonly(false)
 {
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
@@ -552,7 +552,7 @@ bool QHexView::processTextInput(QHexCursor *cur, QKeyEvent *e)
         if(!((key >= '0' && key <= '9') || (key >= 'a' && key <= 'f'))) // Check if is a Hex Char
             return false;
 
-        uchar val = static_cast<uchar>(QString(static_cast<char>(key)).toUInt(NULL, 16));
+        uchar val = static_cast<uchar>(QString(static_cast<char>(key)).toUInt(nullptr, 16));
         m_document->removeSelection();
 
         if(m_document->atEnd() || (cur->currentNibble() && (cur->insertionMode() == QHexCursor::InsertMode)))
