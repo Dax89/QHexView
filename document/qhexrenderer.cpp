@@ -15,12 +15,7 @@ QHexRenderer::QHexRenderer(QHexDocument* document, const QFontMetrics &fontmetri
 
 void QHexRenderer::renderFrame(QPainter *painter)
 {
-    QWidget* widget = dynamic_cast<QWidget*>(painter->device());
-
-    if(!widget)
-        return;
-
-    QRect rect = widget->rect();
+    QRect rect = painter->window();
     int hexx = this->getHexColumnX();
     int asciix = this->getAsciiColumnX();
     int endx = this->getEndColumnX();
