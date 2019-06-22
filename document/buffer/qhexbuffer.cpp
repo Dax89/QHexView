@@ -27,10 +27,10 @@ void QHexBuffer::read(const QByteArray &ba)
 {
     QBuffer* buffer = new QBuffer(this);
 
+    buffer->setData(ba);
     if(!buffer->isOpen())
         buffer->open(QBuffer::ReadWrite);
 
-    buffer->setData(ba);
     this->read(buffer);
 }
 
