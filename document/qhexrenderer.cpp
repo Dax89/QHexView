@@ -201,7 +201,7 @@ void QHexRenderer::unprintableChars(QByteArray &ascii) const
 {
     for(char& ch : ascii)
     {
-        if(std::isprint(ch))
+        if(std::isprint(static_cast<unsigned char>(ch)))
             continue;
 
         ch = HEX_UNPRINTABLE_CHAR;
