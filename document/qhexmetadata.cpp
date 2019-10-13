@@ -8,7 +8,7 @@ const QHexLineMetadata &QHexMetadata::get(int line) const
     return it.value();
 }
 
-QString QHexMetadata::comments(int line) const
+QString QHexMetadata::comments(int line, int column) const
 {
     if(!this->hasMetadata(line))
         return QString();
@@ -19,6 +19,8 @@ QString QHexMetadata::comments(int line) const
 
     for(auto& mi : linemetadata)
     {
+        if(!(mi.start <= column && column < mi.start + mi.length))
+            continue;
         if(mi.comment.isEmpty())
             continue;
 
