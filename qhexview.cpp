@@ -468,7 +468,7 @@ bool QHexView::processMove(QHexCursor *cur, QKeyEvent *e)
         if(m_renderer->documentLastLine() == cur->currentLine())
             return true;
 
-        int pageline = std::min(m_renderer->documentLastLine(), this->firstVisibleLine() + this->visibleLines());
+        int pageline = std::min(m_renderer->documentLastLine(), cur->currentLine() + this->visibleLines());
 
         if(e->matches(QKeySequence::MoveToNextPage))
             cur->moveTo(pageline, cur->currentColumn());
@@ -480,10 +480,7 @@ bool QHexView::processMove(QHexCursor *cur, QKeyEvent *e)
         if(!cur->currentLine())
             return true;
 
-        int pageline = 0;
-
-        if(this->firstVisibleLine() > this->visibleLines())
-            pageline = std::max(0, this->firstVisibleLine() - this->visibleLines());
+        int pageline = std::max(0, cur->currentLine() - this->visibleLines());
 
         if(e->matches(QKeySequence::MoveToPreviousPage))
             cur->moveTo(pageline, cur->currentColumn());
