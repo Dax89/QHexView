@@ -76,16 +76,17 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, int firstli
         return false;
 
     position->line = std::min(firstline + (pt.y() / this->lineHeight()), this->documentLastLine());
+    position->lineWidth = this->hexLineWidth();
 
     if(area == QHexRenderer::HexArea)
     {
-        int relx = pt.x() - this->getHexColumnX();
+        int relx = pt.x() - this->getHexColumnX() - this->borderSize();
         position->column = relx / (this->getCellWidth() * 3);
         position->nibbleindex = this->getNibbleIndex(position->line, relx);
     }
     else
     {
-        int relx = pt.x() - this->getAsciiColumnX() - this->getCellWidth();
+        int relx = pt.x() - this->getAsciiColumnX() - this->borderSize();
         position->column = relx / this->getCellWidth();
         position->nibbleindex = 1;
     }
@@ -96,20 +97,20 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, int firstli
         position->column = std::min(position->column, ba.length());
     }
     else
-        position->column = std::min(position->column, HEX_LINE_LAST_COLUMN);
+        position->column = std::min(position->column, hexLineWidth() - 1);
 
     return true;
 }
 
 int QHexRenderer::hitTestArea(const QPoint &pt) const
 {
-    if((pt.x() >= 0) && (pt.x() <= this->getHexColumnX()))
+    if ((pt.x() >= this->borderSize()) && (pt.x() <= (this->getHexColumnX() - this->borderSize())))
         return QHexRenderer::AddressArea;
 
-    if((pt.x() > this->getHexColumnX()) && (pt.x() < this->getAsciiColumnX()))
+    if ((pt.x() > (this->getHexColumnX() + this->borderSize())) && (pt.x() < (this->getAsciiColumnX() - this->borderSize())))
         return QHexRenderer::HexArea;
 
-    if((pt.x() > this->getAsciiColumnX()) && (pt.x() < this->getEndColumnX()))
+    if ((pt.x() > (this->getAsciiColumnX() + this->borderSize())) && (pt.x() < (this->getEndColumnX() - this->borderSize())))
         return QHexRenderer::AsciiArea;
 
     return QHexRenderer::ExtraArea;
@@ -118,10 +119,26 @@ int QHexRenderer::hitTestArea(const QPoint &pt) const
 int QHexRenderer::selectedArea() const { return m_selectedarea; }
 int QHexRenderer::documentLastLine() const { return this->documentLines() - 1; }
 int QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
-int QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(HEX_LINE_LENGTH));  }
-int QHexRenderer::documentWidth() const { return this->getAsciiColumnX() + (this->getCellWidth() * (HEX_LINE_LENGTH + 1)); }
+int QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(hexLineWidth()));  }
+int QHexRenderer::documentWidth() const { return this->getAsciiColumnX() + (this->getCellWidth() * hexLineWidth() + 2 * this->borderSize()); }
 int QHexRenderer::lineHeight() const { return m_fontmetrics.height(); }
 QRect QHexRenderer::getLineRect(int line, int firstline) const { return QRect(0, (line - firstline) * m_fontmetrics.height(), this->getEndColumnX(), m_fontmetrics.height()); }
+
+int QHexRenderer::borderSize() const
+{
+    if (m_document) {
+        return m_document->areaIdent() * this->getCellWidth();
+    }
+    return DEFAULT_AREA_IDENTATION * this->getCellWidth();
+}
+
+int QHexRenderer::hexLineWidth() const
+{
+    if (m_document) {
+        return m_document->hexLineWidth();
+    }
+    return DEFAULT_HEX_LINE_LENGTH;
+}
 
 QString QHexRenderer::hexString(int line, QByteArray* rawline) const
 {
@@ -145,24 +162,25 @@ QString QHexRenderer::asciiString(int line, QByteArray* rawline) const
     return ascii;
 }
 
-QByteArray QHexRenderer::getLine(int line) const { return m_document->read(line * HEX_LINE_LENGTH, HEX_LINE_LENGTH); }
+QByteArray QHexRenderer::getLine(int line) const { return m_document->read(line * hexLineWidth(), hexLineWidth()); }
 void QHexRenderer::blinkCursor() { m_cursorenabled = !m_cursorenabled; }
 int QHexRenderer::rendererLength() const { return m_document->length() + 1; }
 
 int QHexRenderer::getAddressWidth() const
 {
-    if(this->rendererLength() <= 0xFFFF)
-        return 8;
+    unsigned int maxAddr = m_document->baseAddress() + this->rendererLength();
+    if(maxAddr <= 0xFFFF)
+        return 4;
 
-    if(static_cast<unsigned int>(this->rendererLength()) <= 0xFFFFFFFF)
-        return 16;
+    if(maxAddr <= 0xFFFFFFFF)
+         return 8;
 
-    return QString::number(this->rendererLength(), 16).length();
+    return QString::number(maxAddr, 16).length();
 }
 
-int QHexRenderer::getHexColumnX() const { return this->getCellWidth() * (this->getAddressWidth() + 1); }
-int QHexRenderer::getAsciiColumnX() const { return this->getHexColumnX() + (this->getCellWidth() * (HEX_LINE_LENGTH * 3)); }
-int QHexRenderer::getEndColumnX() const { return this->getAsciiColumnX() + (this->getCellWidth() * (HEX_LINE_LENGTH + 1)); }
+int QHexRenderer::getHexColumnX() const { return this->getCellWidth() * this->getAddressWidth() + 2 * this->borderSize(); }
+int QHexRenderer::getAsciiColumnX() const { return this->getHexColumnX() + this->getCellWidth() * (hexLineWidth() * 3) + 2 * this->borderSize(); }
+int QHexRenderer::getEndColumnX() const { return this->getAsciiColumnX() + this->getCellWidth() * hexLineWidth() + 2 * this->borderSize(); }
 
 int QHexRenderer::getCellWidth() const
 {
@@ -384,7 +402,7 @@ void QHexRenderer::drawAddress(QPainter* painter, const QPalette& palette, const
     painter->save();
     painter->setPen(palette.color(QPalette::Highlight));
 
-    painter->drawText(addressrect, Qt::AlignHCenter | Qt::AlignVCenter, QString("%1").arg(line * HEX_LINE_LENGTH + m_document->baseAddress(),
+    painter->drawText(addressrect, Qt::AlignHCenter | Qt::AlignVCenter, QString("%1").arg(line * hexLineWidth() + m_document->baseAddress(),
                                                                                           this->getAddressWidth(), 16,
                                                                                           QLatin1Char('0')).toUpper());
     painter->restore();
@@ -392,6 +410,7 @@ void QHexRenderer::drawAddress(QPainter* painter, const QPalette& palette, const
 
 void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette, const QRect &linerect, int line)
 {
+    Q_UNUSED(palette)
     QTextDocument textdocument;
     QTextCursor textcursor(&textdocument);
     QByteArray rawline;
@@ -402,7 +421,7 @@ void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette, const QRe
         textcursor.insertText(" ");
 
     QRect hexrect = linerect;
-    hexrect.setX(this->getHexColumnX() + this->getCellWidth());
+    hexrect.setX(this->getHexColumnX() + this->borderSize());
 
     this->applyDocumentStyles(painter, &textdocument);
     this->applyBasicStyle(textcursor, rawline, 3);
@@ -418,6 +437,7 @@ void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette, const QRe
 
 void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette, const QRect &linerect, int line)
 {
+    Q_UNUSED(palette)
     QTextDocument textdocument;
     QTextCursor textcursor(&textdocument);
     QByteArray rawline;
@@ -427,7 +447,7 @@ void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette, const Q
         textcursor.insertText(" ");
 
     QRect asciirect = linerect;
-    asciirect.setX(this->getAsciiColumnX() + this->getCellWidth());
+    asciirect.setX(this->getAsciiColumnX() + this->borderSize());
 
     this->applyDocumentStyles(painter, &textdocument);
     this->applyBasicStyle(textcursor, rawline);

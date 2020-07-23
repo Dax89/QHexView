@@ -10,6 +10,7 @@ QHexCursor::QHexCursor(QObject *parent) : QObject(parent), m_insertionmode(QHexC
     m_selection.line = m_selection.column = 0;
 
     m_position.nibbleindex = m_selection.nibbleindex = 1;
+    setLineWidth(DEFAULT_HEX_LINE_LENGTH);
 }
 
 const QHexPosition &QHexCursor::selectionStart() const
@@ -95,11 +96,11 @@ void QHexCursor::select(int line, int column, int nibbleindex)
 
 void QHexCursor::moveTo(int offset)
 {
-    int line = offset / HEX_LINE_LENGTH;
-    this->moveTo(line, offset - (line * HEX_LINE_LENGTH));
+    int line = offset / m_lineWidth;
+    this->moveTo(line, offset - (line * m_lineWidth));
 }
 
-void QHexCursor::select(int length) { this->select(m_position.line, std::min(HEX_LINE_LAST_COLUMN, m_position.column + length - 1)); }
+void QHexCursor::select(int length) { this->select(m_position.line, std::min(m_lineWidth - 1, m_position.column + length - 1)); }
 
 void QHexCursor::selectOffset(int offset, int length)
 {
@@ -114,6 +115,13 @@ void QHexCursor::setInsertionMode(QHexCursor::InsertionMode mode)
 
 	if (differentmode)
 		emit insertionModeChanged();
+}
+
+void QHexCursor::setLineWidth(int width)
+{
+    m_lineWidth = width;
+    m_position.lineWidth = width;
+    m_selection.lineWidth = width;
 }
 
 void QHexCursor::switchInsertionMode()

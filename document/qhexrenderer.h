@@ -36,6 +36,8 @@ class QHexRenderer : public QObject
         int documentWidth() const;
         int lineHeight() const;
         QRect getLineRect(int line, int firstline) const;
+        int borderSize() const;
+        int hexLineWidth() const;
 
     private:
         QString hexString(int line, QByteArray *rawline = nullptr) const;

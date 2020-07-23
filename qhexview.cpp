@@ -307,7 +307,7 @@ void QHexView::moveNext(bool select)
         column++;
     }
 
-    if(column > HEX_LINE_LAST_COLUMN)
+    if(column > m_renderer->hexLineWidth() - 1)
     {
         line = std::min(m_renderer->documentLastLine(), line + 1);
         column = 0;
@@ -315,9 +315,9 @@ void QHexView::moveNext(bool select)
     }
 
     if(select)
-        cur->select(line, std::min(HEX_LINE_LAST_COLUMN, column), nibbleindex);
+        cur->select(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
     else
-        cur->moveTo(line, std::min(HEX_LINE_LAST_COLUMN, column), nibbleindex);
+        cur->moveTo(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
 }
 
 void QHexView::movePrevious(bool select)
@@ -350,7 +350,7 @@ void QHexView::movePrevious(bool select)
     if(column < 0)
     {
         line = std::max(0, line - 1);
-        column = HEX_LINE_LAST_COLUMN;
+        column = m_renderer->hexLineWidth() - 1;
         nibbleindex = 0;
     }
 
@@ -521,14 +521,14 @@ bool QHexView::processMove(QHexCursor *cur, QKeyEvent *e)
             if(cur->currentLine() == m_renderer->documentLastLine())
                 cur->moveTo(cur->currentLine(), m_renderer->documentLastColumn());
             else
-                cur->moveTo(cur->currentLine(), HEX_LINE_LAST_COLUMN, 0);
+                cur->moveTo(cur->currentLine(), m_renderer->hexLineWidth() - 1, 0);
         }
         else
         {
             if(cur->currentLine() == m_renderer->documentLastLine())
                 cur->select(cur->currentLine(), m_renderer->documentLastColumn());
             else
-                cur->select(cur->currentLine(), HEX_LINE_LAST_COLUMN, 0);
+                cur->select(cur->currentLine(), m_renderer->hexLineWidth() - 1, 0);
         }
     }
     else

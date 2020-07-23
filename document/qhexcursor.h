@@ -3,11 +3,11 @@
 
 #include <QObject>
 
-#define HEX_LINE_LENGTH      0x10
-#define HEX_LINE_LAST_COLUMN (HEX_LINE_LENGTH - 1)
+#define DEFAULT_HEX_LINE_LENGTH      0x10
+#define DEFAULT_AREA_IDENTATION      0x01
 
 struct QHexPosition {
-    int line, column, nibbleindex;
+    int line, column, lineWidth, nibbleindex;
 
     QHexPosition() = default;
     QHexPosition(const QHexPosition&) = default;
@@ -19,7 +19,7 @@ struct QHexPosition {
         return *this;
     }
 
-    int offset() const { return (line * HEX_LINE_LENGTH) + column; }
+    int offset() const { return (line * lineWidth) + column; }
     int operator-(const QHexPosition& rhs) const { return this->offset() - rhs.offset(); }
     bool operator==(const QHexPosition& rhs) const { return (line == rhs.line) && (column == rhs.column) && (nibbleindex == rhs.nibbleindex); }
     bool operator!=(const QHexPosition& rhs) const { return (line != rhs.line) || (column != rhs.column) || (nibbleindex != rhs.nibbleindex); }
@@ -61,6 +61,7 @@ class QHexCursor : public QObject
         void select(int length);
         void selectOffset(int offset, int length);
         void setInsertionMode(InsertionMode mode);
+        void setLineWidth(int width);
         void switchInsertionMode();
 
     signals:
@@ -69,6 +70,7 @@ class QHexCursor : public QObject
 
     private:
         InsertionMode m_insertionmode;
+        int m_lineWidth;
         QHexPosition m_position, m_selection;
 };
 
