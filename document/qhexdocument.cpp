@@ -11,8 +11,11 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, QObject *parent): QObject(parent)
 {
     m_buffer = buffer;
     m_buffer->setParent(this); // Take Ownership
+    m_areaIdent = DEFAULT_AREA_IDENTATION;
+    m_hexLineWidth = DEFAULT_HEX_LINE_LENGTH;
 
     m_cursor = new QHexCursor(this);
+    m_cursor->setLineWidth(m_hexLineWidth);
     m_metadata = new QHexMetadata(this);
 
     connect(m_metadata, &QHexMetadata::metadataChanged, this, &QHexDocument::lineChanged);
@@ -29,6 +32,15 @@ bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
 int QHexDocument::length() const { return m_buffer->length(); }
 int QHexDocument::baseAddress() const { return m_baseaddress; }
 QHexCursor *QHexDocument::cursor() const { return m_cursor; }
+
+int QHexDocument::areaIdent() const { return m_areaIdent;}
+void QHexDocument::setAreaIdent(int value) { m_areaIdent = value; }
+int QHexDocument::hexLineWidth() const { return m_hexLineWidth; }
+void QHexDocument::setHexLineWidth(int value)
+{
+    m_hexLineWidth = value;
+    m_cursor->setLineWidth(value);
+}
 
 QHexMetadata *QHexDocument::metadata() const { return m_metadata; }
 QByteArray QHexDocument::read(int offset, int len) { return m_buffer->read(offset, len); }

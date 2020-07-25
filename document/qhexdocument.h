@@ -23,6 +23,10 @@ class QHexDocument: public QObject
         int baseAddress() const;
         QHexCursor* cursor() const;
         QHexMetadata* metadata() const;
+        int areaIdent() const;
+        void setAreaIdent(int value);
+        int hexLineWidth() const;
+        void setHexLineWidth(int value);
 
     public:
         void removeSelection();
@@ -64,6 +68,8 @@ class QHexDocument: public QObject
         QUndoStack m_undostack;
         QHexCursor* m_cursor;
         int m_baseaddress;
+        int m_areaIdent;
+        int m_hexLineWidth;
 };
 
 template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice, QObject *parent)
