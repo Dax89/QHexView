@@ -167,3 +167,30 @@ bool QHexDocument::saveTo(QIODevice *device)
     m_buffer->write(device);
     return true;
 }
+
+int QHexDocument::searchForward(const QByteArray &ba)
+{
+    int startPos = m_cursor->position().offset();
+    int findPos = m_buffer->indexOf(ba, startPos);
+    if (findPos > -1) {
+        m_cursor->clearSelection();
+        m_cursor->moveTo(findPos);
+        m_cursor->select(ba.length());
+    }
+    return findPos;
+}
+
+int QHexDocument::searchBackward(const QByteArray &ba)
+{
+    int startPos = m_cursor->position().offset() - 1;
+    if (m_cursor->hasSelection()) {
+        startPos = m_cursor->selectionStart().offset() - 1;
+    }
+    int findPos = m_buffer->lastIndexOf(ba, startPos);
+    if (findPos > -1) {
+        m_cursor->clearSelection();
+        m_cursor->moveTo(findPos);
+        m_cursor->select(ba.length());
+    }
+    return findPos;
+}

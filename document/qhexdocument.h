@@ -49,6 +49,10 @@ class QHexDocument: public QObject
         void remove(int offset, int len);
         QByteArray read(int offset, int len) const;
         bool saveTo(QIODevice* device);
+        
+        int searchForward(const QByteArray &ba);
+        int searchBackward(const QByteArray &ba);
+
 
     public:
         template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, QObject* parent = nullptr);

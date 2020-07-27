@@ -8,3 +8,6 @@ void QMemoryBuffer::remove(int offset, int length) { m_buffer.remove(offset, len
 QByteArray QMemoryBuffer::read(int offset, int length) { return m_buffer.mid(offset, length); }
 void QMemoryBuffer::read(QIODevice *device) { m_buffer = device->readAll(); }
 void QMemoryBuffer::write(QIODevice *device) { device->write(m_buffer); }
+
+int QMemoryBuffer::indexOf(const QByteArray& ba, int from) { return m_buffer.indexOf(ba, from); }
+int QMemoryBuffer::lastIndexOf(const QByteArray& ba, int from) { return m_buffer.lastIndexOf(ba, from); }
