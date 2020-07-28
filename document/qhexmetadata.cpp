@@ -82,13 +82,21 @@ void QHexMetadata::setMetadata(const QHexMetadataItem &mi)
     if(!m_metadata.contains(mi.line))
     {
         QHexLineMetadata linemetadata;
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
         linemetadata << mi;
+#else
+        linemetadata.push_back(mi);
+#endif
         m_metadata[mi.line] = linemetadata;
     }
     else
     {
         QHexLineMetadata& linemetadata = m_metadata[mi.line];
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
         linemetadata << mi;
+#else
+        linemetadata.push_back(mi);
+#endif
     }
 
     emit metadataChanged(mi.line);
