@@ -1,6 +1,6 @@
 #include "insertcommand.h"
 
-InsertCommand::InsertCommand(QHexBuffer *buffer, int offset, const QByteArray &data, QUndoCommand *parent): HexCommand(buffer, parent)
+InsertCommand::InsertCommand(QHexBuffer *buffer, quint64 offset, const QByteArray &data, QUndoCommand *parent): HexCommand(buffer, parent)
 {
     m_offset = offset;
     m_data = data;
