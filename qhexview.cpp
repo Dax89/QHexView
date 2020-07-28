@@ -213,13 +213,13 @@ void QHexView::focusOutEvent(QFocusEvent *e)
 
 void QHexView::wheelEvent(QWheelEvent *e)
 {
-    if(e->orientation() == Qt::Vertical)
+    if(e->angleDelta().y() == 0)
     {
         int value = this->verticalScrollBar()->value();
 
-        if(e->delta() < 0) // Scroll Down
+        if(e->angleDelta().x() < 0) // Scroll Down
             this->verticalScrollBar()->setValue(value + DOCUMENT_WHEEL_LINES);
-        else if(e->delta() > 0) // Scroll Up
+        else if(e->angleDelta().x() > 0) // Scroll Up
             this->verticalScrollBar()->setValue(value - DOCUMENT_WHEEL_LINES);
 
         return;
@@ -296,7 +296,8 @@ void QHexView::moveNext(bool select)
 
     if((m_renderer->selectedArea() == QHexRenderer::HexArea))
     {
-        nibbleindex = (++nibbleindex % 2);
+        nibbleindex++;
+        nibbleindex %= 2;
 
         if(nibbleindex)
             column++;
@@ -336,7 +337,8 @@ void QHexView::movePrevious(bool select)
 
     if((m_renderer->selectedArea() == QHexRenderer::HexArea))
     {
-        nibbleindex = (--nibbleindex % 2);
+        nibbleindex--;
+        nibbleindex %= 2;
 
         if(!nibbleindex)
             column--;
