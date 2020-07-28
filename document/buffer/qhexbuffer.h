@@ -25,6 +25,10 @@ class QHexBuffer : public QObject
         virtual QByteArray read(int offset, int length) = 0;
         virtual void read(QIODevice* iodevice) = 0;
         virtual void write(QIODevice* iodevice) = 0;
+
+        virtual int indexOf(const QByteArray& ba, int from) = 0;
+        virtual int lastIndexOf(const QByteArray& ba, int from) = 0;
+
 };
 
 #endif // QHEXBUFFER_H

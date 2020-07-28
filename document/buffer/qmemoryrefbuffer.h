@@ -17,6 +17,8 @@ class QMemoryRefBuffer : public QHexBuffer
         void read(QIODevice* device) override;
         void write(QIODevice* device) override;
 
+        int indexOf(const QByteArray& ba, int from) override;
+        int lastIndexOf(const QByteArray& ba, int from) override;
     private:
         QBuffer* m_buffer;
 };

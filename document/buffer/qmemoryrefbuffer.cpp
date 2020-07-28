@@ -20,3 +20,17 @@ void QMemoryRefBuffer::write(QIODevice *device)
     m_buffer->seek(0);
     device->write(m_buffer->readAll());
 }
+
+int QMemoryRefBuffer::indexOf(const QByteArray& ba, int from)
+{
+    m_buffer->seek(0);
+    QByteArray data = m_buffer->readAll();
+    return data.indexOf(ba, from);
+}
+
+int QMemoryRefBuffer::lastIndexOf(const QByteArray& ba, int from)
+{
+    m_buffer->seek(0);
+    QByteArray data = m_buffer->readAll();
+    return data.lastIndexOf(ba, from);
+}
