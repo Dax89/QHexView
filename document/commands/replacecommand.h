@@ -6,7 +6,7 @@
 class ReplaceCommand: public HexCommand
 {
     public:
-        ReplaceCommand(QHexBuffer* buffer, int offset, const QByteArray& data, QUndoCommand* parent = 0);
+        ReplaceCommand(QHexBuffer* buffer, int offset, const QByteArray& data, QUndoCommand* parent = nullptr);
         void undo() override;
         void redo() override;
 

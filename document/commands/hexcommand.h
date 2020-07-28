@@ -7,7 +7,7 @@
 class HexCommand: public QUndoCommand
 {
     public:
-        HexCommand(QHexBuffer* buffer, QUndoCommand* parent = 0);
+        HexCommand(QHexBuffer* buffer, QUndoCommand* parent = nullptr);
 
     protected:
         QHexBuffer* m_buffer;
