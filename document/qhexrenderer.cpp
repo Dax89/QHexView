@@ -193,7 +193,6 @@ int QHexRenderer::getCellWidth() const
 
 int QHexRenderer::getNibbleIndex(int line, int relx) const
 {
-    relx -= this->getCellWidth(); // Remove padding
     QString hexstring = this->hexString(line);
 
     for(int i = 0; i < hexstring.size(); i++)

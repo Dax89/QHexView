@@ -136,7 +136,10 @@ void QHexView::mousePressEvent(QMouseEvent *e)
         return;
 
     m_renderer->selectArea(e->pos());
-    m_document->cursor()->moveTo(position);
+    if (m_renderer->selectedArea() != QHexRenderer::ExtraArea) {
+        m_document->cursor()->moveTo(position);
+    }
+
     e->accept();
 }
 
