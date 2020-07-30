@@ -94,6 +94,8 @@ template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice,
             iodevice->close();
 
         return new QHexDocument(hexbuffer, parent);
+    } else {
+        delete hexbuffer;
     }
 
     return nullptr;

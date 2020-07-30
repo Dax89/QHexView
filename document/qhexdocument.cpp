@@ -203,6 +203,8 @@ QHexDocument* QHexDocument::fromLargeFile(QString filename, QObject *parent)
     if (hexbuffer->read(f))
     {
         return new QHexDocument(hexbuffer, parent);
+    } else {
+        delete hexbuffer;
     }
 
     return nullptr;
