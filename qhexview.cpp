@@ -136,7 +136,10 @@ void QHexView::mousePressEvent(QMouseEvent *e)
         return;
 
     m_renderer->selectArea(e->pos());
-    m_document->cursor()->moveTo(position);
+    if (m_renderer->selectedArea() != QHexRenderer::ExtraArea) {
+        m_document->cursor()->moveTo(position);
+    }
+
     e->accept();
 }
 
@@ -243,10 +246,10 @@ void QHexView::paintEvent(QPaintEvent *e)
     painter.setFont(this->font());
 
     const QRect& r = e->rect();
-    int firstvisible = this->firstVisibleLine();
-    int first = firstvisible + (r.top() / m_renderer->lineHeight());
-    int last = firstvisible + (r.bottom() / m_renderer->lineHeight());
-    int count = (last - first) + 1;
+    quint64 firstvisible = this->firstVisibleLine();
+    quint64 first = firstvisible + (r.top() / m_renderer->lineHeight());
+    quint64 last = firstvisible + (r.bottom() / m_renderer->lineHeight());
+    int count = static_cast<int>((last - first) + 1);
 
     m_renderer->render(&painter, first, count, firstvisible);
     m_renderer->renderFrame(&painter);
@@ -259,7 +262,8 @@ void QHexView::moveToSelection()
     if(!this->isLineVisible(cur->currentLine()))
     {
         QScrollBar* vscrollbar = this->verticalScrollBar();
-        vscrollbar->setValue(std::max(0, cur->currentLine() - this->visibleLines() / 2));
+        int scrollPos = static_cast<int>(std::max(quint64(0), (cur->currentLine() - this->visibleLines() / 2)) / documentSizeFactor());
+        vscrollbar->setValue(scrollPos);
     }
     else
         this->viewport()->update();
@@ -277,7 +281,8 @@ void QHexView::blinkCursor()
 void QHexView::moveNext(bool select)
 {
     QHexCursor* cur = m_document->cursor();
-    int line = cur->currentLine(), column = cur->currentColumn();
+    quint64 line = cur->currentLine();
+    int column = cur->currentColumn();
     bool lastcell = (line >= m_renderer->documentLastLine()) && (column >= m_renderer->documentLastColumn());
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && lastcell)
@@ -324,7 +329,8 @@ void QHexView::moveNext(bool select)
 void QHexView::movePrevious(bool select)
 {
     QHexCursor* cur = m_document->cursor();
-    int line = cur->currentLine(), column = cur->currentColumn();
+    quint64 line = cur->currentLine();
+    int column = cur->currentColumn();
     bool firstcell = !line && !column;
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && firstcell)
@@ -351,7 +357,7 @@ void QHexView::movePrevious(bool select)
 
     if(column < 0)
     {
-        line = std::max(0, line - 1);
+        line = std::max(quint64(0), line - 1);
         column = m_renderer->hexLineWidth() - 1;
         nibbleindex = 0;
     }
@@ -458,7 +464,7 @@ bool QHexView::processMove(QHexCursor *cur, QKeyEvent *e)
         if(!cur->currentLine())
             return true;
 
-        int prevline = cur->currentLine() - 1;
+        quint64 prevline = cur->currentLine() - 1;
 
         if(e->matches(QKeySequence::MoveToPreviousLine))
             cur->moveTo(prevline, cur->currentColumn());
@@ -482,7 +488,7 @@ bool QHexView::processMove(QHexCursor *cur, QKeyEvent *e)
         if(!cur->currentLine())
             return true;
 
-        int pageline = std::max(0, cur->currentLine() - this->visibleLines());
+        quint64 pageline = std::max(quint64(0), cur->currentLine() - this->visibleLines());
 
         if(e->matches(QKeySequence::MoveToPreviousPage))
             cur->moveTo(pageline, cur->currentColumn());
@@ -598,7 +604,9 @@ void QHexView::adjustScrollBars()
     QScrollBar *vscrollbar = this->verticalScrollBar();
     QScrollBar *hscrollbar = this->horizontalScrollBar();
 
-    if(m_renderer->documentLines() > this->visibleLines())
+    quint64 docLines = m_renderer->documentLines();
+    quint64 visLines = this->visibleLines();
+    if(docLines > visLines)
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     else
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -610,13 +618,15 @@ void QHexView::adjustScrollBars()
 
     hscrollbar->setMaximum(m_renderer->documentWidth());
 
-    if(m_renderer->documentLines() <= this->visibleLines())
-        vscrollbar->setMaximum(m_renderer->documentLines());
+    int sizeFactor = this->documentSizeFactor();
+    vscrollbar->setSingleStep(sizeFactor);
+    if(docLines <= visLines)
+        vscrollbar->setMaximum(static_cast<int>(docLines));
     else
-        vscrollbar->setMaximum(m_renderer->documentLines() - this->visibleLines() + 1);
+        vscrollbar->setMaximum(static_cast<int>((docLines - visLines) / sizeFactor + 1));
 }
 
-void QHexView::renderLine(int line)
+void QHexView::renderLine(quint64 line)
 {
     if(!this->isLineVisible(line))
         return;
@@ -624,18 +634,23 @@ void QHexView::renderLine(int line)
     this->viewport()->update(m_renderer->getLineRect(line, this->firstVisibleLine()));
 }
 
-int QHexView::firstVisibleLine() const { return this->verticalScrollBar()->value(); }
-int QHexView::lastVisibleLine() const { return this->firstVisibleLine() + this->visibleLines() - 1; }
-
-int QHexView::visibleLines() const
+quint64 QHexView::firstVisibleLine() const
 {
-    QFontMetrics fontmetrics = this->fontMetrics();
-    int vl = std::ceil(this->height() / fontmetrics.height());
-
-    return std::min(vl, m_renderer->documentLines());
+    quint64 value = this->verticalScrollBar()->value() * documentSizeFactor();
+    return value;
 }
 
-bool QHexView::isLineVisible(int line) const
+quint64 QHexView::lastVisibleLine() const { return this->firstVisibleLine() + this->visibleLines() - 1; }
+
+quint64 QHexView::visibleLines() const
+{
+    QFontMetrics fontmetrics = this->fontMetrics();
+    int visLines = std::ceil(this->height() / fontmetrics.height());
+
+    return std::min(quint64(visLines), m_renderer->documentLines());
+}
+
+bool QHexView::isLineVisible(quint64 line) const
 {
     if(line < this->firstVisibleLine())
         return false;
@@ -644,4 +659,15 @@ bool QHexView::isLineVisible(int line) const
         return false;
 
     return true;
+}
+
+int QHexView::documentSizeFactor() const {
+    int factor = 1;
+    if (m_document) {
+        quint64 docLines = m_renderer->documentLines();
+        if (docLines >= INT_MAX) {
+            factor = static_cast<int>(docLines / INT_MAX) + 1;
+        }
+    }
+    return factor;
 }

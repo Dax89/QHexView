@@ -21,29 +21,29 @@ class QHexRenderer : public QObject
     public:
         explicit QHexRenderer(QHexDocument* document, const QFontMetrics& fontmetrics, QObject *parent = nullptr);
         void renderFrame(QPainter* painter);
-        void render(QPainter* painter, int start, int count, int firstline);
+        void render(QPainter* painter, quint64 start, int count, quint64 firstline);
         void enableCursor(bool b = true);
         void selectArea(const QPoint& pt);
 
     public:
         void blinkCursor();
-        bool hitTest(const QPoint& pt, QHexPosition* position, int firstline) const;
+        bool hitTest(const QPoint& pt, QHexPosition* position, quint64 firstline) const;
         int hitTestArea(const QPoint& pt) const;
         int selectedArea() const;
-        int documentLastLine() const;
+        quint64 documentLastLine() const;
         int documentLastColumn() const;
-        int documentLines() const;
+        quint64 documentLines() const;
         int documentWidth() const;
         int lineHeight() const;
-        QRect getLineRect(int line, int firstline) const;
+        QRect getLineRect(quint64 line, quint64 firstline) const;
         int borderSize() const;
-        int hexLineWidth() const;
+        qint8 hexLineWidth() const;
 
     private:
-        QString hexString(int line, QByteArray *rawline = nullptr) const;
-        QString asciiString(int line, QByteArray *rawline = nullptr) const;
-        QByteArray getLine(int line) const;
-        int rendererLength() const;
+        QString hexString(quint64 line, QByteArray *rawline = nullptr) const;
+        QString asciiString(quint64 line, QByteArray *rawline = nullptr) const;
+        QByteArray getLine(quint64 line) const;
+        qint64 rendererLength() const;
         int getAddressWidth() const;
         int getHexColumnX() const;
         int getAsciiColumnX() const;
@@ -55,13 +55,13 @@ class QHexRenderer : public QObject
     private:
         void applyDocumentStyles(QPainter* painter, QTextDocument *textdocument) const;
         void applyBasicStyle(QTextCursor& textcursor, const QByteArray& rawline, int factor = 1) const;
-        void applyMetadata(QTextCursor& textcursor, int line, int factor = 1) const;
-        void applySelection(QTextCursor& textcursor, int line, int factor = 1) const;
-        void applyCursorAscii(QTextCursor& textcursor, int line) const;
-        void applyCursorHex(QTextCursor& textcursor, int line) const;
-        void drawAddress(QPainter *painter, const QPalette &palette, const QRect &linerect, int line);
-        void drawHex(QPainter *painter, const QPalette &palette, const QRect &linerect, int line);
-        void drawAscii(QPainter *painter, const QPalette &palette, const QRect &linerect, int line);
+        void applyMetadata(QTextCursor& textcursor, quint64 line, int factor = 1) const;
+        void applySelection(QTextCursor& textcursor, quint64 line, int factor = 1) const;
+        void applyCursorAscii(QTextCursor& textcursor, quint64 line) const;
+        void applyCursorHex(QTextCursor& textcursor, quint64 line) const;
+        void drawAddress(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
+        void drawHex(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
+        void drawAscii(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
 
     private:
         QHexDocument* m_document;

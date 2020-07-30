@@ -1,6 +1,6 @@
 #include "removecommand.h"
 
-RemoveCommand::RemoveCommand(QHexBuffer *buffer, int offset, int length, QUndoCommand *parent): HexCommand(buffer, parent)
+RemoveCommand::RemoveCommand(QHexBuffer *buffer, qint64 offset, int length, QUndoCommand *parent): HexCommand(buffer, parent)
 {
     m_offset = offset;
     m_length = length;
