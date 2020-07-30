@@ -7,7 +7,9 @@
 #define DEFAULT_AREA_IDENTATION      0x01
 
 struct QHexPosition {
-    int line, column, lineWidth, nibbleindex;
+    quint64 line;
+    int column, nibbleindex;
+    quint8 lineWidth;
 
     QHexPosition() = default;
     QHexPosition(const QHexPosition&) = default;
@@ -19,7 +21,7 @@ struct QHexPosition {
         return *this;
     }
 
-    int offset() const { return (line * lineWidth) + column; }
+    qint64 offset() const { return static_cast<qint64>(line * lineWidth) + column; }
     int operator-(const QHexPosition& rhs) const { return this->offset() - rhs.offset(); }
     bool operator==(const QHexPosition& rhs) const { return (line == rhs.line) && (column == rhs.column) && (nibbleindex == rhs.nibbleindex); }
     bool operator!=(const QHexPosition& rhs) const { return (line != rhs.line) || (column != rhs.column) || (nibbleindex != rhs.nibbleindex); }
@@ -33,7 +35,7 @@ class QHexCursor : public QObject
         enum InsertionMode { OverwriteMode, InsertMode };
 
     public:
-        explicit QHexCursor(QObject *parent = 0);
+        explicit QHexCursor(QObject *parent = nullptr);
 
     public:
         const QHexPosition& selectionStart() const;
@@ -41,27 +43,27 @@ class QHexCursor : public QObject
         const QHexPosition& position() const;
         InsertionMode insertionMode() const;
         int selectionLength() const;
-        int currentLine() const;
+        quint64 currentLine() const;
         int currentColumn() const;
         int currentNibble() const;
-        int selectionLine() const;
+        quint64 selectionLine() const;
         int selectionColumn() const;
         int selectionNibble() const;
         bool atEnd() const;
-        bool isLineSelected(int line) const;
+        bool isLineSelected(quint64 line) const;
         bool hasSelection() const;
         void clearSelection();
 
     public:
         void moveTo(const QHexPosition& pos);
-        void moveTo(int line, int column, int nibbleindex = 1);
-        void moveTo(int offset);
+        void moveTo(quint64 line, int column, int nibbleindex = 1);
+        void moveTo(qint64 offset);
         void select(const QHexPosition& pos);
-        void select(int line, int column, int nibbleindex = 1);
+        void select(quint64 line, int column, int nibbleindex = 1);
         void select(int length);
-        void selectOffset(int offset, int length);
+        void selectOffset(qint64 offset, int length);
         void setInsertionMode(InsertionMode mode);
-        void setLineWidth(int width);
+        void setLineWidth(quint8 width);
         void switchInsertionMode();
 
     signals:
@@ -70,7 +72,7 @@ class QHexCursor : public QObject
 
     private:
         InsertionMode m_insertionmode;
-        int m_lineWidth;
+        qint8 m_lineWidth;
         QHexPosition m_position, m_selection;
 };
 

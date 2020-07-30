@@ -4,6 +4,7 @@
 #include <QUndoStack>
 #include <QFile>
 #include "buffer/qhexbuffer.h"
+#include "buffer/qfilebuffer.h"
 #include "qhexmetadata.h"
 #include "qhexcursor.h"
 
@@ -19,21 +20,21 @@ class QHexDocument: public QObject
         bool atEnd() const;
         bool canUndo() const;
         bool canRedo() const;
-        int length() const;
-        int baseAddress() const;
+        qint64 length() const;
+        quint64 baseAddress() const;
         QHexCursor* cursor() const;
         QHexMetadata* metadata() const;
-        int areaIdent() const;
-        void setAreaIdent(int value);
-        int hexLineWidth() const;
-        void setHexLineWidth(int value);
+        qint8 areaIdent() const;
+        void setAreaIdent(quint8 value);
+        qint8 hexLineWidth() const;
+        void setHexLineWidth(quint8 value);
 
     public:
         void removeSelection();
-        QByteArray read(int offset, int len = 0);
+        QByteArray read(qint64 offset, int len = 0);
         QByteArray selectedBytes() const;
         char at(int offset) const;
-        void setBaseAddress(int baseaddress);
+        void setBaseAddress(quint64 baseaddress);
         void sync();
 
     public slots:
@@ -42,38 +43,38 @@ class QHexDocument: public QObject
         void cut(bool hex = false);
         void copy(bool hex = false);
         void paste(bool hex = false);
-        void insert(int offset, uchar b);
-        void replace(int offset, uchar b);
-        void insert(int offset, const QByteArray& data);
-        void replace(int offset, const QByteArray& data);
-        void remove(int offset, int len);
-        QByteArray read(int offset, int len) const;
+        void insert(qint64 offset, uchar b);
+        void replace(qint64 offset, uchar b);
+        void insert(qint64 offset, const QByteArray& data);
+        void replace(qint64 offset, const QByteArray& data);
+        void remove(qint64 offset, int len);
+        QByteArray read(qint64 offset, int len) const;
         bool saveTo(QIODevice* device);
         
-        int searchForward(const QByteArray &ba);
-        int searchBackward(const QByteArray &ba);
-
+        qint64 searchForward(const QByteArray &ba);
+        qint64 searchBackward(const QByteArray &ba);
 
     public:
         template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromFile(QString filename, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromMemory(char *data, int size, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, QObject* parent = nullptr);
+        static QHexDocument* fromLargeFile(QString filename, QObject *parent = nullptr);
 
     signals:
         void canUndoChanged();
         void canRedoChanged();
         void documentChanged();
-        void lineChanged(int line);
+        void lineChanged(quint64 line);
 
     private:
         QHexBuffer* m_buffer;
         QHexMetadata* m_metadata;
         QUndoStack m_undostack;
         QHexCursor* m_cursor;
-        int m_baseaddress;
-        int m_areaIdent;
-        int m_hexLineWidth;
+        quint64 m_baseaddress;
+        quint8 m_areaIdent;
+        quint8 m_hexLineWidth;
 };
 
 template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice, QObject *parent)
@@ -87,12 +88,15 @@ template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice,
     }
 
     QHexBuffer* hexbuffer = new T();
-    hexbuffer->read(iodevice);
+    if (hexbuffer->read(iodevice))
+    {
+        if(needsclose)
+            iodevice->close();
 
-    if(needsclose)
-        iodevice->close();
+        return new QHexDocument(hexbuffer, parent);
+    }
 
-    return new QHexDocument(hexbuffer, parent);
+    return nullptr;
 }
 
 template<typename T> QHexDocument* QHexDocument::fromFile(QString filename, QObject *parent)

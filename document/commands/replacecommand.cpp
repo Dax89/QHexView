@@ -1,6 +1,6 @@
 #include "replacecommand.h"
 
-ReplaceCommand::ReplaceCommand(QHexBuffer *buffer, int offset, const QByteArray &data, QUndoCommand *parent): HexCommand(buffer, parent)
+ReplaceCommand::ReplaceCommand(QHexBuffer *buffer, qint64 offset, const QByteArray &data, QUndoCommand *parent): HexCommand(buffer, parent)
 {
     m_offset = offset;
     m_data = data;

@@ -45,11 +45,13 @@ class QHexView : public QAbstractScrollArea
         bool processTextInput(QHexCursor* cur, QKeyEvent* e);
         bool processAction(QHexCursor* cur, QKeyEvent* e);
         void adjustScrollBars();
-        void renderLine(int line);
-        int firstVisibleLine() const;
-        int lastVisibleLine() const;
-        int visibleLines() const;
-        bool isLineVisible(int line) const;
+        void renderLine(quint64 line);
+        quint64 firstVisibleLine() const;
+        quint64 lastVisibleLine() const;
+        quint64 visibleLines() const;
+        bool isLineVisible(quint64 line) const;
+
+        int documentSizeFactor() const;
 
     private:
         QHexDocument* m_document;

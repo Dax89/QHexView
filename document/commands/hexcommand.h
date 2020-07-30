@@ -11,7 +11,8 @@ class HexCommand: public QUndoCommand
 
     protected:
         QHexBuffer* m_buffer;
-        int m_offset, m_length;
+        qint64 m_offset;
+        int m_length;
         QByteArray m_data;
 };
 
