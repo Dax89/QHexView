@@ -136,7 +136,8 @@ void QHexView::mousePressEvent(QMouseEvent *e)
         return;
 
     m_renderer->selectArea(e->pos());
-    if (m_renderer->selectedArea() != QHexRenderer::ExtraArea) {
+    if (m_renderer->selectedArea() == QHexRenderer::HexArea ||
+        m_renderer->selectedArea() == QHexRenderer::AsciiArea) {
         m_document->cursor()->moveTo(position);
     }
 
@@ -173,10 +174,10 @@ void QHexView::mouseMoveEvent(QMouseEvent *e)
 
     int hittest = m_renderer->hitTestArea(e->pos());
 
-    if((hittest == QHexRenderer::AddressArea) || (hittest == QHexRenderer::ExtraArea))
-        this->setCursor(Qt::ArrowCursor);
-    else
+    if((hittest == QHexRenderer::HexArea) || (hittest == QHexRenderer::AsciiArea))
         this->setCursor(Qt::IBeamCursor);
+    else
+        this->setCursor(Qt::ArrowCursor);
 }
 
 void QHexView::mouseReleaseEvent(QMouseEvent *e)
@@ -249,7 +250,7 @@ void QHexView::paintEvent(QPaintEvent *e)
     quint64 firstvisible = this->firstVisibleLine();
     quint64 first = firstvisible + (r.top() / m_renderer->lineHeight());
     quint64 last = firstvisible + (r.bottom() / m_renderer->lineHeight());
-    int count = static_cast<int>((last - first) + 1);
+    int count = static_cast<int>((last - first) - m_renderer->headerLineCount());
 
     m_renderer->render(&painter, first, count, firstvisible);
     m_renderer->renderFrame(&painter);
@@ -282,7 +283,7 @@ void QHexView::moveNext(bool select)
 {
     QHexCursor* cur = m_document->cursor();
     quint64 line = cur->currentLine();
-    int column = cur->currentColumn();
+    qint8 column = cur->currentColumn();
     bool lastcell = (line >= m_renderer->documentLastLine()) && (column >= m_renderer->documentLastColumn());
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && lastcell)
@@ -321,16 +322,16 @@ void QHexView::moveNext(bool select)
     }
 
     if(select)
-        cur->select(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
+        cur->select(line, std::min(static_cast<qint8>(m_renderer->hexLineWidth() - 1), column), nibbleindex);
     else
-        cur->moveTo(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
+        cur->moveTo(line, std::min(static_cast<qint8>(m_renderer->hexLineWidth() - 1), column), nibbleindex);
 }
 
 void QHexView::movePrevious(bool select)
 {
     QHexCursor* cur = m_document->cursor();
     quint64 line = cur->currentLine();
-    int column = cur->currentColumn();
+    qint8 column = cur->currentColumn();
     bool firstcell = !line && !column;
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && firstcell)
@@ -363,9 +364,9 @@ void QHexView::movePrevious(bool select)
     }
 
     if(select)
-        cur->select(line, std::max(0, column), nibbleindex);
+        cur->select(line, std::max(qint8(0), column), nibbleindex);
     else
-        cur->moveTo(line, std::max(0, column), nibbleindex);
+        cur->moveTo(line, std::max(qint8(0), column), nibbleindex);
 }
 
 void QHexView::renderCurrentLine()
@@ -631,7 +632,7 @@ void QHexView::renderLine(quint64 line)
     if(!this->isLineVisible(line))
         return;
 
-    this->viewport()->update(m_renderer->getLineRect(line, this->firstVisibleLine()));
+    this->viewport()->update(/*m_renderer->getLineRect(line, this->firstVisibleLine())*/);
 }
 
 quint64 QHexView::firstVisibleLine() const
@@ -644,14 +645,16 @@ quint64 QHexView::lastVisibleLine() const { return this->firstVisibleLine() + th
 
 quint64 QHexView::visibleLines() const
 {
-    QFontMetrics fontmetrics = this->fontMetrics();
-    int visLines = std::ceil(this->height() / fontmetrics.height());
+    int visLines = std::ceil(this->height() / m_renderer->lineHeight()) - m_renderer->headerLineCount();
 
     return std::min(quint64(visLines), m_renderer->documentLines());
 }
 
 bool QHexView::isLineVisible(quint64 line) const
 {
+    if (!m_document)
+        return false;
+
     if(line < this->firstVisibleLine())
         return false;
 

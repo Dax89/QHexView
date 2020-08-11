@@ -16,7 +16,7 @@ class QHexRenderer : public QObject
     Q_OBJECT
 
     public:
-        enum { AddressArea, HexArea, AsciiArea, ExtraArea };
+        enum { HeaderArea, AddressArea, HexArea, AsciiArea, ExtraArea };
 
     public:
         explicit QHexRenderer(QHexDocument* document, const QFontMetrics& fontmetrics, QObject *parent = nullptr);
@@ -31,11 +31,12 @@ class QHexRenderer : public QObject
         int hitTestArea(const QPoint& pt) const;
         int selectedArea() const;
         quint64 documentLastLine() const;
-        int documentLastColumn() const;
+        qint8 documentLastColumn() const;
         quint64 documentLines() const;
         int documentWidth() const;
         int lineHeight() const;
         QRect getLineRect(quint64 line, quint64 firstline) const;
+        int headerLineCount() const;
         int borderSize() const;
         qint8 hexLineWidth() const;
 
@@ -62,6 +63,7 @@ class QHexRenderer : public QObject
         void drawAddress(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
         void drawHex(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
         void drawAscii(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
+        void drawHeader(QPainter *painter, const QPalette &palette);
 
     private:
         QHexDocument* m_document;
