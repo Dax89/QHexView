@@ -30,6 +30,7 @@ class QHexRenderer : public QObject
         bool hitTest(const QPoint& pt, QHexPosition* position, quint64 firstline) const;
         int hitTestArea(const QPoint& pt) const;
         int selectedArea() const;
+        bool editableArea(int area) const;
         quint64 documentLastLine() const;
         qint8 documentLastColumn() const;
         quint64 documentLines() const;

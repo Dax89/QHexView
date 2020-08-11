@@ -70,7 +70,7 @@ void QHexRenderer::selectArea(const QPoint &pt)
 {
     int area = this->hitTestArea(pt);
 
-    if(area != QHexRenderer::HexArea && area != QHexRenderer::AsciiArea)
+    if(!editableArea(area))
         return;
 
     m_selectedarea = area;
@@ -80,7 +80,7 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
 {
     int area = this->hitTestArea(pt);
 
-    if(area != QHexRenderer::HexArea && area != QHexRenderer::AsciiArea)
+    if(!editableArea(area))
         return false;
 
     position->line = std::min(firstline + (pt.y() / this->lineHeight()) - headerLineCount(), this->documentLastLine());
@@ -128,6 +128,7 @@ int QHexRenderer::hitTestArea(const QPoint &pt) const
 }
 
 int QHexRenderer::selectedArea() const { return m_selectedarea; }
+bool QHexRenderer::editableArea(int area) const { return (area == QHexRenderer::HexArea || area == QHexRenderer::AsciiArea); }
 quint64 QHexRenderer::documentLastLine() const { return this->documentLines() - 1; }
 qint8 QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
 quint64 QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(hexLineWidth()));  }

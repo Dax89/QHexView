@@ -136,8 +136,7 @@ void QHexView::mousePressEvent(QMouseEvent *e)
         return;
 
     m_renderer->selectArea(e->pos());
-    if (m_renderer->selectedArea() == QHexRenderer::HexArea ||
-        m_renderer->selectedArea() == QHexRenderer::AsciiArea) {
+    if (m_renderer->editableArea(m_renderer->selectedArea())) {
         m_document->cursor()->moveTo(position);
     }
 
@@ -174,7 +173,7 @@ void QHexView::mouseMoveEvent(QMouseEvent *e)
 
     int hittest = m_renderer->hitTestArea(e->pos());
 
-    if((hittest == QHexRenderer::HexArea) || (hittest == QHexRenderer::AsciiArea))
+    if(m_renderer->editableArea(hittest))
         this->setCursor(Qt::IBeamCursor);
     else
         this->setCursor(Qt::ArrowCursor);
