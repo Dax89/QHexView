@@ -20,6 +20,11 @@ void QHexRenderer::renderFrame(QPainter *painter)
     int asciix = this->getAsciiColumnX();
     int endx = this->getEndColumnX();
 
+    painter->drawLine(0,
+                      headerLineCount() * lineHeight() - 1,
+                      endx,
+                      headerLineCount() * lineHeight() - 1);
+
     painter->drawLine(rect.x() + hexx,
                       rect.top(),
                       rect.x() + hexx,
@@ -40,6 +45,8 @@ void QHexRenderer::render(QPainter *painter, quint64 start, int count, quint64 f
 {
     quint64 end = start + count;
     QPalette palette = qApp->palette();
+
+    drawHeader(painter, palette);
 
     quint64 documentLines = this->documentLines();
     for(quint64 line = start; line < std::min(end, documentLines); line++)
@@ -63,7 +70,7 @@ void QHexRenderer::selectArea(const QPoint &pt)
 {
     int area = this->hitTestArea(pt);
 
-    if(area == QHexRenderer::AddressArea)
+    if(!editableArea(area))
         return;
 
     m_selectedarea = area;
@@ -73,10 +80,10 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
 {
     int area = this->hitTestArea(pt);
 
-    if(area == QHexRenderer::AddressArea)
+    if(!editableArea(area))
         return false;
 
-    position->line = std::min(firstline + (pt.y() / this->lineHeight()), this->documentLastLine());
+    position->line = std::min(firstline + (pt.y() / this->lineHeight()) - headerLineCount(), this->documentLastLine());
     position->lineWidth = this->hexLineWidth();
 
     if(area == QHexRenderer::HexArea)
@@ -95,16 +102,19 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
     if(position->line == this->documentLastLine()) // Check last line's columns
     {
         QByteArray ba = this->getLine(position->line);
-        position->column = std::min(position->column, ba.length());
+        position->column = std::min(position->column, static_cast<qint8>(ba.length()));
     }
     else
-        position->column = std::min(position->column, hexLineWidth() - 1);
+        position->column = std::min(position->column, static_cast<qint8>(hexLineWidth() - 1));
 
     return true;
 }
 
 int QHexRenderer::hitTestArea(const QPoint &pt) const
 {
+    if (pt.y() < headerLineCount() * lineHeight())
+        return QHexRenderer::HeaderArea;
+
     if ((pt.x() >= this->borderSize()) && (pt.x() <= (this->getHexColumnX() - this->borderSize())))
         return QHexRenderer::AddressArea;
 
@@ -118,12 +128,23 @@ int QHexRenderer::hitTestArea(const QPoint &pt) const
 }
 
 int QHexRenderer::selectedArea() const { return m_selectedarea; }
+bool QHexRenderer::editableArea(int area) const { return (area == QHexRenderer::HexArea || area == QHexRenderer::AsciiArea); }
 quint64 QHexRenderer::documentLastLine() const { return this->documentLines() - 1; }
-int QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
+qint8 QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
 quint64 QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(hexLineWidth()));  }
-int QHexRenderer::documentWidth() const { return this->getAsciiColumnX() + (this->getCellWidth() * hexLineWidth() + 2 * this->borderSize()); }
+int QHexRenderer::documentWidth() const { return this->getEndColumnX(); }
 int QHexRenderer::lineHeight() const { return m_fontmetrics.height(); }
-QRect QHexRenderer::getLineRect(quint64 line, quint64 firstline) const { return QRect(0, static_cast<int>((line - firstline) * m_fontmetrics.height()), this->getEndColumnX(), m_fontmetrics.height()); }
+
+QRect QHexRenderer::getLineRect(quint64 line, quint64 firstline) const
+{
+    QRect rect = QRect(0, static_cast<int>((line - firstline + headerLineCount()) * lineHeight()), this->getEndColumnX(), lineHeight());
+    return rect;
+}
+
+int QHexRenderer::headerLineCount() const
+{
+    return 1;
+}
 
 int QHexRenderer::borderSize() const
 {
@@ -396,14 +417,14 @@ void QHexRenderer::applyCursorHex(QTextCursor &textcursor, quint64 line) const
 
 void QHexRenderer::drawAddress(QPainter* painter, const QPalette& palette, const QRect& linerect, quint64 line)
 {
+    quint64 addr = line * hexLineWidth() + m_document->baseAddress();
+    QString addrStr = QString::number(addr, 16).rightJustified(this->getAddressWidth(), QLatin1Char('0')).toUpper();
+
     QRect addressrect = linerect;
     addressrect.setWidth(this->getHexColumnX());
 
     painter->save();
     painter->setPen(palette.color(QPalette::Highlight));
-
-    quint64 addr = line * hexLineWidth() + m_document->baseAddress();
-    QString addrStr = QString::number(addr, 16).rightJustified(this->getAddressWidth(), QLatin1Char('0')).toUpper();
     painter->drawText(addressrect, Qt::AlignHCenter | Qt::AlignVCenter, addrStr);
     painter->restore();
 }
@@ -458,5 +479,35 @@ void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette, const Q
     painter->save();
     painter->translate(asciirect.topLeft());
     textdocument.drawContents(painter);
+    painter->restore();
+}
+
+void QHexRenderer::drawHeader(QPainter *painter, const QPalette &palette)
+{
+    QRect rect = QRect(0, 0, this->getEndColumnX(), headerLineCount() * lineHeight());
+    QString hexHeader;
+    for (quint8 i = 0; i < hexLineWidth(); i++)
+    {
+        hexHeader.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(2, QChar('0'))).toUpper());
+    }
+
+    QRect addressRect = rect;
+    addressRect.setWidth(this->getHexColumnX());
+
+    QRect hexRect = rect;
+    hexRect.setX(this->getHexColumnX() + this->borderSize());
+    hexRect.setWidth(this->getCellWidth() * (hexLineWidth() * 3));
+
+    QRect asciiRect = rect;
+    asciiRect.setX(this->getAsciiColumnX());
+    asciiRect.setWidth(this->getEndColumnX() - this->getAsciiColumnX());
+
+    painter->save();
+    painter->setPen(palette.color(QPalette::Highlight));
+
+    painter->drawText(addressRect, Qt::AlignHCenter | Qt::AlignVCenter, QString("Offset"));
+    painter->drawText(hexRect, Qt::AlignHCenter | Qt::AlignVCenter, hexHeader);
+    painter->drawText(asciiRect, Qt::AlignHCenter | Qt::AlignVCenter, QString("Ascii"));
+
     painter->restore();
 }

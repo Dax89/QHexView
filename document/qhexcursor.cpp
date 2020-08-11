@@ -45,10 +45,10 @@ const QHexPosition &QHexCursor::position() const { return m_position; }
 QHexCursor::InsertionMode QHexCursor::insertionMode() const { return m_insertionmode; }
 int QHexCursor::selectionLength() const { return this->selectionEnd() - this->selectionStart() + 1;  }
 quint64 QHexCursor::currentLine() const { return m_position.line; }
-int QHexCursor::currentColumn() const { return m_position.column; }
+qint8 QHexCursor::currentColumn() const { return m_position.column; }
 int QHexCursor::currentNibble() const { return m_position.nibbleindex; }
 quint64 QHexCursor::selectionLine() const { return m_selection.line; }
-int QHexCursor::selectionColumn() const { return m_selection.column; }
+qint8 QHexCursor::selectionColumn() const { return m_selection.column; }
 int QHexCursor::selectionNibble() const { return m_selection.nibbleindex;  }
 
 bool QHexCursor::isLineSelected(quint64 line) const
@@ -76,7 +76,7 @@ void QHexCursor::clearSelection()
 void QHexCursor::moveTo(const QHexPosition &pos) { this->moveTo(pos.line, pos.column, pos.nibbleindex); }
 void QHexCursor::select(const QHexPosition &pos) { this->select(pos.line, pos.column, pos.nibbleindex); }
 
-void QHexCursor::moveTo(quint64 line, int column, int nibbleindex)
+void QHexCursor::moveTo(quint64 line, qint8 column, int nibbleindex)
 {
     m_selection.line = line;
     m_selection.column = column;
@@ -85,7 +85,7 @@ void QHexCursor::moveTo(quint64 line, int column, int nibbleindex)
     this->select(line, column, nibbleindex);
 }
 
-void QHexCursor::select(quint64 line, int column, int nibbleindex)
+void QHexCursor::select(quint64 line, qint8 column, int nibbleindex)
 {
     m_position.line = line;
     m_position.column = column;
@@ -96,7 +96,7 @@ void QHexCursor::select(quint64 line, int column, int nibbleindex)
 
 void QHexCursor::moveTo(qint64 offset)
 {
-    int line = offset / m_lineWidth;
+    quint64 line = offset / m_lineWidth;
     this->moveTo(line, offset - (line * m_lineWidth));
 }
 
