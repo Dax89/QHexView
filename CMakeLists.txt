@@ -8,6 +8,7 @@ set(QHEXVIEW_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qhexbuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemoryrefbuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemorybuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qfilebuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.h
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexmetadata.h
@@ -23,6 +24,7 @@ set(QHEXVIEW_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qhexbuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemoryrefbuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemorybuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qfilebuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexmetadata.cpp
