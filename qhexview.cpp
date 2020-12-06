@@ -636,7 +636,7 @@ void QHexView::renderLine(quint64 line)
 
 quint64 QHexView::firstVisibleLine() const
 {
-    quint64 value = this->verticalScrollBar()->value() * documentSizeFactor();
+    quint64 value = quint64(this->verticalScrollBar()->value()) * documentSizeFactor();
     return value;
 }
 
