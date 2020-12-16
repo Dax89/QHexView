@@ -1,33 +1,33 @@
 project(QHexView)
 
-set(QHEXVIEW_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qhexbuffer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemoryrefbuffer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemorybuffer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qfilebuffer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexmetadata.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexrenderer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/qhexview.h
-    PARENT_SCOPE)
+add_library(qhexview-lib STATIC
+    document/buffer/qfilebuffer.cpp
+    document/buffer/qfilebuffer.h
+    document/buffer/qhexbuffer.cpp
+    document/buffer/qhexbuffer.h
+    document/buffer/qmemorybuffer.cpp
+    document/buffer/qmemorybuffer.h
+    document/buffer/qmemoryrefbuffer.cpp
+    document/buffer/qmemoryrefbuffer.h
+    document/commands/hexcommand.cpp
+    document/commands/hexcommand.h
+    document/commands/insertcommand.cpp
+    document/commands/insertcommand.h
+    document/commands/removecommand.cpp
+    document/commands/removecommand.h
+    document/commands/replacecommand.cpp
+    document/commands/replacecommand.h
+    document/qhexcursor.cpp
+    document/qhexcursor.h
+    document/qhexdocument.cpp
+    document/qhexdocument.h
+    document/qhexmetadata.cpp
+    document/qhexmetadata.h
+    document/qhexrenderer.cpp
+    document/qhexrenderer.h
+    qhexview.cpp
+    qhexview.h
+)
 
-set(QHEXVIEW_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/hexcommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/insertcommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/removecommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/commands/replacecommand.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qhexbuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemoryrefbuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qmemorybuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/buffer/qfilebuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexcursor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexdocument.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexmetadata.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/document/qhexrenderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/qhexview.cpp
-    PARENT_SCOPE)
+target_link_libraries(qhexview-lib PRIVATE Qt5::Widgets)
+target_include_directories(qhexview-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
