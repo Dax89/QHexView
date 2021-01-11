@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QColor>
 #include <QHash>
+#include <QVector>
 
 struct QHexMetadataAbsoluteItem
 {
