@@ -36,7 +36,9 @@ class QHexMetadata : public QObject
         const QHexLineMetadata& get(int line) const;
         QString comments(int line, int column) const;
         bool hasMetadata(int line) const;
-        void clear(int line);
+
+        void clear(int line); // this is transient till next call to setLineWidth()
+
         void clear();
         void setLineWidth(quint8 width);
 

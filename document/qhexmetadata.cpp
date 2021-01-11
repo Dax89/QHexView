@@ -48,6 +48,7 @@ void QHexMetadata::clear(int line)
 
 void QHexMetadata::clear()
 {
+    m_absoluteMetadata.clear();
     m_metadata.clear();
     emit metadataCleared();
 }
