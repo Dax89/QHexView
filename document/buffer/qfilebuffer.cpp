@@ -16,8 +16,8 @@ QFileBuffer::~QFileBuffer()
 
 uchar QFileBuffer::at(qint64 idx) {
     m_buffer->seek(idx);
-    char c;
-    bool res = m_buffer->getChar(&c);
+    char c = '\0';
+    m_buffer->getChar(&c);
     return static_cast<uchar>(c);
 }
 
