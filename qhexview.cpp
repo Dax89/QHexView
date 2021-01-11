@@ -246,12 +246,22 @@ void QHexView::paintEvent(QPaintEvent *e)
     painter.setFont(this->font());
 
     const QRect& r = e->rect();
-    quint64 firstvisible = this->firstVisibleLine();
-    quint64 first = firstvisible + (r.top() / m_renderer->lineHeight());
-    quint64 last = firstvisible + (r.bottom() / m_renderer->lineHeight());
-    int count = static_cast<int>((last - first) - m_renderer->headerLineCount());
 
-    m_renderer->render(&painter, first, count, firstvisible);
+    const quint64 firstVisible = this->firstVisibleLine();
+    const int lineHeight = m_renderer->lineHeight();
+    const int headerCount = m_renderer->headerLineCount();
+
+    // these are lines from the point of view of the visible rect
+    // where the first "headerCount" are taken by the header
+    const int first = (r.top() / lineHeight);  // included
+    const int lastPlusOne = (r.bottom() / lineHeight) + 1;  // excluded
+
+    // compute document lines, adding firstVisible and removing the header
+    // the max is necessary if the rect covers the header
+    const quint64 begin = firstVisible + std::max(first - headerCount, 0);
+    const quint64 end = firstVisible + std::max(lastPlusOne - headerCount, 0) ;
+
+    m_renderer->render(&painter, begin, end, firstVisible);
     m_renderer->renderFrame(&painter);
 }
 
