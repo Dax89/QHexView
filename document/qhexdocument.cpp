@@ -17,6 +17,7 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, QObject *parent): QObject(parent)
     m_cursor = new QHexCursor(this);
     m_cursor->setLineWidth(m_hexLineWidth);
     m_metadata = new QHexMetadata(this);
+    m_metadata->setLineWidth(m_hexLineWidth);
 
     connect(m_metadata, &QHexMetadata::metadataChanged, this, &QHexDocument::lineChanged);
     connect(m_metadata, &QHexMetadata::metadataCleared, this, &QHexDocument::documentChanged);
@@ -40,6 +41,7 @@ void QHexDocument::setHexLineWidth(quint8 value)
 {
     m_hexLineWidth = value;
     m_cursor->setLineWidth(value);
+    m_metadata->setLineWidth(value);
 }
 
 QHexMetadata *QHexDocument::metadata() const { return m_metadata; }

@@ -6,6 +6,14 @@
 #include <QColor>
 #include <QHash>
 
+struct QHexMetadataAbsoluteItem
+{
+    qint64 begin;
+    qint64 end;
+    QColor foreground, background;
+    QString comment;
+};
+
 struct QHexMetadataItem
 {
     int line, start, length;
@@ -30,8 +38,13 @@ class QHexMetadata : public QObject
         bool hasMetadata(int line) const;
         void clear(int line);
         void clear();
+        void setLineWidth(quint8 width);
 
     public:
+        // new interface with begin, end
+        void metadata(qint64 begin, qint64 end, const QColor &fgcolor, const QColor &bgcolor, const QString &comment);
+
+        // old interface with line, start, length
         void metadata(int line, int start, int length, const QColor& fgcolor, const QColor& bgcolor, const QString& comment);
         void color(int line, int start, int length, const QColor& fgcolor, const QColor& bgcolor);
         void foreground(int line, int start, int length, const QColor& fgcolor);
@@ -40,13 +53,16 @@ class QHexMetadata : public QObject
 
     private:
         void setMetadata(const QHexMetadataItem& mi);
+        void setAbsoluteMetadata(const QHexMetadataAbsoluteItem& mi);
 
     signals:
         void metadataChanged(int line);
         void metadataCleared();
 
     private:
+        quint8 m_lineWidth;
         QHash<int, QHexLineMetadata> m_metadata;
+        QVector<QHexMetadataAbsoluteItem> m_absoluteMetadata;
 };
 
 #endif // QHEXMETADATA_H
