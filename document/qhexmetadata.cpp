@@ -48,13 +48,70 @@ void QHexMetadata::clear(int line)
 
 void QHexMetadata::clear()
 {
+    m_absoluteMetadata.clear();
     m_metadata.clear();
     emit metadataCleared();
 }
 
+void QHexMetadata::metadata(qint64 begin, qint64 end, const QColor &fgcolor, const QColor &bgcolor, const QString &comment)
+{
+    m_absoluteMetadata.append({ begin, end, fgcolor, bgcolor, comment});
+    setAbsoluteMetadata(m_absoluteMetadata.back());
+}
+
+void QHexMetadata::setAbsoluteMetadata(const QHexMetadataAbsoluteItem& mai)
+{
+    const int firstRow = mai.begin / m_lineWidth;
+    const int lastRow = mai.end / m_lineWidth;
+
+    for (int row = firstRow; row <= lastRow; ++row)
+    {
+        int start, length;
+        if (row == firstRow)
+        {
+            start = mai.begin % m_lineWidth;
+        }
+        else
+        {
+            start = 0;
+        }
+        if (row == lastRow)
+        {
+            const int lastChar = mai.end % m_lineWidth;
+            length = lastChar - start;
+        }
+        else
+        {
+            length = m_lineWidth;
+        }
+        if (length > 0)
+        {
+            setMetadata({row, start, length, mai.foreground, mai.background, mai.comment});
+        }
+    }
+}
+
+void QHexMetadata::setLineWidth(quint8 width)
+{
+    if (width != m_lineWidth)
+    {
+        m_lineWidth = width;
+        // clean m_metadata
+        m_metadata.clear();
+        // and regenerate with new line width size
+        for (int i = 0; i < m_absoluteMetadata.size(); ++i)
+        {
+            setAbsoluteMetadata(m_absoluteMetadata[i]);
+        }
+    }
+}
+
 void QHexMetadata::metadata(int line, int start, int length, const QColor &fgcolor, const QColor &bgcolor, const QString &comment)
 {
-    this->setMetadata({ line, start, length, fgcolor, bgcolor, comment});
+    const qint64 begin = line * m_lineWidth + start;
+    const qint64 end = begin + length;
+    // delegate to the new interface
+    this->metadata(begin, end, fgcolor, bgcolor, comment);
 }
 
 void QHexMetadata::color(int line, int start, int length, const QColor &fgcolor, const QColor &bgcolor)
