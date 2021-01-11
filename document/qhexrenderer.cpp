@@ -41,15 +41,14 @@ void QHexRenderer::renderFrame(QPainter *painter)
                       rect.bottom());
 }
 
-void QHexRenderer::render(QPainter *painter, quint64 start, int count, quint64 firstline)
+void QHexRenderer::render(QPainter *painter, quint64 begin, quint64 end, quint64 firstline)
 {
-    quint64 end = start + count;
     QPalette palette = qApp->palette();
 
     drawHeader(painter, palette);
 
     quint64 documentLines = this->documentLines();
-    for(quint64 line = start; line < std::min(end, documentLines); line++)
+    for(quint64 line = begin; line < std::min(end, documentLines); line++)
     {
         QRect linerect = this->getLineRect(line, firstline);
 

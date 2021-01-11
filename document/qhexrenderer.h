@@ -21,7 +21,7 @@ class QHexRenderer : public QObject
     public:
         explicit QHexRenderer(QHexDocument* document, const QFontMetrics& fontmetrics, QObject *parent = nullptr);
         void renderFrame(QPainter* painter);
-        void render(QPainter* painter, quint64 start, int count, quint64 firstline);
+        void render(QPainter* painter, quint64 start, quint64 end, quint64 firstline);  // begin included, end excluded
         void enableCursor(bool b = true);
         void selectArea(const QPoint& pt);
 
