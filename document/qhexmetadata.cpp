@@ -2,13 +2,13 @@
 
 QHexMetadata::QHexMetadata(QObject *parent) : QObject(parent) { }
 
-const QHexLineMetadata &QHexMetadata::get(int line) const
+const QHexLineMetadata &QHexMetadata::get(quint64 line) const
 {
     auto it = m_metadata.find(line);
     return it.value();
 }
 
-QString QHexMetadata::comments(int line, int column) const
+QString QHexMetadata::comments(quint64 line, int column) const
 {
     if(!this->hasMetadata(line))
         return QString();
@@ -33,9 +33,9 @@ QString QHexMetadata::comments(int line, int column) const
     return s;
 }
 
-bool QHexMetadata::hasMetadata(int line) const { return m_metadata.contains(line); }
+bool QHexMetadata::hasMetadata(quint64 line) const { return m_metadata.contains(line); }
 
-void QHexMetadata::clear(int line)
+void QHexMetadata::clear(quint64 line)
 {
     auto it = m_metadata.find(line);
 
@@ -61,10 +61,10 @@ void QHexMetadata::metadata(qint64 begin, qint64 end, const QColor &fgcolor, con
 
 void QHexMetadata::setAbsoluteMetadata(const QHexMetadataAbsoluteItem& mai)
 {
-    const int firstRow = mai.begin / m_lineWidth;
-    const int lastRow = mai.end / m_lineWidth;
+    const quint64 firstRow = mai.begin / m_lineWidth;
+    const quint64 lastRow = mai.end / m_lineWidth;
 
-    for (int row = firstRow; row <= lastRow; ++row)
+    for (quint64 row = firstRow; row <= lastRow; ++row)
     {
         int start, length;
         if (row == firstRow)
@@ -106,7 +106,7 @@ void QHexMetadata::setLineWidth(quint8 width)
     }
 }
 
-void QHexMetadata::metadata(int line, int start, int length, const QColor &fgcolor, const QColor &bgcolor, const QString &comment)
+void QHexMetadata::metadata(quint64 line, int start, int length, const QColor &fgcolor, const QColor &bgcolor, const QString &comment)
 {
     const qint64 begin = line * m_lineWidth + start;
     const qint64 end = begin + length;
@@ -114,22 +114,22 @@ void QHexMetadata::metadata(int line, int start, int length, const QColor &fgcol
     this->metadata(begin, end, fgcolor, bgcolor, comment);
 }
 
-void QHexMetadata::color(int line, int start, int length, const QColor &fgcolor, const QColor &bgcolor)
+void QHexMetadata::color(quint64 line, int start, int length, const QColor &fgcolor, const QColor &bgcolor)
 {
     this->metadata(line, start, length, fgcolor, bgcolor, QString());
 }
 
-void QHexMetadata::foreground(int line, int start, int length, const QColor &fgcolor)
+void QHexMetadata::foreground(quint64 line, int start, int length, const QColor &fgcolor)
 {
     this->color(line, start, length, fgcolor, QColor());
 }
 
-void QHexMetadata::background(int line, int start, int length, const QColor &bgcolor)
+void QHexMetadata::background(quint64 line, int start, int length, const QColor &bgcolor)
 {
     this->color(line, start, length, QColor(), bgcolor);
 }
 
-void QHexMetadata::comment(int line, int start, int length, const QString &comment)
+void QHexMetadata::comment(quint64 line, int start, int length, const QString &comment)
 {
     this->metadata(line, start, length, QColor(), QColor(), comment);
 }
