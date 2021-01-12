@@ -26,10 +26,14 @@ qint64 QFileBuffer::length() const {
 }
 
 void QFileBuffer::insert(qint64 offset, const QByteArray &data) {
+    Q_UNUSED(offset)
+    Q_UNUSED(data)
     // Not implemented
 }
 
 void QFileBuffer::remove(qint64 offset, int length) {
+    Q_UNUSED(offset)
+    Q_UNUSED(length)
     // Not implemented
 }
 
@@ -52,6 +56,7 @@ bool QFileBuffer::read(QIODevice *device) {
 }
 
 void QFileBuffer::write(QIODevice *device) {
+    Q_UNUSED(device)
     // Not implemented
 }
 
