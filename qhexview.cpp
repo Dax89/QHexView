@@ -16,7 +16,7 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_document(nu
 {
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
-    if(!(f.styleHint() & QFont::Monospace))
+    if(f.styleHint() != QFont::TypeWriter)
     {
         f.setFamily("Monospace"); // Force Monospaced font
         f.setStyleHint(QFont::TypeWriter);
