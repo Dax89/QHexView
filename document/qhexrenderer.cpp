@@ -132,7 +132,7 @@ quint64 QHexRenderer::documentLastLine() const { return this->documentLines() - 
 qint8 QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
 quint64 QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(hexLineWidth()));  }
 int QHexRenderer::documentWidth() const { return this->getEndColumnX(); }
-int QHexRenderer::lineHeight() const { return m_fontmetrics.height(); }
+int QHexRenderer::lineHeight() const { return qRound(m_fontmetrics.height()); }
 
 QRect QHexRenderer::getLineRect(quint64 line, quint64 firstline) const
 {
@@ -148,9 +148,9 @@ int QHexRenderer::headerLineCount() const
 int QHexRenderer::borderSize() const
 {
     if (m_document) {
-        return m_document->areaIdent() * this->getCellWidth();
+        return this->getNCellsWidth(m_document->areaIdent());
     }
-    return DEFAULT_AREA_IDENTATION * this->getCellWidth();
+    return this->getNCellsWidth(DEFAULT_AREA_IDENTATION);
 }
 
 qint8 QHexRenderer::hexLineWidth() const
@@ -199,17 +199,22 @@ int QHexRenderer::getAddressWidth() const
     return QString::number(maxAddr, 16).length();
 }
 
-int QHexRenderer::getHexColumnX() const { return this->getCellWidth() * this->getAddressWidth() + 2 * this->borderSize(); }
-int QHexRenderer::getAsciiColumnX() const { return this->getHexColumnX() + this->getCellWidth() * (hexLineWidth() * 3) + 2 * this->borderSize(); }
-int QHexRenderer::getEndColumnX() const { return this->getAsciiColumnX() + this->getCellWidth() * hexLineWidth() + 2 * this->borderSize(); }
+int QHexRenderer::getHexColumnX() const { return this->getNCellsWidth(this->getAddressWidth()) + 2 * this->borderSize(); }
+int QHexRenderer::getAsciiColumnX() const { return this->getHexColumnX() + this->getNCellsWidth(hexLineWidth() * 3) + 2 * this->borderSize(); }
+int QHexRenderer::getEndColumnX() const { return this->getAsciiColumnX() + this->getNCellsWidth(hexLineWidth()) + 2 * this->borderSize(); }
 
-int QHexRenderer::getCellWidth() const
+qreal QHexRenderer::getCellWidth() const
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     return m_fontmetrics.horizontalAdvance(" ");
 #else
     return m_fontmetrics.width(" ");
 #endif
+}
+
+int QHexRenderer::getNCellsWidth(qint8 n) const
+{
+    return qRound(n * getCellWidth());
 }
 
 int QHexRenderer::getNibbleIndex(int line, int relx) const
@@ -495,7 +500,7 @@ void QHexRenderer::drawHeader(QPainter *painter, const QPalette &palette)
 
     QRect hexRect = rect;
     hexRect.setX(this->getHexColumnX() + this->borderSize());
-    hexRect.setWidth(this->getCellWidth() * (hexLineWidth() * 3));
+    hexRect.setWidth(this->getNCellsWidth(hexLineWidth() * 3));
 
     QRect asciiRect = rect;
     asciiRect.setX(this->getAsciiColumnX());

@@ -50,7 +50,8 @@ class QHexRenderer : public QObject
         int getHexColumnX() const;
         int getAsciiColumnX() const;
         int getEndColumnX() const;
-        int getCellWidth() const;
+        qreal getCellWidth() const;
+        int getNCellsWidth(qint8 n) const;
         int getNibbleIndex(int line, int relx) const;
         void unprintableChars(QByteArray &ascii) const;
 
@@ -68,7 +69,7 @@ class QHexRenderer : public QObject
 
     private:
         QHexDocument* m_document;
-        QFontMetrics m_fontmetrics;
+        QFontMetricsF m_fontmetrics;
         int m_selectedarea;
         bool m_cursorenabled;
 };
