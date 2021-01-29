@@ -52,7 +52,6 @@ class QHexRenderer : public QObject
         int getEndColumnX() const;
         qreal getCellWidth() const;
         int getNCellsWidth(qint8 n) const;
-        int getNibbleIndex(int line, int relx) const;
         void unprintableChars(QByteArray &ascii) const;
 
     private:

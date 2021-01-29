@@ -88,8 +88,10 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
     if(area == QHexRenderer::HexArea)
     {
         int relx = pt.x() - this->getHexColumnX() - this->borderSize();
-        position->column = relx / (this->getCellWidth() * 3);
-        position->nibbleindex = this->getNibbleIndex(position->line, relx);
+        int column = relx / this->getCellWidth();
+        position->column = column / 3;
+        // first char is nibble 1, 2nd and space are 0
+        position->nibbleindex = (column % 3 == 0) ? 1 : 0;
     }
     else
     {
@@ -215,29 +217,6 @@ qreal QHexRenderer::getCellWidth() const
 int QHexRenderer::getNCellsWidth(qint8 n) const
 {
     return qRound(n * getCellWidth());
-}
-
-int QHexRenderer::getNibbleIndex(int line, int relx) const
-{
-    QString hexstring = this->hexString(line);
-
-    for(int i = 0; i < hexstring.size(); i++)
-    {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-        int x = m_fontmetrics.horizontalAdvance(hexstring, i + 1);
-#else
-        int x = m_fontmetrics.width(hexstring, i + 1);
-#endif
-        if(x < relx)
-            continue;
-
-        if((i == (hexstring.size() - 1)) || (hexstring[i + 1] == ' '))
-            return 0;
-
-        break;
-    }
-
-    return 1;
 }
 
 void QHexRenderer::unprintableChars(QByteArray &ascii) const
