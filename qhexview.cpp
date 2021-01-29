@@ -235,6 +235,10 @@ void QHexView::resizeEvent(QResizeEvent *e)
 {
     QAbstractScrollArea::resizeEvent(e);
     this->adjustScrollBars();
+    // something resets the viewport's position to 0
+    // here we synchronize the horizontal scrollbar
+    QScrollBar *hscrollbar = this->horizontalScrollBar();
+    hscrollbar->setValue(0);
 }
 
 void QHexView::paintEvent(QPaintEvent *e)

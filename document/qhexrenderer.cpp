@@ -25,19 +25,19 @@ void QHexRenderer::renderFrame(QPainter *painter)
                       endx,
                       headerLineCount() * lineHeight() - 1);
 
-    painter->drawLine(rect.x() + hexx,
+    painter->drawLine(hexx,
                       rect.top(),
-                      rect.x() + hexx,
+                      hexx,
                       rect.bottom());
 
-    painter->drawLine(rect.x() + asciix,
+    painter->drawLine(asciix,
                       rect.top(),
-                      rect.x() + asciix,
+                      asciix,
                       rect.bottom());
 
-    painter->drawLine(rect.x() + endx,
+    painter->drawLine(endx,
                       rect.top(),
-                      rect.x() + endx,
+                      endx,
                       rect.bottom());
 }
 
