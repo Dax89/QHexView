@@ -295,7 +295,7 @@ void QHexView::moveNext(bool select)
 {
     QHexCursor* cur = m_document->cursor();
     quint64 line = cur->currentLine();
-    qint8 column = cur->currentColumn();
+    int column = cur->currentColumn();
     bool lastcell = (line >= m_renderer->documentLastLine()) && (column >= m_renderer->documentLastColumn());
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && lastcell)
@@ -334,16 +334,16 @@ void QHexView::moveNext(bool select)
     }
 
     if(select)
-        cur->select(line, std::min(static_cast<qint8>(m_renderer->hexLineWidth() - 1), column), nibbleindex);
+        cur->select(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
     else
-        cur->moveTo(line, std::min(static_cast<qint8>(m_renderer->hexLineWidth() - 1), column), nibbleindex);
+        cur->moveTo(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
 }
 
 void QHexView::movePrevious(bool select)
 {
     QHexCursor* cur = m_document->cursor();
     quint64 line = cur->currentLine();
-    qint8 column = cur->currentColumn();
+    int column = cur->currentColumn();
     bool firstcell = !line && !column;
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && firstcell)
@@ -376,9 +376,9 @@ void QHexView::movePrevious(bool select)
     }
 
     if(select)
-        cur->select(line, std::max(qint8(0), column), nibbleindex);
+        cur->select(line, std::max(0, column), nibbleindex);
     else
-        cur->moveTo(line, std::max(qint8(0), column), nibbleindex);
+        cur->moveTo(line, std::max(0, column), nibbleindex);
 }
 
 void QHexView::renderCurrentLine()

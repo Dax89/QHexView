@@ -107,10 +107,10 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
     if(position->line == this->documentLastLine()) // Check last line's columns
     {
         QByteArray ba = this->getLine(position->line);
-        position->column = std::min(position->column, static_cast<qint8>(ba.length()));
+        position->column = std::min(position->column, static_cast<int>(ba.length()));
     }
     else
-        position->column = std::min(position->column, static_cast<qint8>(hexLineWidth() - 1));
+        position->column = std::min(position->column, hexLineWidth() - 1);
 
     return true;
 }
@@ -135,7 +135,7 @@ int QHexRenderer::hitTestArea(const QPoint &pt) const
 int QHexRenderer::selectedArea() const { return m_selectedarea; }
 bool QHexRenderer::editableArea(int area) const { return (area == QHexRenderer::HexArea || area == QHexRenderer::AsciiArea); }
 quint64 QHexRenderer::documentLastLine() const { return this->documentLines() - 1; }
-qint8 QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
+int QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
 quint64 QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(hexLineWidth()));  }
 int QHexRenderer::documentWidth() const { return this->getEndColumnX(); }
 int QHexRenderer::lineHeight() const { return qRound(m_fontmetrics.height()); }
@@ -159,7 +159,7 @@ int QHexRenderer::borderSize() const
     return this->getNCellsWidth(DEFAULT_AREA_IDENTATION);
 }
 
-qint8 QHexRenderer::hexLineWidth() const
+int QHexRenderer::hexLineWidth() const
 {
     if (m_document) {
         return m_document->hexLineWidth();
@@ -218,7 +218,7 @@ qreal QHexRenderer::getCellWidth() const
 #endif
 }
 
-int QHexRenderer::getNCellsWidth(qint8 n) const
+int QHexRenderer::getNCellsWidth(int n) const
 {
     return qRound(n * getCellWidth());
 }
