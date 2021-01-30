@@ -20,6 +20,10 @@ void QHexRenderer::renderFrame(QPainter *painter)
     int asciix = this->getAsciiColumnX();
     int endx = this->getEndColumnX();
 
+    // x coordinates are in absolute space
+    // y coordinates are in viewport space
+    // see QHexView::paintEvent where the painter has been shifted horizontally
+
     painter->drawLine(0,
                       headerLineCount() * lineHeight() - 1,
                       endx,

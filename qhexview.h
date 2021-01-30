@@ -20,7 +20,6 @@ class QHexView : public QAbstractScrollArea
 
     protected:
         virtual bool event(QEvent* e);
-        virtual void scrollContentsBy(int dx, int dy);
         virtual void keyPressEvent(QKeyEvent *e);
         virtual void mousePressEvent(QMouseEvent* e);
         virtual void mouseMoveEvent(QMouseEvent* e);
@@ -52,6 +51,8 @@ class QHexView : public QAbstractScrollArea
         bool isLineVisible(quint64 line) const;
 
         int documentSizeFactor() const;
+
+        QPoint absolutePosition(const QPoint & pos) const;
 
     private:
         QHexDocument* m_document;
