@@ -20,24 +20,28 @@ void QHexRenderer::renderFrame(QPainter *painter)
     int asciix = this->getAsciiColumnX();
     int endx = this->getEndColumnX();
 
+    // x coordinates are in absolute space
+    // y coordinates are in viewport space
+    // see QHexView::paintEvent where the painter has been shifted horizontally
+
     painter->drawLine(0,
                       headerLineCount() * lineHeight() - 1,
                       endx,
                       headerLineCount() * lineHeight() - 1);
 
-    painter->drawLine(rect.x() + hexx,
+    painter->drawLine(hexx,
                       rect.top(),
-                      rect.x() + hexx,
+                      hexx,
                       rect.bottom());
 
-    painter->drawLine(rect.x() + asciix,
+    painter->drawLine(asciix,
                       rect.top(),
-                      rect.x() + asciix,
+                      asciix,
                       rect.bottom());
 
-    painter->drawLine(rect.x() + endx,
+    painter->drawLine(endx,
                       rect.top(),
-                      rect.x() + endx,
+                      endx,
                       rect.bottom());
 }
 
@@ -88,8 +92,10 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
     if(area == QHexRenderer::HexArea)
     {
         int relx = pt.x() - this->getHexColumnX() - this->borderSize();
-        position->column = relx / (this->getCellWidth() * 3);
-        position->nibbleindex = this->getNibbleIndex(position->line, relx);
+        int column = relx / this->getCellWidth();
+        position->column = column / 3;
+        // first char is nibble 1, 2nd and space are 0
+        position->nibbleindex = (column % 3 == 0) ? 1 : 0;
     }
     else
     {
@@ -101,10 +107,10 @@ bool QHexRenderer::hitTest(const QPoint &pt, QHexPosition *position, quint64 fir
     if(position->line == this->documentLastLine()) // Check last line's columns
     {
         QByteArray ba = this->getLine(position->line);
-        position->column = std::min(position->column, static_cast<qint8>(ba.length()));
+        position->column = std::min(position->column, static_cast<int>(ba.length()));
     }
     else
-        position->column = std::min(position->column, static_cast<qint8>(hexLineWidth() - 1));
+        position->column = std::min(position->column, hexLineWidth() - 1);
 
     return true;
 }
@@ -129,10 +135,10 @@ int QHexRenderer::hitTestArea(const QPoint &pt) const
 int QHexRenderer::selectedArea() const { return m_selectedarea; }
 bool QHexRenderer::editableArea(int area) const { return (area == QHexRenderer::HexArea || area == QHexRenderer::AsciiArea); }
 quint64 QHexRenderer::documentLastLine() const { return this->documentLines() - 1; }
-qint8 QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
+int QHexRenderer::documentLastColumn() const { return this->getLine(this->documentLastLine()).length(); }
 quint64 QHexRenderer::documentLines() const { return std::ceil(this->rendererLength() / static_cast<float>(hexLineWidth()));  }
 int QHexRenderer::documentWidth() const { return this->getEndColumnX(); }
-int QHexRenderer::lineHeight() const { return m_fontmetrics.height(); }
+int QHexRenderer::lineHeight() const { return qRound(m_fontmetrics.height()); }
 
 QRect QHexRenderer::getLineRect(quint64 line, quint64 firstline) const
 {
@@ -148,12 +154,12 @@ int QHexRenderer::headerLineCount() const
 int QHexRenderer::borderSize() const
 {
     if (m_document) {
-        return m_document->areaIdent() * this->getCellWidth();
+        return this->getNCellsWidth(m_document->areaIdent());
     }
-    return DEFAULT_AREA_IDENTATION * this->getCellWidth();
+    return this->getNCellsWidth(DEFAULT_AREA_IDENTATION);
 }
 
-qint8 QHexRenderer::hexLineWidth() const
+int QHexRenderer::hexLineWidth() const
 {
     if (m_document) {
         return m_document->hexLineWidth();
@@ -199,11 +205,11 @@ int QHexRenderer::getAddressWidth() const
     return QString::number(maxAddr, 16).length();
 }
 
-int QHexRenderer::getHexColumnX() const { return this->getCellWidth() * this->getAddressWidth() + 2 * this->borderSize(); }
-int QHexRenderer::getAsciiColumnX() const { return this->getHexColumnX() + this->getCellWidth() * (hexLineWidth() * 3) + 2 * this->borderSize(); }
-int QHexRenderer::getEndColumnX() const { return this->getAsciiColumnX() + this->getCellWidth() * hexLineWidth() + 2 * this->borderSize(); }
+int QHexRenderer::getHexColumnX() const { return this->getNCellsWidth(this->getAddressWidth()) + 2 * this->borderSize(); }
+int QHexRenderer::getAsciiColumnX() const { return this->getHexColumnX() + this->getNCellsWidth(hexLineWidth() * 3) + 2 * this->borderSize(); }
+int QHexRenderer::getEndColumnX() const { return this->getAsciiColumnX() + this->getNCellsWidth(hexLineWidth()) + 2 * this->borderSize(); }
 
-int QHexRenderer::getCellWidth() const
+qreal QHexRenderer::getCellWidth() const
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     return m_fontmetrics.horizontalAdvance(" ");
@@ -212,27 +218,9 @@ int QHexRenderer::getCellWidth() const
 #endif
 }
 
-int QHexRenderer::getNibbleIndex(int line, int relx) const
+int QHexRenderer::getNCellsWidth(int n) const
 {
-    QString hexstring = this->hexString(line);
-
-    for(int i = 0; i < hexstring.size(); i++)
-    {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-        int x = m_fontmetrics.horizontalAdvance(hexstring, i + 1);
-#else
-        int x = m_fontmetrics.width(hexstring, i + 1);
-#endif
-        if(x < relx)
-            continue;
-
-        if((i == (hexstring.size() - 1)) || (hexstring[i + 1] == ' '))
-            return 0;
-
-        break;
-    }
-
-    return 1;
+    return qRound(n * getCellWidth());
 }
 
 void QHexRenderer::unprintableChars(QByteArray &ascii) const
@@ -495,7 +483,7 @@ void QHexRenderer::drawHeader(QPainter *painter, const QPalette &palette)
 
     QRect hexRect = rect;
     hexRect.setX(this->getHexColumnX() + this->borderSize());
-    hexRect.setWidth(this->getCellWidth() * (hexLineWidth() * 3));
+    hexRect.setWidth(this->getNCellsWidth(hexLineWidth() * 3));
 
     QRect asciiRect = rect;
     asciiRect.setX(this->getAsciiColumnX());
@@ -505,7 +493,9 @@ void QHexRenderer::drawHeader(QPainter *painter, const QPalette &palette)
     painter->setPen(palette.color(QPalette::Highlight));
 
     painter->drawText(addressRect, Qt::AlignHCenter | Qt::AlignVCenter, QString("Offset"));
-    painter->drawText(hexRect, Qt::AlignHCenter | Qt::AlignVCenter, hexHeader);
+    // align left for maximum consistency with drawHex() which prints from the left.
+    // so hex and positions are aligned vertically
+    painter->drawText(hexRect, Qt::AlignLeft | Qt::AlignVCenter, hexHeader);
     painter->drawText(asciiRect, Qt::AlignHCenter | Qt::AlignVCenter, QString("Ascii"));
 
     painter->restore();

@@ -8,7 +8,7 @@
 
 struct QHexPosition {
     quint64 line;
-    qint8 column;
+    int column;
     quint8 lineWidth;
     int nibbleindex;
 
@@ -45,10 +45,10 @@ class QHexCursor : public QObject
         InsertionMode insertionMode() const;
         int selectionLength() const;
         quint64 currentLine() const;
-        qint8 currentColumn() const;
+        int currentColumn() const;
         int currentNibble() const;
         quint64 selectionLine() const;
-        qint8 selectionColumn() const;
+        int selectionColumn() const;
         int selectionNibble() const;
         bool atEnd() const;
         bool isLineSelected(quint64 line) const;
@@ -57,10 +57,10 @@ class QHexCursor : public QObject
 
     public:
         void moveTo(const QHexPosition& pos);
-        void moveTo(quint64 line, qint8 column, int nibbleindex = 1);
+        void moveTo(quint64 line, int column, int nibbleindex = 1);
         void moveTo(qint64 offset);
         void select(const QHexPosition& pos);
-        void select(quint64 line, qint8 column, int nibbleindex = 1);
+        void select(quint64 line, int column, int nibbleindex = 1);
         void select(int length);
         void selectOffset(qint64 offset, int length);
         void setInsertionMode(InsertionMode mode);

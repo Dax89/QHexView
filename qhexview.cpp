@@ -76,7 +76,8 @@ bool QHexView::event(QEvent *e)
         QHelpEvent* helpevent = static_cast<QHelpEvent*>(e);
         QHexPosition position;
 
-        if(m_renderer->hitTest(helpevent->pos(), &position, this->firstVisibleLine()))
+        QPoint abspos = absolutePosition(helpevent->pos());
+        if(m_renderer->hitTest(abspos, &position, this->firstVisibleLine()))
         {
             QString comments = m_document->metadata()->comments(position.line, position.column);
 
@@ -88,18 +89,6 @@ bool QHexView::event(QEvent *e)
     }
 
     return QAbstractScrollArea::event(e);
-}
-
-void QHexView::scrollContentsBy(int dx, int dy)
-{
-    if(dx)
-    {
-        QWidget* viewport = this->viewport();
-        viewport->move(viewport->x() + dx, viewport->y());
-        return;
-    }
-
-    QAbstractScrollArea::scrollContentsBy(dx, dy);
 }
 
 void QHexView::keyPressEvent(QKeyEvent *e)
@@ -123,6 +112,13 @@ void QHexView::keyPressEvent(QKeyEvent *e)
     m_blinktimer->start();
 }
 
+QPoint QHexView::absolutePosition(const QPoint & pos) const
+{
+    QPoint shift(horizontalScrollBar()->value(), 0);
+    QPoint abs = pos + shift;
+    return abs;
+}
+
 void QHexView::mousePressEvent(QMouseEvent *e)
 {
     QAbstractScrollArea::mousePressEvent(e);
@@ -132,10 +128,12 @@ void QHexView::mousePressEvent(QMouseEvent *e)
 
     QHexPosition position;
 
-    if(!m_renderer->hitTest(e->pos(), &position, this->firstVisibleLine()))
+    QPoint abspos = absolutePosition(e->pos());
+
+    if(!m_renderer->hitTest(abspos, &position, this->firstVisibleLine()))
         return;
 
-    m_renderer->selectArea(e->pos());
+    m_renderer->selectArea(abspos);
     if (m_renderer->editableArea(m_renderer->selectedArea())) {
         m_document->cursor()->moveTo(position);
     }
@@ -150,6 +148,8 @@ void QHexView::mouseMoveEvent(QMouseEvent *e)
     if(!m_renderer || !m_document)
         return;
 
+    QPoint abspos = absolutePosition(e->pos());
+
     if(e->buttons() == Qt::LeftButton)
     {
         if(m_blinktimer->isActive())
@@ -161,7 +161,7 @@ void QHexView::mouseMoveEvent(QMouseEvent *e)
         QHexCursor* cursor = m_document->cursor();
         QHexPosition position;
 
-        if(!m_renderer->hitTest(e->pos(), &position, this->firstVisibleLine()))
+        if(!m_renderer->hitTest(abspos, &position, this->firstVisibleLine()))
             return;
 
         cursor->select(position.line, position.column, 0);
@@ -171,7 +171,7 @@ void QHexView::mouseMoveEvent(QMouseEvent *e)
     if(e->buttons() != Qt::NoButton)
         return;
 
-    int hittest = m_renderer->hitTestArea(e->pos());
+    int hittest = m_renderer->hitTestArea(abspos);
 
     if(m_renderer->editableArea(hittest))
         this->setCursor(Qt::IBeamCursor);
@@ -261,8 +261,11 @@ void QHexView::paintEvent(QPaintEvent *e)
     const quint64 begin = firstVisible + std::max(first - headerCount, 0);
     const quint64 end = firstVisible + std::max(lastPlusOne - headerCount, 0) ;
 
+    painter.save();
+    painter.translate(-this->horizontalScrollBar()->value(), 0);
     m_renderer->render(&painter, begin, end, firstVisible);
     m_renderer->renderFrame(&painter);
+    painter.restore();
 }
 
 void QHexView::moveToSelection()
@@ -292,7 +295,7 @@ void QHexView::moveNext(bool select)
 {
     QHexCursor* cur = m_document->cursor();
     quint64 line = cur->currentLine();
-    qint8 column = cur->currentColumn();
+    int column = cur->currentColumn();
     bool lastcell = (line >= m_renderer->documentLastLine()) && (column >= m_renderer->documentLastColumn());
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && lastcell)
@@ -331,16 +334,16 @@ void QHexView::moveNext(bool select)
     }
 
     if(select)
-        cur->select(line, std::min(static_cast<qint8>(m_renderer->hexLineWidth() - 1), column), nibbleindex);
+        cur->select(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
     else
-        cur->moveTo(line, std::min(static_cast<qint8>(m_renderer->hexLineWidth() - 1), column), nibbleindex);
+        cur->moveTo(line, std::min(m_renderer->hexLineWidth() - 1, column), nibbleindex);
 }
 
 void QHexView::movePrevious(bool select)
 {
     QHexCursor* cur = m_document->cursor();
     quint64 line = cur->currentLine();
-    qint8 column = cur->currentColumn();
+    int column = cur->currentColumn();
     bool firstcell = !line && !column;
 
     if((m_renderer->selectedArea() == QHexRenderer::AsciiArea) && firstcell)
@@ -373,9 +376,9 @@ void QHexView::movePrevious(bool select)
     }
 
     if(select)
-        cur->select(line, std::max(qint8(0), column), nibbleindex);
+        cur->select(line, std::max(0, column), nibbleindex);
     else
-        cur->moveTo(line, std::max(qint8(0), column), nibbleindex);
+        cur->moveTo(line, std::max(0, column), nibbleindex);
 }
 
 void QHexView::renderCurrentLine()
@@ -612,28 +615,38 @@ bool QHexView::processTextInput(QHexCursor *cur, QKeyEvent *e)
 void QHexView::adjustScrollBars()
 {
     QScrollBar *vscrollbar = this->verticalScrollBar();
-    QScrollBar *hscrollbar = this->horizontalScrollBar();
+    int sizeFactor = this->documentSizeFactor();
+    vscrollbar->setSingleStep(sizeFactor);
 
     quint64 docLines = m_renderer->documentLines();
     quint64 visLines = this->visibleLines();
     if(docLines > visLines)
+    {
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    else
-        this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    if(m_renderer->documentWidth() > this->width())
-        this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    else
-        this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    hscrollbar->setMaximum(m_renderer->documentWidth());
-
-    int sizeFactor = this->documentSizeFactor();
-    vscrollbar->setSingleStep(sizeFactor);
-    if(docLines <= visLines)
-        vscrollbar->setMaximum(static_cast<int>(docLines));
-    else
         vscrollbar->setMaximum(static_cast<int>((docLines - visLines) / sizeFactor + 1));
+    }
+    else
+    {
+        this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        vscrollbar->setValue(0);
+        vscrollbar->setMaximum(static_cast<int>(docLines));
+    }
+
+    QScrollBar *hscrollbar = this->horizontalScrollBar();
+    int documentWidth = m_renderer->documentWidth();
+    int viewportWidth = viewport()->width();
+    if(documentWidth > viewportWidth)
+    {
+        this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+        // +1 to see the rightmost vertical line, +2 seems more pleasant to the eyes
+        hscrollbar->setMaximum(documentWidth - viewportWidth + 2);
+    }
+    else
+    {
+        this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        hscrollbar->setValue(0);
+        hscrollbar->setMaximum(documentWidth);
+    }
 }
 
 void QHexView::renderLine(quint64 line)

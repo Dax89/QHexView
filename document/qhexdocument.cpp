@@ -34,9 +34,9 @@ qint64 QHexDocument::length() const { return m_buffer->length(); }
 quint64 QHexDocument::baseAddress() const { return m_baseaddress; }
 QHexCursor *QHexDocument::cursor() const { return m_cursor; }
 
-qint8 QHexDocument::areaIdent() const { return m_areaIdent;}
+int QHexDocument::areaIdent() const { return m_areaIdent;}
 void QHexDocument::setAreaIdent(quint8 value) { m_areaIdent = value; }
-qint8 QHexDocument::hexLineWidth() const { return m_hexLineWidth; }
+int QHexDocument::hexLineWidth() const { return m_hexLineWidth; }
 void QHexDocument::setHexLineWidth(quint8 value)
 {
     m_hexLineWidth = value;

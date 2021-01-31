@@ -32,14 +32,14 @@ class QHexRenderer : public QObject
         int selectedArea() const;
         bool editableArea(int area) const;
         quint64 documentLastLine() const;
-        qint8 documentLastColumn() const;
+        int documentLastColumn() const;
         quint64 documentLines() const;
         int documentWidth() const;
         int lineHeight() const;
         QRect getLineRect(quint64 line, quint64 firstline) const;
         int headerLineCount() const;
         int borderSize() const;
-        qint8 hexLineWidth() const;
+        int hexLineWidth() const;
 
     private:
         QString hexString(quint64 line, QByteArray *rawline = nullptr) const;
@@ -50,8 +50,8 @@ class QHexRenderer : public QObject
         int getHexColumnX() const;
         int getAsciiColumnX() const;
         int getEndColumnX() const;
-        int getCellWidth() const;
-        int getNibbleIndex(int line, int relx) const;
+        qreal getCellWidth() const;
+        int getNCellsWidth(int n) const;
         void unprintableChars(QByteArray &ascii) const;
 
     private:
@@ -68,7 +68,7 @@ class QHexRenderer : public QObject
 
     private:
         QHexDocument* m_document;
-        QFontMetrics m_fontmetrics;
+        QFontMetricsF m_fontmetrics;
         int m_selectedarea;
         bool m_cursorenabled;
 };
