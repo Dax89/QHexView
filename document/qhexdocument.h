@@ -62,8 +62,8 @@ class QHexDocument: public QObject
         static QHexDocument* fromLargeFile(QString filename, QObject *parent = nullptr);
 
     signals:
-        void canUndoChanged();
-        void canRedoChanged();
+        void canUndoChanged(bool canUndo);
+        void canRedoChanged(bool canRedo);
         void documentChanged();
         void lineChanged(quint64 line);
 
