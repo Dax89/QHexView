@@ -154,7 +154,7 @@ int QHexRenderer::headerLineCount() const
 int QHexRenderer::borderSize() const
 {
     if (m_document) {
-        return this->getNCellsWidth(m_document->areaIdent());
+        return this->getNCellsWidth(m_document->areaIndent());
     }
     return this->getNCellsWidth(DEFAULT_AREA_IDENTATION);
 }

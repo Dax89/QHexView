@@ -11,7 +11,7 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, QObject *parent): QObject(parent)
 {
     m_buffer = buffer;
     m_buffer->setParent(this); // Take Ownership
-    m_areaIdent = DEFAULT_AREA_IDENTATION;
+    m_areaindent = DEFAULT_AREA_IDENTATION;
     m_hexLineWidth = DEFAULT_HEX_LINE_LENGTH;
 
     m_cursor = new QHexCursor(this);
@@ -34,8 +34,8 @@ qint64 QHexDocument::length() const { return m_buffer->length(); }
 quint64 QHexDocument::baseAddress() const { return m_baseaddress; }
 QHexCursor *QHexDocument::cursor() const { return m_cursor; }
 
-int QHexDocument::areaIdent() const { return m_areaIdent;}
-void QHexDocument::setAreaIdent(quint8 value) { m_areaIdent = value; }
+int QHexDocument::areaIndent() const { return m_areaindent;}
+void QHexDocument::setAreaIndent(quint8 value) { m_areaindent = value; }
 int QHexDocument::hexLineWidth() const { return m_hexLineWidth; }
 void QHexDocument::setHexLineWidth(quint8 value)
 {

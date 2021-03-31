@@ -24,8 +24,8 @@ class QHexDocument: public QObject
         quint64 baseAddress() const;
         QHexCursor* cursor() const;
         QHexMetadata* metadata() const;
-        int areaIdent() const;
-        void setAreaIdent(quint8 value);
+        int areaIndent() const;
+        void setAreaIndent(quint8 value);
         int hexLineWidth() const;
         void setHexLineWidth(quint8 value);
 
@@ -73,7 +73,7 @@ class QHexDocument: public QObject
         QUndoStack m_undostack;
         QHexCursor* m_cursor;
         quint64 m_baseaddress;
-        quint8 m_areaIdent;
+        quint8 m_areaindent;
         quint8 m_hexLineWidth;
 };
 
