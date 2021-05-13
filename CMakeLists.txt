@@ -1,4 +1,9 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 3.10)
 project(QHexView)
+
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
+message(STATUS "Using Qt${QT_VERSION_MAJOR} (${QT_VERSION})")
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 add_library(qhexview-lib STATIC
     document/buffer/qfilebuffer.cpp
@@ -29,5 +34,5 @@ add_library(qhexview-lib STATIC
     qhexview.h
 )
 
-target_link_libraries(qhexview-lib PRIVATE Qt5::Widgets)
+target_link_libraries(qhexview-lib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_include_directories(qhexview-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
