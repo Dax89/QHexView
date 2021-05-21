@@ -7,7 +7,7 @@
 
 #define HEX_UNPRINTABLE_CHAR     '.'
 
-QHexRenderer::QHexRenderer(QHexDocument* document, const QFontMetrics &fontmetrics, QObject *parent) : QObject(parent), m_document(document), m_fontmetrics(fontmetrics)
+QHexRenderer::QHexRenderer(QHexDocument* document, const QFontMetricsF& fontmetrics, QObject *parent) : QObject(parent), m_document(document), m_fontmetrics(fontmetrics)
 {
     m_selectedarea = QHexRenderer::HexArea;
     m_cursorenabled = false;
@@ -25,9 +25,9 @@ void QHexRenderer::renderFrame(QPainter *painter)
     // see QHexView::paintEvent where the painter has been shifted horizontally
 
     painter->drawLine(0,
-                      headerLineCount() * lineHeight() - 1,
+                      this->headerLineCount() * this->lineHeight() - 1,
                       endx,
-                      headerLineCount() * lineHeight() - 1);
+                      this->headerLineCount() * this->lineHeight() - 1);
 
     painter->drawLine(hexx,
                       rect.top(),
@@ -64,6 +64,7 @@ void QHexRenderer::render(QPainter *painter, quint64 begin, quint64 end, quint64
     }
 }
 
+void QHexRenderer::updateMetrics(const QFontMetricsF& fm) { m_fontmetrics = fm; }
 void QHexRenderer::enableCursor(bool b) { m_cursorenabled = b; }
 
 void QHexRenderer::selectArea(const QPoint &pt)
@@ -417,7 +418,7 @@ void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette, const Q
 
 void QHexRenderer::drawHeader(QPainter *painter, const QPalette &palette)
 {
-    QRect rect = QRect(0, 0, this->getEndColumnX(), headerLineCount() * lineHeight());
+    QRect rect = QRect(0, 0, this->getEndColumnX(), this->headerLineCount() * this->lineHeight());
     QString hexheader;
 
     for(quint8 i = 0; i < this->hexLineWidth(); i++)

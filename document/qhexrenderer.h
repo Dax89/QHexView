@@ -19,9 +19,10 @@ class QHexRenderer : public QObject
         enum { HeaderArea, AddressArea, HexArea, AsciiArea, ExtraArea };
 
     public:
-        explicit QHexRenderer(QHexDocument* document, const QFontMetrics& fontmetrics, QObject *parent = nullptr);
+        explicit QHexRenderer(QHexDocument* document, const QFontMetricsF& fontmetrics, QObject *parent = nullptr);
         void renderFrame(QPainter* painter);
         void render(QPainter* painter, quint64 start, quint64 end, quint64 firstline);  // begin included, end excluded
+        void updateMetrics(const QFontMetricsF& fm);
         void enableCursor(bool b = true);
         void selectArea(const QPoint& pt);
 

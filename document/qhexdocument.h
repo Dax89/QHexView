@@ -74,7 +74,7 @@ class QHexDocument: public QObject
         QHexCursor* m_cursor;
         quint64 m_baseaddress;
         quint8 m_areaindent;
-        quint8 m_hexLineWidth;
+        quint8 m_hexlinewidth;
 };
 
 template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice, QObject *parent)

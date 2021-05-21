@@ -12,12 +12,12 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, QObject *parent): QObject(parent)
     m_buffer = buffer;
     m_buffer->setParent(this); // Take Ownership
     m_areaindent = DEFAULT_AREA_IDENTATION;
-    m_hexLineWidth = DEFAULT_HEX_LINE_LENGTH;
+    m_hexlinewidth = DEFAULT_HEX_LINE_LENGTH;
 
     m_cursor = new QHexCursor(this);
-    m_cursor->setLineWidth(m_hexLineWidth);
+    m_cursor->setLineWidth(m_hexlinewidth);
     m_metadata = new QHexMetadata(this);
-    m_metadata->setLineWidth(m_hexLineWidth);
+    m_metadata->setLineWidth(m_hexlinewidth);
 
     connect(m_metadata, &QHexMetadata::metadataChanged, this, &QHexDocument::lineChanged);
     connect(m_metadata, &QHexMetadata::metadataCleared, this, &QHexDocument::documentChanged);
@@ -36,10 +36,10 @@ QHexCursor *QHexDocument::cursor() const { return m_cursor; }
 
 int QHexDocument::areaIndent() const { return m_areaindent;}
 void QHexDocument::setAreaIndent(quint8 value) { m_areaindent = value; }
-int QHexDocument::hexLineWidth() const { return m_hexLineWidth; }
+int QHexDocument::hexLineWidth() const { return m_hexlinewidth; }
 void QHexDocument::setHexLineWidth(quint8 value)
 {
-    m_hexLineWidth = value;
+    m_hexlinewidth = value;
     m_cursor->setLineWidth(value);
     m_metadata->setLineWidth(value);
 }

@@ -13,19 +13,10 @@ struct QHexPosition {
     int nibbleindex;
 
     QHexPosition() = default;
-    QHexPosition(const QHexPosition&) = default;
-
-    QHexPosition& operator=(const QHexPosition& rhs) {
-        line = rhs.line;
-        column = rhs.column;
-        nibbleindex = rhs.nibbleindex;
-        return *this;
-    }
-
-    qint64 offset() const { return static_cast<qint64>(line * lineWidth) + column; }
-    int operator-(const QHexPosition& rhs) const { return this->offset() - rhs.offset(); }
-    bool operator==(const QHexPosition& rhs) const { return (line == rhs.line) && (column == rhs.column) && (nibbleindex == rhs.nibbleindex); }
-    bool operator!=(const QHexPosition& rhs) const { return (line != rhs.line) || (column != rhs.column) || (nibbleindex != rhs.nibbleindex); }
+    inline qint64 offset() const { return static_cast<qint64>(line * lineWidth) + column; }
+    inline int operator-(const QHexPosition& rhs) const { return this->offset() - rhs.offset(); }
+    inline bool operator==(const QHexPosition& rhs) const { return (line == rhs.line) && (column == rhs.column) && (nibbleindex == rhs.nibbleindex); }
+    inline bool operator!=(const QHexPosition& rhs) const { return (line != rhs.line) || (column != rhs.column) || (nibbleindex != rhs.nibbleindex); }
 };
 
 class QHexCursor : public QObject
