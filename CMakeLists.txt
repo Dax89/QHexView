@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(QHexView)
+project(QHexView
+    LANGUAGES CXX
+)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
@@ -20,6 +22,11 @@ add_library(qhexview-lib STATIC
     qhexview.cpp
 )
 
-target_compile_features(qhexview-lib PUBLIC cxx_std_11)
+set_target_properties(qhexview-lib PROPERTIES
+    AUTOMOC ON
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+)
+
 target_link_libraries(qhexview-lib PRIVATE Qt5::Widgets)
 target_include_directories(qhexview-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
