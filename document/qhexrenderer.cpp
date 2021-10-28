@@ -275,14 +275,14 @@ void QHexRenderer::applySelection(QTextCursor &textcursor, quint64 line, int fac
     if(startsel.line == endsel.line)
     {
         textcursor.setPosition(startsel.column * factor);
-        textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column - startsel.column + 1) * factor) - 1);
+        textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column - startsel.column + 1) * factor));
     }
     else
     {
         if(line == startsel.line) textcursor.setPosition(startsel.column * factor);
         else textcursor.setPosition(0);
 
-        if(line == endsel.line) textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column + 1) * factor) - 1);
+        if(line == endsel.line) textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column + 1) * factor));
         else textcursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
     }
 
