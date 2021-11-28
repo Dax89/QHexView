@@ -286,6 +286,11 @@ void QHexRenderer::applySelection(QTextCursor &textcursor, quint64 line, int fac
         else textcursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
     }
 
+    if(factor == 3)  // i.e. Hex
+    {
+        textcursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, 1);
+    }
+
     QPalette palette = qApp->palette();
 
     QTextCharFormat charformat;
