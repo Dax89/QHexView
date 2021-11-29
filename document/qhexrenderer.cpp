@@ -215,7 +215,7 @@ void QHexRenderer::applyDocumentStyles(QPainter *painter, QTextDocument* textdoc
     textdocument->setDefaultFont(painter->font());
 }
 
-void QHexRenderer::applyBasicStyle(QTextCursor &textcursor, const QByteArray &rawline, int factor) const
+void QHexRenderer::applyBasicStyle(QTextCursor &textcursor, const QByteArray &rawline, Factor factor) const
 {
     QPalette palette = qApp->palette();
     QColor color = palette.color(QPalette::WindowText);
@@ -242,7 +242,7 @@ void QHexRenderer::applyBasicStyle(QTextCursor &textcursor, const QByteArray &ra
     }
 }
 
-void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line, int factor) const
+void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line, Factor factor) const
 {
     QHexMetadata* metadata = m_document->metadata();
 
@@ -264,7 +264,7 @@ void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line, int fact
     }
 }
 
-void QHexRenderer::applySelection(QTextCursor &textcursor, quint64 line, int factor) const
+void QHexRenderer::applySelection(QTextCursor &textcursor, quint64 line, Factor factor) const
 {
     QHexCursor* cursor = m_document->cursor();
     if(!cursor->isLineSelected(line)) return;
@@ -275,16 +275,18 @@ void QHexRenderer::applySelection(QTextCursor &textcursor, quint64 line, int fac
     if(startsel.line == endsel.line)
     {
         textcursor.setPosition(startsel.column * factor);
-        textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column - startsel.column + 1) * factor) - 1);
+        textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column - startsel.column + 1) * factor));
     }
     else
     {
         if(line == startsel.line) textcursor.setPosition(startsel.column * factor);
         else textcursor.setPosition(0);
 
-        if(line == endsel.line) textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column + 1) * factor) - 1);
+        if(line == endsel.line) textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, ((endsel.column + 1) * factor));
         else textcursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
     }
+
+    if(factor == Hex) textcursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, 1);
 
     QPalette palette = qApp->palette();
 
@@ -379,9 +381,9 @@ void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette, const QRe
     hexrect.setX(this->getHexColumnX() + this->borderSize());
 
     this->applyDocumentStyles(painter, &textdocument);
-    this->applyBasicStyle(textcursor, rawline, 3);
-    this->applyMetadata(textcursor, line, 3);
-    this->applySelection(textcursor, line, 3);
+    this->applyBasicStyle(textcursor, rawline, Hex);
+    this->applyMetadata(textcursor, line, Hex);
+    this->applySelection(textcursor, line, Hex);
     this->applyCursorHex(textcursor, line);
 
     painter->save();
@@ -405,9 +407,9 @@ void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette, const Q
     asciirect.setX(this->getAsciiColumnX() + this->borderSize());
 
     this->applyDocumentStyles(painter, &textdocument);
-    this->applyBasicStyle(textcursor, rawline);
-    this->applyMetadata(textcursor, line);
-    this->applySelection(textcursor, line);
+    this->applyBasicStyle(textcursor, rawline, Ascii);
+    this->applyMetadata(textcursor, line, Ascii);
+    this->applySelection(textcursor, line, Ascii);
     this->applyCursorAscii(textcursor, line);
 
     painter->save();
