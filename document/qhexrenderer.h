@@ -56,10 +56,12 @@ class QHexRenderer : public QObject
         void unprintableChars(QByteArray &ascii) const;
 
     private:
+        enum Factor {Ascii = 1, Hex = 3};
+
         void applyDocumentStyles(QPainter* painter, QTextDocument *textdocument) const;
-        void applyBasicStyle(QTextCursor& textcursor, const QByteArray& rawline, int factor = 1) const;
-        void applyMetadata(QTextCursor& textcursor, quint64 line, int factor = 1) const;
-        void applySelection(QTextCursor& textcursor, quint64 line, int factor = 1) const;
+        void applyBasicStyle(QTextCursor& textcursor, const QByteArray& rawline, Factor factor) const;
+        void applyMetadata(QTextCursor& textcursor, quint64 line, Factor factor) const;
+        void applySelection(QTextCursor& textcursor, quint64 line, Factor factor) const;
         void applyCursorAscii(QTextCursor& textcursor, quint64 line) const;
         void applyCursorHex(QTextCursor& textcursor, quint64 line) const;
         void drawAddress(QPainter *painter, const QPalette &palette, const QRect &linerect, quint64 line);
