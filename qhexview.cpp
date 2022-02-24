@@ -151,10 +151,12 @@ void QHexView::drawDocument(QTextCursor& c) const
         // Hex Part
         for(auto column = 0u; column < this->options().linelength; )
         {
-            for(auto byteidx = 0u; byteidx < this->options().grouplength; byteidx++, column++)
-                this->drawFormat(c, linebytes.mid(column, 1).toHex().toUpper(), Area::Hex, line, column);
+            QTextCharFormat cf;
 
-            c.insertText(" ", { });
+            for(auto byteidx = 0u; byteidx < this->options().grouplength; byteidx++, column++)
+                cf = this->drawFormat(c, linebytes.mid(column, 1).toHex().toUpper(), Area::Hex, line, column);
+
+            c.insertText(" ", cf);
         }
 
         // Ascii Part
@@ -265,19 +267,20 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
     return Area::Extra;
 }
 
-void QHexView::drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const
+QTextCharFormat QHexView::drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const
 {
     auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
     auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Window);
     auto discursorbg = this->palette().color(QPalette::Disabled, QPalette::WindowText);
     auto discursorfg = this->palette().color(QPalette::Disabled, QPalette::Window);
 
-    QTextCharFormat cf;
+    QTextCharFormat cf, selcf;
 
     if(this->hexCursor()->isSelected(line, column))
     {
         cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
         cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
+        if(column < m_hexdocument->lastColumn() - 1) selcf = cf;
     }
 
     if(this->hexCursor()->line() == line && this->hexCursor()->column() == column)
@@ -297,6 +300,7 @@ void QHexView::drawFormat(QTextCursor& c, const QString& s, Area area, qint64 li
     }
 
     c.insertText(s, cf);
+    return selcf;
 }
 
 void QHexView::moveNext(bool select)

@@ -3,6 +3,7 @@
 #define QHEXVIEW_VERSION 5.0
 
 #include <QAbstractScrollArea>
+#include <QTextCharFormat>
 #include <QFontMetricsF>
 #include <QTextDocument>
 #include <QRectF>
@@ -49,7 +50,7 @@ class QHexView : public QAbstractScrollArea
         QHexCursor::Position positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
         Area areaFromPoint(QPoint pt) const;
-        void drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const;
+        QTextCharFormat drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
         bool keyPressMove(QKeyEvent* e);
