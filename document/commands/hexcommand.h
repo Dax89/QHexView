@@ -1,5 +1,4 @@
-#ifndef HEXCOMMAND_H
-#define HEXCOMMAND_H
+#pragma once
 
 #include <QUndoCommand>
 #include "../buffer/qhexbuffer.h"
@@ -15,5 +14,3 @@ class HexCommand: public QUndoCommand
         int m_length;
         QByteArray m_data;
 };
-
-#endif // HEXCOMMAND_H

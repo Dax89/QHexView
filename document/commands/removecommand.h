@@ -1,5 +1,4 @@
-#ifndef REMOVECOMMAND_H
-#define REMOVECOMMAND_H
+#pragma once
 
 #include "hexcommand.h"
 
@@ -10,5 +9,3 @@ class RemoveCommand: public HexCommand
         void undo() override;
         void redo() override;
 };
-
-#endif // REMOVECOMMAND_H

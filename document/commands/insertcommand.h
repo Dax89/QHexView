@@ -1,5 +1,4 @@
-#ifndef INSERTCOMMAND_H
-#define INSERTCOMMAND_H
+#pragma once
 
 #include "hexcommand.h"
 
@@ -10,5 +9,3 @@ class InsertCommand: public HexCommand
         void undo() override;
         void redo() override;
 };
-
-#endif // INSERTCOMMAND_H

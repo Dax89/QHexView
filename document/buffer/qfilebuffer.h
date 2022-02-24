@@ -1,5 +1,4 @@
-#ifndef QFILEBUFFER_H
-#define QFILEBUFFER_H
+#pragma once
 
 #include "qhexbuffer.h"
 #include <QFile>
@@ -18,12 +17,10 @@ class QFileBuffer : public QHexBuffer
         QByteArray read(qint64 offset, int length) override;
         bool read(QIODevice* device) override;
         void write(QIODevice* device) override;
-
         qint64 indexOf(const QByteArray& ba, qint64 from) override;
         qint64 lastIndexOf(const QByteArray& ba, qint64 from) override;
+
     private:
         QFile* m_buffer;
         uchar *m_memory;
 };
-
-#endif // QFILEBUFFER_H

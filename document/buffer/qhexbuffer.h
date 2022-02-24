@@ -1,5 +1,4 @@
-#ifndef QHEXBUFFER_H
-#define QHEXBUFFER_H
+#pragma once
 
 #include <QObject>
 #include <QIODevice>
@@ -30,5 +29,3 @@ class QHexBuffer : public QObject
         virtual qint64 lastIndexOf(const QByteArray& ba, qint64 from) = 0;
 
 };
-
-#endif // QHEXBUFFER_H

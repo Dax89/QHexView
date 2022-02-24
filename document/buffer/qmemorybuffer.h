@@ -1,5 +1,4 @@
-#ifndef QMEMORYBUFFER_H
-#define QMEMORYBUFFER_H
+#pragma once
 
 #include "qhexbuffer.h"
 
@@ -16,11 +15,9 @@ class QMemoryBuffer : public QHexBuffer
         QByteArray read(qint64 offset, int length) override;
         bool read(QIODevice* device) override;
         void write(QIODevice* device) override;
-
         qint64 indexOf(const QByteArray& ba, qint64 from) override;
         qint64 lastIndexOf(const QByteArray& ba, qint64 from) override;
+
     private:
         QByteArray m_buffer;
 };
-
-#endif // QMEMORYBUFFER_H

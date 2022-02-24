@@ -1,64 +1,75 @@
-#ifndef QHEXVIEW_H
-#define QHEXVIEW_H
+#pragma once
 
-#define QHEXVIEW_VERSION 3.0
+#define QHEXVIEW_VERSION 5.0
 
 #include <QAbstractScrollArea>
-#include <QTimer>
-#include "document/qhexrenderer.h"
+#include <QFontMetricsF>
+#include <QTextDocument>
+#include <QRectF>
+#include <QList>
 #include "document/qhexdocument.h"
+#include "document/qhexcursor.h"
 
 class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
 
     public:
+        enum class Area { Header, Address, Hex, Ascii, Extra };
+
+    public:
         explicit QHexView(QWidget *parent = nullptr);
-        QHexDocument* document();
-        void setDocument(QHexDocument* document);
-        void setReadOnly(bool b);
+        QHexDocument* hexDocument() const;
+        QHexCursor* hexCursor() const;
+        const QHexOptions& options() const;
+        void setOptions(const QHexOptions& options);
+        void setDocument(QHexDocument* doc);
+        void setReadOnly(bool r);
 
-    protected:
-        virtual bool event(QEvent* e);
-        virtual void keyPressEvent(QKeyEvent *e);
-        virtual void mousePressEvent(QMouseEvent* e);
-        virtual void mouseMoveEvent(QMouseEvent* e);
-        virtual void mouseReleaseEvent(QMouseEvent* e);
-        virtual void focusInEvent(QFocusEvent* e);
-        virtual void focusOutEvent(QFocusEvent* e);
-        virtual void wheelEvent(QWheelEvent* e);
-        virtual void resizeEvent(QResizeEvent* e);
-        virtual void paintEvent(QPaintEvent* e);
-
-    private slots:
-        void renderCurrentLine();
-        void moveToSelection();
-        void blinkCursor();
+    public Q_SLOTS:
+        void setLineLength(int l);
+        void setGroupLength(int l);
 
     private:
+        void checkState();
+        void checkAndUpdate(bool calccolumns = false);
+        void calcColumns();
+        void drawHeader(QTextCursor& c) const;
+        void drawDocument(QTextCursor& c) const;
+        int documentSizeFactor() const;
+        int visibleLines() const;
+        qreal getNCellsWidth(int n) const;
+        qreal hexColumnWidth() const;
+        qreal addressWidth() const;
+        qreal hexColumnX() const;
+        qreal asciiColumnX() const;
+        qreal endColumnX() const;
+        qreal cellWidth() const;
+        qreal lineHeight() const;
+        QHexCursor::Position positionFromPoint(QPoint pt) const;
+        QPoint absolutePoint(QPoint pt) const;
+        Area areaFromPoint(QPoint pt) const;
+        void drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
+        bool keyPressMove(QKeyEvent* e);
+        bool keyPressTextInput(QKeyEvent* e);
+        bool keyPressAction(QKeyEvent* e);
+
+    protected:
+        bool event(QEvent* e) override;
+        void paintEvent(QPaintEvent*) override;
+        void resizeEvent(QResizeEvent* e) override;
+        void mousePressEvent(QMouseEvent* e) override;
+        void mouseMoveEvent(QMouseEvent* e) override;
+        void keyPressEvent(QKeyEvent *e) override;
 
     private:
-        bool processMove(QHexCursor* cur, QKeyEvent* e);
-        bool processTextInput(QHexCursor* cur, QKeyEvent* e);
-        bool processAction(QHexCursor* cur, QKeyEvent* e);
-        void adjustScrollBars();
-        void renderLine(quint64 line);
-        quint64 firstVisibleLine() const;
-        quint64 lastVisibleLine() const;
-        quint64 visibleLines() const;
-        bool isLineVisible(quint64 line) const;
-
-        int documentSizeFactor() const;
-
-        QPoint absolutePosition(const QPoint & pos) const;
-
-    private:
-        QHexDocument* m_document;
-        QHexRenderer* m_renderer;
-        QTimer* m_blinktimer;
-        bool m_readonly;
+        bool m_readonly{false}, m_writing{false};
+        Area m_currentarea{Area::Ascii};
+        QList<QRectF> m_hexcolumns;
+        QTextDocument m_textdocument;
+        QFontMetricsF m_fontmetrics;
+        QHexDocument* m_hexdocument{nullptr};
 };
 
-#endif // QHEXVIEW_H

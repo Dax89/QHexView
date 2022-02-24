@@ -1,25 +1,22 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 2.8)
 
 project(QHexView)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-add_library(qhexview-lib STATIC
-    document/buffer/qfilebuffer.cpp
-    document/buffer/qhexbuffer.cpp
-    document/buffer/qmemorybuffer.cpp
-    document/buffer/qmemoryrefbuffer.cpp
-    document/commands/hexcommand.cpp
-    document/commands/insertcommand.cpp
-    document/commands/removecommand.cpp
-    document/commands/replacecommand.cpp
-    document/qhexcursor.cpp
-    document/qhexdocument.cpp
-    document/qhexmetadata.cpp
-    document/qhexrenderer.cpp
-    qhexview.cpp
-)
+file(GLOB_RECURSE HEADERS *.h)
+file(GLOB_RECURSE SOURCES *.cpp)
 
-target_compile_features(qhexview-lib PUBLIC cxx_std_11)
-target_link_libraries(qhexview-lib PRIVATE Qt5::Widgets)
-target_include_directories(qhexview-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug") # Enforce warnings as errors if not in Release mode
+    if(MSVC)
+        target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /permissive)
+    else()
+        target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wextra -Wno-error=extra -Wshadow -pedantic)
+    endif()
+endif()

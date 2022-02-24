@@ -1,19 +1,27 @@
 #include "qhexcursor.h"
-#include <QWidget>
+#include "qhexdocument.h"
 
-QHexCursor::QHexCursor(QObject *parent) : QObject(parent), m_insertionmode(QHexCursor::OverwriteMode)
-{
-    m_position.line = m_position.column = 0;
-    m_position.line = m_position.column = 0;
+/*
+ * https://stackoverflow.com/questions/10803043/inverse-column-row-major-order-transformation
+ *
+ *  If the index is calculated as:
+ *      offset = row + column*NUMROWS
+ *  then the inverse would be:
+ *      row = offset % NUMROWS
+ *      column = offset / NUMROWS
+ *  where % is modulus, and / is integer division.
+ */
 
-    m_selection.line = m_selection.column = 0;
-    m_selection.line = m_selection.column = 0;
+QHexCursor::QHexCursor(QHexDocument* parent) : QObject(parent) { }
+QHexDocument* QHexCursor::document() const { return qobject_cast<QHexDocument*>(this->parent()); }
+QHexCursor::Mode QHexCursor::mode() const { return m_mode; }
+qint64 QHexCursor::offset() const { return this->positionToOffset(m_position); }
+qint64 QHexCursor::selectionStartOffset() const { return this->positionToOffset(this->selectionStart()); }
+qint64 QHexCursor::selectionEndOffset() const { return this->positionToOffset(this->selectionEnd()); }
+qint64 QHexCursor::line() const { return m_position.line; }
+qint64 QHexCursor::column() const { return m_position.column; }
 
-    m_position.nibbleindex = m_selection.nibbleindex = 1;
-    setLineWidth(DEFAULT_HEX_LINE_LENGTH);
-}
-
-const QHexPosition &QHexCursor::selectionStart() const
+QHexCursor::Position QHexCursor::selectionStart() const
 {
     if(m_position.line < m_selection.line)
         return m_position;
@@ -27,7 +35,7 @@ const QHexPosition &QHexCursor::selectionStart() const
     return m_selection;
 }
 
-const QHexPosition &QHexCursor::selectionEnd() const
+QHexCursor::Position QHexCursor::selectionEnd() const
 {
     if(m_position.line > m_selection.line)
         return m_position;
@@ -41,95 +49,121 @@ const QHexPosition &QHexCursor::selectionEnd() const
     return m_selection;
 }
 
-const QHexPosition &QHexCursor::position() const { return m_position; }
-QHexCursor::InsertionMode QHexCursor::insertionMode() const { return m_insertionmode; }
-int QHexCursor::selectionLength() const { return this->selectionEnd() - this->selectionStart() + 1;  }
-quint64 QHexCursor::currentLine() const { return m_position.line; }
-int QHexCursor::currentColumn() const { return m_position.column; }
-int QHexCursor::currentNibble() const { return m_position.nibbleindex; }
-quint64 QHexCursor::selectionLine() const { return m_selection.line; }
-int QHexCursor::selectionColumn() const { return m_selection.column; }
-int QHexCursor::selectionNibble() const { return m_selection.nibbleindex;  }
+qint64 QHexCursor::selectionLength() const { return this->selectionEndOffset() - this->selectionStartOffset(); }
+QHexCursor::Position QHexCursor::position() const { return m_position; }
+QByteArray QHexCursor::selectedBytes() const { return this->hasSelection() ? this->document()->read(this->selectionStartOffset(), this->selectionLength()) : QByteArray{ }; }
+bool QHexCursor::hasSelection() const { return m_position != m_selection; }
 
-bool QHexCursor::isLineSelected(quint64 line) const
+bool QHexCursor::isLineSelected(qint64 line) const
 {
-    if(!this->hasSelection())
-        return false;
+    if(!this->hasSelection()) return false;
 
-    quint64 first = std::min(m_position.line, m_selection.line);
-    quint64 last = std::max(m_position.line, m_selection.line);
-
-    if((line < first) || (line > last))
-        return false;
-
-    return true;
+    qint64 first = std::min(m_position.line, m_selection.line);
+    qint64 last = std::max(m_position.line, m_selection.line);
+    return (line >= first) && (line <= last);
 }
 
-bool QHexCursor::hasSelection() const { return m_position != m_selection; }
+bool QHexCursor::isSelected(qint64 line, qint64 column) const
+{
+    if(!this->hasSelection()) return false;
+
+    auto selstart = this->selectionStart(), selend = this->selectionEnd();
+
+    if(line > selstart.line && line < selend.line) return true;
+    if(line == selstart.line && line == selend.line) return column >= selstart.column && column < selend.column;
+    if(line == selstart.line) return column >= selstart.column;
+    if(line == selend.line) return column < selend.column;
+    return false;
+}
+
+void QHexCursor::setMode(Mode m)
+{
+    if(m_mode == m) return;
+    m_mode = m;
+    Q_EMIT modeChanged();
+}
+
+void QHexCursor::toggleMode()
+{
+    switch(m_mode)
+    {
+        case Mode::Insert: this->setMode(Mode::Overwrite); break;
+        case Mode::Overwrite: this->setMode(Mode::Insert); break;
+    }
+}
+
+void QHexCursor::move(qint64 offset) { this->move(this->offsetToPosition(offset)); }
+void QHexCursor::move(qint64 line, qint64 column) { return this->move({line, column}); }
+
+void QHexCursor::move(Position pos)
+{
+    if(pos.line >= 0) m_selection.line = pos.line;
+    if(pos.column >= 0) m_selection.column = pos.column;
+    this->select(pos);
+}
+
+void QHexCursor::select(qint64 line, qint64 column) { this->select({line, column}); }
+
+void QHexCursor::select(Position pos)
+{
+    if(pos.line >= 0) m_position.line = pos.line;
+    if(pos.column >= 0) m_position.column = pos.column;
+    Q_EMIT positionChanged();
+}
+
+void QHexCursor::select(qint64 length)
+{
+    const auto& opt = this->document()->options();
+    Position pos = m_position;
+
+    if(length > 0)
+    {
+        for(qint64 i = 0; i < length; i++)
+        {
+            pos.column++;
+
+            if(pos.column >= opt.linelength)
+            {
+                //TODO: Check if line == EOF
+                pos.line++;
+                pos.column = 0;
+            }
+        }
+    }
+    else if(length < 0)
+    {
+        for(qint64 i = length; i-- > 0; )
+        {
+            pos.column--;
+
+            if(pos.column <= 0)
+            {
+                //TODO: Check if line == 0
+                pos.line--;
+                pos.column = opt.linelength - 1;
+            }
+        }
+    }
+    else
+        return;
+
+    this->select(pos);
+}
+
+void QHexCursor::removeSelection()
+{
+    if(!this->hasSelection()) return;
+}
 
 void QHexCursor::clearSelection()
 {
-    m_selection = m_position;
-    emit positionChanged();
+    m_position = m_selection;
+    Q_EMIT positionChanged();
 }
 
-void QHexCursor::moveTo(const QHexPosition &pos) { this->moveTo(pos.line, pos.column, pos.nibbleindex); }
-void QHexCursor::select(const QHexPosition &pos) { this->select(pos.line, pos.column, pos.nibbleindex); }
+qint64 QHexCursor::positionToOffset(Position pos) const { return this->document()->options().linelength * pos.line + pos.column; }
 
-void QHexCursor::moveTo(quint64 line, int column, int nibbleindex)
+QHexCursor::Position QHexCursor::offsetToPosition(qint64 offset) const
 {
-    m_selection.line = line;
-    m_selection.column = column;
-    m_selection.nibbleindex = nibbleindex;
-
-    this->select(line, column, nibbleindex);
-}
-
-void QHexCursor::select(quint64 line, int column, int nibbleindex)
-{
-    m_position.line = line;
-    m_position.column = column;
-    m_position.nibbleindex = nibbleindex;
-
-    emit positionChanged();
-}
-
-void QHexCursor::moveTo(qint64 offset)
-{
-    quint64 line = offset / m_lineWidth;
-    this->moveTo(line, offset - (line * m_lineWidth));
-}
-
-void QHexCursor::select(int length) { this->select(m_position.line, std::min(m_lineWidth - 1, m_position.column + length - 1)); }
-
-void QHexCursor::selectOffset(qint64 offset, int length)
-{
-    this->moveTo(offset);
-    this->select(length);
-}
-
-void QHexCursor::setInsertionMode(QHexCursor::InsertionMode mode)
-{
-    bool differentmode = (m_insertionmode != mode);
-    m_insertionmode = mode;
-
-	if (differentmode)
-		emit insertionModeChanged();
-}
-
-void QHexCursor::setLineWidth(quint8 width)
-{
-    m_lineWidth = width;
-    m_position.lineWidth = width;
-    m_selection.lineWidth = width;
-}
-
-void QHexCursor::switchInsertionMode()
-{
-    if(m_insertionmode == QHexCursor::OverwriteMode)
-        m_insertionmode = QHexCursor::InsertMode;
-    else
-        m_insertionmode = QHexCursor::OverwriteMode;
-
-    emit insertionModeChanged();
+    return { offset / this->document()->options().linelength, offset % this->document()->options().linelength };
 }

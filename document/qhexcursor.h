@@ -1,71 +1,67 @@
-#ifndef QHEXCURSOR_H
-#define QHEXCURSOR_H
+#pragma once
 
 #include <QObject>
+#include "qhexoptions.h"
 
-#define DEFAULT_HEX_LINE_LENGTH      0x10
-#define DEFAULT_AREA_IDENTATION      0x01
-
-struct QHexPosition {
-    quint64 line;
-    int column;
-    quint8 lineWidth;
-    int nibbleindex;
-
-    QHexPosition() = default;
-    inline qint64 offset() const { return static_cast<qint64>(line * lineWidth) + column; }
-    inline int operator-(const QHexPosition& rhs) const { return this->offset() - rhs.offset(); }
-    inline bool operator==(const QHexPosition& rhs) const { return (line == rhs.line) && (column == rhs.column) && (nibbleindex == rhs.nibbleindex); }
-    inline bool operator!=(const QHexPosition& rhs) const { return (line != rhs.line) || (column != rhs.column) || (nibbleindex != rhs.nibbleindex); }
-};
+class QHexDocument;
 
 class QHexCursor : public QObject
 {
     Q_OBJECT
 
     public:
-        enum InsertionMode { OverwriteMode, InsertMode };
+        enum class Mode { Overwrite, Insert };
 
-    public:
-        explicit QHexCursor(QObject *parent = nullptr);
-
-    public:
-        const QHexPosition& selectionStart() const;
-        const QHexPosition& selectionEnd() const;
-        const QHexPosition& position() const;
-        InsertionMode insertionMode() const;
-        int selectionLength() const;
-        quint64 currentLine() const;
-        int currentColumn() const;
-        int currentNibble() const;
-        quint64 selectionLine() const;
-        int selectionColumn() const;
-        int selectionNibble() const;
-        bool atEnd() const;
-        bool isLineSelected(quint64 line) const;
-        bool hasSelection() const;
-        void clearSelection();
-
-    public:
-        void moveTo(const QHexPosition& pos);
-        void moveTo(quint64 line, int column, int nibbleindex = 1);
-        void moveTo(qint64 offset);
-        void select(const QHexPosition& pos);
-        void select(quint64 line, int column, int nibbleindex = 1);
-        void select(int length);
-        void selectOffset(qint64 offset, int length);
-        void setInsertionMode(InsertionMode mode);
-        void setLineWidth(quint8 width);
-        void switchInsertionMode();
-
-    signals:
-        void positionChanged();
-        void insertionModeChanged();
+        struct Position {
+            qint64 line; qint64 column;
+            static inline Position invalid() { return {-1, -1}; }
+            inline bool isValid() const { return line >= 0 && column >= 0; }
+            inline bool operator==(const Position& rhs) const { return (line == rhs.line) && (column == rhs.column); }
+            inline bool operator!=(const Position& rhs) const { return (line != rhs.line) || (column != rhs.column); }
+        };
 
     private:
-        InsertionMode m_insertionmode;
-        quint8 m_lineWidth;
-        QHexPosition m_position, m_selection;
+        explicit QHexCursor(QHexDocument *parent = nullptr);
+
+    public:
+        QHexDocument* document() const;
+        Mode mode() const;
+        qint64 line() const;
+        qint64 column() const;
+        qint64 offset() const;
+        qint64 selectionStartOffset() const;
+        qint64 selectionEndOffset() const;
+        qint64 selectionLength() const;
+        Position position() const;
+        Position selectionStart() const;
+        Position selectionEnd() const;
+        QByteArray selectedBytes() const;
+        bool hasSelection() const;
+        bool isLineSelected(qint64 line) const;
+        bool isSelected(qint64 line, qint64 column) const;
+        void setMode(Mode m);
+        void toggleMode();
+        void move(qint64 offset);
+        void move(qint64 line, qint64 column);
+        void move(Position pos);
+        void select(qint64 line, qint64 column);
+        void select(Position pos);
+        void select(qint64 length);
+        void removeSelection();
+        void clearSelection();
+
+    private:
+        qint64 positionToOffset(Position pos) const;
+        Position offsetToPosition(qint64 offset) const;
+
+    Q_SIGNALS:
+        void positionChanged();
+        void modeChanged();
+
+    private:
+        Mode m_mode{Mode::Overwrite};
+        Position m_position{}, m_selection{};
+
+    friend class QHexDocument;
 };
 
-#endif // QHEXCURSOR_H

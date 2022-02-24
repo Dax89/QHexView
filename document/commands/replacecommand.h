@@ -1,5 +1,4 @@
-#ifndef REPLACECOMMAND_H
-#define REPLACECOMMAND_H
+#pragma once
 
 #include "hexcommand.h"
 
@@ -13,5 +12,3 @@ class ReplaceCommand: public HexCommand
     private:
         QByteArray m_olddata;
 };
-
-#endif // REPLACECOMMAND_H
