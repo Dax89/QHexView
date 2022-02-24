@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(QHexView)
 
@@ -15,7 +15,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug") # Enforce warnings as errors if not in Release mode
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /permissive)
+        target_compile_options(${PROJECT_NAME} PRIVATE /W3 /WX /permissive)
     else()
         target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wextra -Wno-error=extra -Wshadow -pedantic)
     endif()

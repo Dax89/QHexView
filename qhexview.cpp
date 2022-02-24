@@ -162,7 +162,7 @@ void QHexView::drawDocument(QTextCursor& c) const
         // Ascii Part
         for(auto column = 0u; column < this->options().linelength; column++)
         {
-            this->drawFormat(c, std::isprint(linebytes[column]) ? QChar(linebytes[column]) : this->options().unprintablechar,
+            this->drawFormat(c, std::isprint(static_cast<uchar>(linebytes[column])) ? QChar(linebytes[column]) : this->options().unprintablechar,
                              Area::Ascii, line, column);
         }
 
@@ -413,7 +413,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
     bool atend = cursor->offset() >= m_hexdocument->length();
     if(atend && cursor->mode() == QHexCursor::Mode::Overwrite) return false;
 
-    auto key = static_cast<char>(e->text().at(0).toLatin1());
+    auto key = static_cast<uchar>(e->text().at(0).toLatin1());
 
     switch(m_currentarea)
     {
