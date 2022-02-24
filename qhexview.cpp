@@ -269,11 +269,6 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
 
 QTextCharFormat QHexView::drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const
 {
-    auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
-    auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Window);
-    auto discursorbg = this->palette().color(QPalette::Disabled, QPalette::WindowText);
-    auto discursorfg = this->palette().color(QPalette::Disabled, QPalette::Window);
-
     QTextCharFormat cf, selcf;
 
     if(this->hexCursor()->isSelected(line, column))
@@ -285,6 +280,11 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, const QString& s, Area area
 
     if(this->hexCursor()->line() == line && this->hexCursor()->column() == column)
     {
+        auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
+        auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Window);
+        auto discursorbg = this->palette().color(QPalette::Disabled, QPalette::WindowText);
+        auto discursorfg = this->palette().color(QPalette::Disabled, QPalette::Window);
+
         switch(m_hexdocument->cursor()->mode())
         {
             case QHexCursor::Mode::Insert:
