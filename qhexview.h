@@ -8,8 +8,8 @@
 #include <QTextDocument>
 #include <QRectF>
 #include <QList>
-#include "document/qhexdocument.h"
-#include "document/qhexcursor.h"
+#include "model/qhexdocument.h"
+#include "model/qhexcursor.h"
 
 class QHexView : public QAbstractScrollArea
 {

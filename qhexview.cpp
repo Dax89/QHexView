@@ -1,5 +1,5 @@
 #include "qhexview.h"
-#include "document/qhexcursor.h"
+#include "model/qhexcursor.h"
 #include <QMouseEvent>
 #include <QFontDatabase>
 #include <QApplication>
