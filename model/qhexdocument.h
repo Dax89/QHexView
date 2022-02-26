@@ -60,6 +60,7 @@ class QHexDocument: public QObject
         template<typename T> static QHexDocument* fromMemory(char *data, int size, const QHexOptions& options, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, const QHexOptions& options, QObject* parent = nullptr);
         static QHexDocument* fromLargeFile(QString filename, const QHexOptions& options, QObject *parent = nullptr);
+        static QHexDocument* create(const QHexOptions& options, QObject* parent = nullptr);
 
     Q_SIGNALS:
         void canUndoChanged(bool canUndo);

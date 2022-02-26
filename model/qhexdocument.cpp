@@ -1,4 +1,5 @@
 #include "qhexdocument.h"
+#include "model/buffer/qmemorybuffer.h"
 #include "commands/insertcommand.h"
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
@@ -38,7 +39,15 @@ void QHexDocument::checkOptions(QPalette palette)
 
 qint64 QHexDocument::lastColumn() const { return this->getLine(this->lastLine()).size(); }
 qint64 QHexDocument::lastLine() const { return this->lines() - 1; }
-quint64 QHexDocument::lines() const { return m_buffer ? static_cast<quint64>(m_buffer->length() / m_options.linelength) : 0; }
+
+quint64 QHexDocument::lines() const
+{
+    if(!m_buffer) return 0;
+
+    auto lines = static_cast<quint64>(std::ceil(m_buffer->length() / m_options.linelength));
+    return !m_buffer->isEmpty() && !lines ? 1 : lines;
+}
+
 bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
 bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }
 bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
@@ -83,13 +92,13 @@ void QHexDocument::paste(bool hex)
     if(data.isEmpty()) return;
 
     m_hexcursor->removeSelection();
-
     if(hex) data = QByteArray::fromHex(data);
 
-    //if(m_cursor->insertionMode() == QHexCursor::InsertMode)
-        //this->insert(m_cursor->position().offset(), data);
-    //else
-        //this->replace(m_cursor->position().offset(), data);
+    switch(m_hexcursor->mode())
+    {
+        case QHexCursor::Mode::Insert: this->insert(m_hexcursor->offset(), data); break;
+        default: this->replace(m_hexcursor->offset(), data); break;
+    }
 }
 
 void QHexDocument::insert(qint64 offset, uchar b) { this->insert(offset, QByteArray(1, b)); }
@@ -156,3 +165,5 @@ QHexDocument* QHexDocument::fromLargeFile(QString filename, const QHexOptions& o
     std::unique_ptr<QHexBuffer> hexbuffer(new QFileBuffer());
     return hexbuffer->read(&f) ? new QHexDocument(hexbuffer.release(), options, parent) : nullptr;
 }
+
+QHexDocument* QHexDocument::create(const QHexOptions& options, QObject* parent) { return QHexDocument::fromMemory<QMemoryBuffer>({}, options, parent); }
