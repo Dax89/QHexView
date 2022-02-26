@@ -68,6 +68,9 @@ void QHexView::setDocument(QHexDocument* doc)
     this->checkAndUpdate(true);
 }
 
+void QHexView::setByteColor(quint8 b, QHexColor c) { if(m_hexdocument) m_hexdocument->setByteColor(b, c); }
+void QHexView::setByteForeground(quint8 b, QColor c) { if(m_hexdocument) m_hexdocument->setByteForeground(b, c); }
+void QHexView::setByteBackground(quint8 b, QColor c) { if(m_hexdocument) m_hexdocument->setByteBackground(b, c); }
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
 void QHexView::setLineLength(int l) { m_hexdocument->setLineLength(l); this->checkAndUpdate(true); }
 void QHexView::setGroupLength(int l) { m_hexdocument->setGroupLength(l); }
@@ -165,7 +168,7 @@ void QHexView::drawDocument(QTextCursor& c) const
             for(auto byteidx = 0u; byteidx < this->options().grouplength; byteidx++, column++)
             {
                 auto s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : linebytes.mid(column, 1).toHex().toUpper();
-                cf = this->drawFormat(c, s, Area::Hex, line, column);
+                cf = this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Hex, line, column);
             }
 
             c.insertText(" ", cf);
@@ -176,9 +179,9 @@ void QHexView::drawDocument(QTextCursor& c) const
         {
             auto s = linebytes.isEmpty() ||
                      column >= static_cast<qint64>(linebytes.size()) ? QChar(' ') :
-                                                                       (std::isprint(static_cast<uchar>(linebytes.at(column))) ? QChar(linebytes.at(column)) : this->options().unprintablechar);
+                                                                       (std::isprint(static_cast<quint8>(linebytes.at(column))) ? QChar(linebytes.at(column)) : this->options().unprintablechar);
 
-            this->drawFormat(c, s, Area::Ascii, line, column);
+            this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Ascii, line, column);
         }
 
         c.insertBlock();
@@ -288,9 +291,16 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
     return Area::Extra;
 }
 
-QTextCharFormat QHexView::drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const
+QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column) const
 {
     QTextCharFormat cf, selcf;
+    const auto& options = m_hexdocument->options();
+
+    auto it = options.bytecolors.find(b); if(it != options.bytecolors.end())
+    {
+        if(it->background.isValid()) cf.setBackground(it->background);
+        if(it->foreground.isValid()) cf.setForeground(it->foreground);
+    }
 
     if(this->hexCursor()->isSelected(line, column))
     {
@@ -434,7 +444,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
     bool atend = cursor->offset() >= m_hexdocument->length();
     if(atend && cursor->mode() == QHexCursor::Mode::Overwrite) return false;
 
-    auto key = static_cast<uchar>(e->text().at(0).toLatin1());
+    auto key = static_cast<quint8>(e->text().at(0).toLatin1());
 
     switch(m_currentarea)
     {
@@ -442,11 +452,11 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
             if(!std::isxdigit(key)) return false;
 
             bool ok = false;
-            auto val = static_cast<uchar>(QString(key).toUInt(&ok, 16));
+            auto val = static_cast<quint8>(QString(key).toUInt(&ok, 16));
             if(!ok) return false;
             cursor->removeSelection();
 
-            uchar ch = m_hexdocument->isEmpty() || cursor->offset() >= m_hexdocument->length() ? '\x00' : m_hexdocument->at(cursor->offset());
+            quint8 ch = m_hexdocument->isEmpty() || cursor->offset() >= m_hexdocument->length() ? '\x00' : m_hexdocument->at(cursor->offset());
             ch = m_writing ? (ch << 4) | val : val;
 
             if(!m_writing && (cursor->mode() == QHexCursor::Mode::Insert)) m_hexdocument->insert(cursor->offset(), val);

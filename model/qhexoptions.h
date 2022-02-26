@@ -9,6 +9,12 @@
 #define QHEXVIEW_UNPRINTABLECHAR '.'
 #define QHEXVIEW_LINELENGTH      0x10
 
+struct QHexColor
+{
+    QColor foreground;
+    QColor background;
+};
+
 struct QHexOptions
 {
     // Appearance
@@ -21,6 +27,6 @@ struct QHexOptions
     bool header{true};
 
     // Colors
-    QHash<quint8, QColor> bytecolors;
+    QHash<quint8, QHexColor> bytecolors;
     QColor headercolor;
 };

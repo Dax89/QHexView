@@ -65,6 +65,15 @@ void QHexDocument::setBaseAddress(quint64 baseaddress)
 }
 
 void QHexDocument::setOptions(const QHexOptions& options) { m_options = options; Q_EMIT changed(); }
+
+void QHexDocument::setByteColor(quint8 b, QHexColor c)
+{
+    m_options.bytecolors[b] = c;
+    Q_EMIT changed();
+}
+
+void QHexDocument::setByteForeground(quint8 b, QColor c) { this->setByteColor(b, {c, Qt::transparent}); }
+void QHexDocument::setByteBackground(quint8 b, QColor c) { this->setByteColor(b, {Qt::transparent, c}); }
 void QHexDocument::undo() { m_undostack.undo(); Q_EMIT changed(); }
 void QHexDocument::redo() { m_undostack.redo(); Q_EMIT changed(); }
 

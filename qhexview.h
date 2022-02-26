@@ -26,6 +26,9 @@ class QHexView : public QAbstractScrollArea
         const QHexOptions& options() const;
         void setOptions(const QHexOptions& options);
         void setDocument(QHexDocument* doc);
+        void setByteColor(quint8 b, QHexColor c);
+        void setByteForeground(quint8 b, QColor c);
+        void setByteBackground(quint8 b, QColor c);
         void setReadOnly(bool r);
 
     public Q_SLOTS:
@@ -51,7 +54,7 @@ class QHexView : public QAbstractScrollArea
         QHexCursor::Position positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
         Area areaFromPoint(QPoint pt) const;
-        QTextCharFormat drawFormat(QTextCursor& c, const QString& s, Area area, qint64 line, qint64 column) const;
+        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
         bool keyPressMove(QKeyEvent* e);

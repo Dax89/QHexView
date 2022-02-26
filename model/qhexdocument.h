@@ -53,6 +53,9 @@ class QHexDocument: public QObject
         void setGroupLength(unsigned int l);
         void setBaseAddress(quint64 baseaddress);
         void setOptions(const QHexOptions& options);
+        void setByteColor(quint8 b, QHexColor c);
+        void setByteForeground(quint8 b, QColor c);
+        void setByteBackground(quint8 b, QColor c);
 
     public:
         template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, const QHexOptions& options = { }, QObject* parent = nullptr);
