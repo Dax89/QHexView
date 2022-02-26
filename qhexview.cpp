@@ -264,7 +264,7 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
     if(this->options().header) pos.line = std::max<qint64>(0, pos.line - 1);
 
     auto docline = m_hexdocument->getLine(pos.line);
-    pos.column = std::min<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size() - 1);
+    pos.column = std::min<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size());
 
     qhexview_fmtprint("line: %lld, col: %lld", pos.line, pos.column);
     return pos;
