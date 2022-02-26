@@ -12,7 +12,16 @@
 #include <cctype>
 #include <cmath>
 
-#include <QDebug>
+#if defined(QHEXVIEW_DEBUG)
+    #include <QMetaEnum>
+    #include <QDebug>
+
+    #define qhexview_fmtprint(fmt, ...) qDebug("%s " fmt, __func__, __VA_ARGS__)
+    #define qhexview_enumname(val) QMetaEnum::fromType<decltype(val)>().valueToKey(static_cast<int>(val))
+#else
+    #define qhexview_fmtprint(fmt, ...)
+    #define qhexview_enumname(val)
+#endif
 
 QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics(this->font())
 {
@@ -136,7 +145,7 @@ void QHexView::drawDocument(QTextCursor& c) const
     QTextCharFormat addrformat;
     addrformat.setForeground(this->palette().color(QPalette::Normal, QPalette::Highlight));
 
-    for(qint64 l = 0; (line < m_hexdocument->lines()) && (l < this->visibleLines()); l++, line++, y += this->lineHeight())
+    for(qint64 l = 0; m_hexdocument->isEmpty() || (line < m_hexdocument->lines() && l < this->visibleLines()); l++, line++, y += this->lineHeight())
     {
         quint64 address = line * this->options().linelength + m_hexdocument->baseAddress();
         QString addrstr = QString::number(address, 16).rightJustified(this->addressWidth(), '0').toUpper();
@@ -154,7 +163,10 @@ void QHexView::drawDocument(QTextCursor& c) const
             QTextCharFormat cf;
 
             for(auto byteidx = 0u; byteidx < this->options().grouplength; byteidx++, column++)
-                cf = this->drawFormat(c, linebytes.mid(column, 1).toHex().toUpper(), Area::Hex, line, column);
+            {
+                auto s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : linebytes.mid(column, 1).toHex().toUpper();
+                cf = this->drawFormat(c, s, Area::Hex, line, column);
+            }
 
             c.insertText(" ", cf);
         }
@@ -162,11 +174,15 @@ void QHexView::drawDocument(QTextCursor& c) const
         // Ascii Part
         for(auto column = 0u; column < this->options().linelength; column++)
         {
-            this->drawFormat(c, std::isprint(static_cast<uchar>(linebytes[column])) ? QChar(linebytes[column]) : this->options().unprintablechar,
-                             Area::Ascii, line, column);
+            auto s = linebytes.isEmpty() ||
+                     column >= static_cast<qint64>(linebytes.size()) ? QChar(' ') :
+                                                                       (std::isprint(static_cast<uchar>(linebytes.at(column))) ? QChar(linebytes.at(column)) : this->options().unprintablechar);
+
+            this->drawFormat(c, s, Area::Ascii, line, column);
         }
 
         c.insertBlock();
+        if(m_hexdocument->isEmpty()) break;
     }
 }
 
@@ -246,6 +262,11 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
 
     pos.line = std::min<qint64>(this->verticalScrollBar()->value() + (pt.y() / this->lineHeight()), m_hexdocument->lines());
     if(this->options().header) pos.line = std::max<qint64>(0, pos.line - 1);
+
+    auto docline = m_hexdocument->getLine(pos.line);
+    pos.column = std::min<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size() - 1);
+
+    qhexview_fmtprint("line: %lld, col: %lld", pos.line, pos.column);
     return pos;
 }
 
@@ -425,7 +446,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
             if(!ok) return false;
             cursor->removeSelection();
 
-            uchar ch = m_hexdocument->at(cursor->offset());
+            uchar ch = m_hexdocument->isEmpty() || cursor->offset() >= m_hexdocument->length() ? '\x00' : m_hexdocument->at(cursor->offset());
             ch = m_writing ? (ch << 4) | val : val;
 
             if(!m_writing && (cursor->mode() == QHexCursor::Mode::Insert)) m_hexdocument->insert(cursor->offset(), val);
@@ -519,6 +540,7 @@ void QHexView::paintEvent(QPaintEvent*)
 
     QPainter painter(this->viewport());
     QTextCursor c(&m_textdocument);
+
     this->drawHeader(c);
     this->drawDocument(c);
 
@@ -540,6 +562,7 @@ void QHexView::mousePressEvent(QMouseEvent* e)
     if(!pos.isValid()) return;
 
     auto area = this->areaFromPoint(e->pos());
+    qhexview_fmtprint("%s", qhexview_enumname(area));
 
     switch(area)
     {

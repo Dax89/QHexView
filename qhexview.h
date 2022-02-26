@@ -17,6 +17,7 @@ class QHexView : public QAbstractScrollArea
 
     public:
         enum class Area { Header, Address, Hex, Ascii, Extra };
+        Q_ENUM(Area)
 
     public:
         explicit QHexView(QWidget *parent = nullptr);
