@@ -63,5 +63,6 @@ class QHexCursor : public QObject
         Position m_position{}, m_selection{};
 
     friend class QHexDocument;
+    friend class QHexView;
 };
 
