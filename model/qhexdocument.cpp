@@ -52,7 +52,7 @@ bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
 bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }
 bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
 QHexCursor* QHexDocument::cursor() const { return m_hexcursor; }
-const QHexOptions& QHexDocument::options() const { return m_options; }
+const QHexOptions* QHexDocument::options() const { return &m_options; }
 qint64 QHexDocument::length() const { return m_buffer->length(); }
 quint64 QHexDocument::baseAddress() const { return m_baseaddress; }
 uchar QHexDocument::at(int offset) const { return m_buffer->at(offset); }

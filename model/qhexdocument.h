@@ -29,7 +29,7 @@ class QHexDocument: public QObject
         bool canUndo() const;
         bool canRedo() const;
         QHexCursor* cursor() const;
-        const QHexOptions& options() const;
+        const QHexOptions* options() const;
         qint64 length() const;
         quint64 baseAddress() const;
         qint64 find(const QByteArray &ba, FindDirection fd = FindDirection::Forward) const;

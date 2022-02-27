@@ -23,7 +23,7 @@ class QHexView : public QAbstractScrollArea
         explicit QHexView(QWidget *parent = nullptr);
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
-        const QHexOptions& options() const;
+        const QHexOptions* options() const;
         void setOptions(const QHexOptions& options);
         void setDocument(QHexDocument* doc);
         void setByteColor(quint8 b, QHexColor c);

@@ -113,7 +113,7 @@ void QHexCursor::select(Position pos)
 
 void QHexCursor::select(qint64 length)
 {
-    const auto& opt = this->document()->options();
+    auto* opt = this->document()->options();
     Position pos = m_position;
 
     if(length > 0)
@@ -122,7 +122,7 @@ void QHexCursor::select(qint64 length)
         {
             pos.column++;
 
-            if(pos.column >= opt.linelength)
+            if(pos.column >= opt->linelength)
             {
                 //TODO: Check if line == EOF
                 pos.line++;
@@ -140,7 +140,7 @@ void QHexCursor::select(qint64 length)
             {
                 //TODO: Check if line == 0
                 pos.line--;
-                pos.column = opt.linelength - 1;
+                pos.column = opt->linelength - 1;
             }
         }
     }
@@ -161,9 +161,9 @@ void QHexCursor::clearSelection()
     Q_EMIT positionChanged();
 }
 
-qint64 QHexCursor::positionToOffset(Position pos) const { return this->document()->options().linelength * pos.line + pos.column; }
+qint64 QHexCursor::positionToOffset(Position pos) const { return this->document()->options()->linelength * pos.line + pos.column; }
 
 QHexCursor::Position QHexCursor::offsetToPosition(qint64 offset) const
 {
-    return { offset / this->document()->options().linelength, offset % this->document()->options().linelength };
+    return { offset / this->document()->options()->linelength, offset % this->document()->options()->linelength };
 }

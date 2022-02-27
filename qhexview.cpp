@@ -47,7 +47,7 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
 
 QHexDocument* QHexView::hexDocument() const { return m_hexdocument; }
 QHexCursor* QHexView::hexCursor() const { return m_hexdocument->cursor(); }
-const QHexOptions& QHexView::options() const { return m_hexdocument->options(); }
+const QHexOptions* QHexView::options() const { return m_hexdocument ? m_hexdocument->options() : nullptr; }
 void QHexView::setOptions(const QHexOptions& options) { if(m_hexdocument) m_hexdocument->setOptions(options); }
 
 void QHexView::setDocument(QHexDocument* doc)
@@ -80,8 +80,8 @@ void QHexView::checkState()
     if(!m_hexdocument) return;
     m_hexdocument->checkOptions(this->palette());
 
-    this->verticalScrollBar()->setSingleStep(this->options().scrollsteps);
-    this->verticalScrollBar()->setPageStep(this->options().scrollsteps);
+    this->verticalScrollBar()->setSingleStep(this->options()->scrollsteps);
+    this->verticalScrollBar()->setPageStep(this->options()->scrollsteps);
 
     quint64 doclines = m_hexdocument->lines();
     int vislines = this->visibleLines();
@@ -108,13 +108,13 @@ void QHexView::checkAndUpdate(bool calccolumns)
 void QHexView::calcColumns()
 {
     m_hexcolumns.clear();
-    m_hexcolumns.reserve(this->options().linelength);
+    m_hexcolumns.reserve(this->options()->linelength);
 
     auto x = this->hexColumnX(), cw = this->cellWidth() * 2;
 
-    for(auto i = 0u; i < this->options().linelength; i++)
+    for(auto i = 0u; i < this->options()->linelength; i++)
     {
-        for(auto j = 0u; j < this->options().grouplength; j++, x += cw)
+        for(auto j = 0u; j < this->options()->grouplength; j++, x += cw)
             m_hexcolumns.push_back(QRect(x, 0, cw, 0));
 
         x += this->cellWidth();
@@ -123,17 +123,17 @@ void QHexView::calcColumns()
 
 void QHexView::drawHeader(QTextCursor& c) const
 {
-    QString addressheader = this->options().addresslabel.rightJustified(this->addressWidth()), hexheader;
+    QString addressheader = this->options()->addresslabel.rightJustified(this->addressWidth()), hexheader;
 
-    for(auto i = 0u; i < this->options().linelength; i += this->options().grouplength)
-        hexheader.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(this->options().grouplength * 2, '0')).toUpper());
+    for(auto i = 0u; i < this->options()->linelength; i += this->options()->grouplength)
+        hexheader.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(this->options()->grouplength * 2, '0')).toUpper());
 
     QTextCharFormat cf;
-    cf.setForeground(this->options().headercolor);
+    cf.setForeground(this->options()->headercolor);
 
     c.insertText(m_fontmetrics.elidedText(addressheader, Qt::ElideRight, this->hexColumnX()) + " ", cf);
     c.insertText(hexheader, cf);
-    c.insertText(this->options().asciilabel, cf);
+    c.insertText(this->options()->asciilabel, cf);
 
     c.insertBlock();
 }
@@ -142,7 +142,7 @@ void QHexView::drawDocument(QTextCursor& c) const
 {
     if(!m_hexdocument) return;
 
-    qreal y = this->options().header ? this->lineHeight() : 0;
+    qreal y = this->options()->header ? this->lineHeight() : 0;
     quint64 line = static_cast<quint64>(this->verticalScrollBar()->value());
 
     QTextCharFormat addrformat;
@@ -150,22 +150,22 @@ void QHexView::drawDocument(QTextCursor& c) const
 
     for(qint64 l = 0; m_hexdocument->isEmpty() || (line < m_hexdocument->lines() && l < this->visibleLines()); l++, line++, y += this->lineHeight())
     {
-        quint64 address = line * this->options().linelength + m_hexdocument->baseAddress();
+        quint64 address = line * this->options()->linelength + m_hexdocument->baseAddress();
         QString addrstr = QString::number(address, 16).rightJustified(this->addressWidth(), '0').toUpper();
 
         // Address Part
         QTextCharFormat acf;
-        acf.setForeground(this->options().headercolor);
+        acf.setForeground(this->options()->headercolor);
         c.insertText(addrstr + " ", acf);
 
         auto linebytes = m_hexdocument->getLine(line);
 
         // Hex Part
-        for(auto column = 0u; column < this->options().linelength; )
+        for(auto column = 0u; column < this->options()->linelength; )
         {
             QTextCharFormat cf;
 
-            for(auto byteidx = 0u; byteidx < this->options().grouplength; byteidx++, column++)
+            for(auto byteidx = 0u; byteidx < this->options()->grouplength; byteidx++, column++)
             {
                 auto s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : linebytes.mid(column, 1).toHex().toUpper();
                 cf = this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Hex, line, column);
@@ -175,11 +175,11 @@ void QHexView::drawDocument(QTextCursor& c) const
         }
 
         // Ascii Part
-        for(auto column = 0u; column < this->options().linelength; column++)
+        for(auto column = 0u; column < this->options()->linelength; column++)
         {
             auto s = linebytes.isEmpty() ||
                      column >= static_cast<qint64>(linebytes.size()) ? QChar(' ') :
-                                                                       (std::isprint(static_cast<quint8>(linebytes.at(column))) ? QChar(linebytes.at(column)) : this->options().unprintablechar);
+                                                                       (std::isprint(static_cast<quint8>(linebytes.at(column))) ? QChar(linebytes.at(column)) : this->options()->unprintablechar);
 
             this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Ascii, line, column);
         }
@@ -206,7 +206,7 @@ int QHexView::documentSizeFactor() const
 int QHexView::visibleLines() const
 {
     quint64 vl = std::ceil(this->height() / this->lineHeight());
-    if(this->options().header) vl--;
+    if(this->options()->header) vl--;
     return static_cast<int>(std::min(m_hexdocument->lines(), vl));
 }
 
@@ -214,8 +214,8 @@ qreal QHexView::hexColumnWidth() const
 {
     int l = 0;
 
-    for(auto i = 0u; i < this->options().linelength; i += this->options().grouplength)
-        l += (1 << this->options().grouplength) + 1;
+    for(auto i = 0u; i < this->options()->linelength; i += this->options()->grouplength)
+        l += (1 << this->options()->grouplength) + 1;
 
     return this->getNCellsWidth(l);
 }
@@ -223,7 +223,7 @@ qreal QHexView::hexColumnWidth() const
 qreal QHexView::addressWidth() const { return 8; }
 qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth()) + this->cellWidth(); }
 qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth(); }
-qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->cellWidth() + this->getNCellsWidth(this->options().linelength); }
+qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->cellWidth() + this->getNCellsWidth(this->options()->linelength); }
 qreal QHexView::getNCellsWidth(int n) const { return n * this->cellWidth(); }
 
 qreal QHexView::cellWidth() const
@@ -264,7 +264,7 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
     }
 
     pos.line = std::min<qint64>(this->verticalScrollBar()->value() + (pt.y() / this->lineHeight()), m_hexdocument->lines());
-    if(this->options().header) pos.line = std::max<qint64>(0, pos.line - 1);
+    if(this->options()->header) pos.line = std::max<qint64>(0, pos.line - 1);
 
     auto docline = m_hexdocument->getLine(pos.line);
     pos.column = std::min<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size());
@@ -284,7 +284,7 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
     qreal line = this->verticalScrollBar()->value() + pt.y() / this->lineHeight();
     qreal x = std::ceil(this->horizontalScrollBar()->value() + pt.x());
 
-    if(this->options().header && !std::floor(line)) return Area::Header;
+    if(this->options()->header && !std::floor(line)) return Area::Header;
     if(x < this->hexColumnX()) return Area::Address;
     if(x < this->asciiColumnX()) return Area::Hex;
     if(x < this->endColumnX()) return Area::Ascii;
@@ -296,7 +296,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     QTextCharFormat cf, selcf;
     const auto& options = m_hexdocument->options();
 
-    auto it = options.bytecolors.find(b); if(it != options.bytecolors.end())
+    auto it = options->bytecolors.find(b); if(it != options->bytecolors.end())
     {
         if(it->background.isValid()) cf.setBackground(it->background);
         if(it->foreground.isValid()) cf.setForeground(it->foreground);
@@ -338,7 +338,7 @@ void QHexView::moveNext(bool select)
 {
     auto line = this->hexCursor()->line(), column = this->hexCursor()->column();
 
-    if(column >= this->options().linelength - 1)
+    if(column >= this->options()->linelength - 1)
     {
         line++;
         column = 0;
@@ -422,12 +422,12 @@ bool QHexView::keyPressMove(QKeyEvent* e)
         if(e->matches(QKeySequence::MoveToEndOfLine))
         {
             if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->move(this->hexCursor()->line(), m_hexdocument->lastColumn());
-            else this->hexCursor()->move(this->hexCursor()->line(), this->options().linelength - 1);
+            else this->hexCursor()->move(this->hexCursor()->line(), this->options()->linelength - 1);
         }
         else
         {
             if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->select(this->hexCursor()->line(), m_hexdocument->lastColumn()); else
-                this->hexCursor()->select(this->hexCursor()->line(), this->options().linelength - 1);
+                this->hexCursor()->select(this->hexCursor()->line(), this->options()->linelength - 1);
         }
     }
     else
