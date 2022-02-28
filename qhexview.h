@@ -43,11 +43,12 @@ class QHexView : public QAbstractScrollArea
         void removeComments(qint64 line);
         void unhighlight(qint64 line);
         void clearMetadata();
-        void setReadOnly(bool r);
 
     public Q_SLOTS:
-        void setLineLength(int l);
-        void setGroupLength(int l);
+        void setScrollSteps(unsigned int l);
+        void setLineLength(unsigned int l);
+        void setGroupLength(unsigned int l);
+        void setReadOnly(bool r);
 
     private:
         void checkState();

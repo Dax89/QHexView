@@ -23,7 +23,7 @@ struct QHexOptions
     QString asciilabel{QHEXVIEW_ASCIILABEL};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
     unsigned int grouplength{1};
-    int scrollsteps{1};
+    unsigned int scrollsteps{1};
     bool header{true};
 
     // Colors

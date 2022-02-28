@@ -89,9 +89,10 @@ void QHexView::removeForeground(qint64 line) { if(m_hexdocument) m_hexdocument->
 void QHexView::removeComments(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeComments(line); }
 void QHexView::unhighlight(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->unhighlight(line); }
 void QHexView::clearMetadata() { if(m_hexdocument) m_hexdocument->metadata()->clear(); }
+void QHexView::setScrollSteps(unsigned int l) { if(m_hexdocument) m_hexdocument->setScrollSteps(l); }
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
-void QHexView::setLineLength(int l) { m_hexdocument->setLineLength(l); this->checkAndUpdate(true); }
-void QHexView::setGroupLength(int l) { m_hexdocument->setGroupLength(l); }
+void QHexView::setLineLength(unsigned int l) { m_hexdocument->setLineLength(l); this->checkAndUpdate(true); }
+void QHexView::setGroupLength(unsigned int l) { m_hexdocument->setGroupLength(l); }
 
 void QHexView::checkState()
 {

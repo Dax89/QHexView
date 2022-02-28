@@ -53,6 +53,7 @@ class QHexDocument: public QObject
         bool saveTo(QIODevice* device);
         void setLineLength(unsigned int l);
         void setGroupLength(unsigned int l);
+        void setScrollSteps(unsigned int l);
         void setBaseAddress(quint64 baseaddress);
         void setOptions(const QHexOptions& options);
         void setByteColor(quint8 b, QHexColor c);

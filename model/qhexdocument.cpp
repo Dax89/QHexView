@@ -167,6 +167,12 @@ void QHexDocument::setGroupLength(unsigned int l)
     Q_EMIT changed();
 }
 
+void QHexDocument::setScrollSteps(unsigned int l)
+{
+    if(l == m_options.scrollsteps) return;
+    m_options.scrollsteps = l;
+}
+
 qint64 QHexDocument::find(const QByteArray &ba, FindDirection fd) const
 {
     qint64 startpos = -1;
