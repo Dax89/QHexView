@@ -1,7 +1,8 @@
 #pragma once
 
 #include "qhexbuffer.h"
-#include <QFile>
+
+class QFile;
 
 class QFileBuffer : public QHexBuffer
 {
@@ -21,6 +22,5 @@ class QFileBuffer : public QHexBuffer
         qint64 lastIndexOf(const QByteArray& ba, qint64 from) override;
 
     private:
-        QFile* m_buffer;
-        uchar *m_memory;
+        QFile* m_file;
 };

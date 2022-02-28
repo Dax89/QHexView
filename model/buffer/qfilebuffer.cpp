@@ -1,29 +1,28 @@
 #include "qfilebuffer.h"
+#include <QFile>
+#include <limits>
 
 QFileBuffer::QFileBuffer(QObject *parent) : QHexBuffer(parent) { }
 
 QFileBuffer::~QFileBuffer()
 {
-    if (m_buffer)
-    {
-        if (m_buffer->isOpen())
-            m_buffer->close();
-
-        delete m_buffer;
-        m_buffer = nullptr;
-    }
+    if(!m_file) return;
+    if(m_file->isOpen()) m_file->close();
+    if(m_file->parent() != this) m_file->deleteLater();
+    m_file = nullptr;
 }
 
-uchar QFileBuffer::at(qint64 idx) {
-    m_buffer->seek(idx);
+uchar QFileBuffer::at(qint64 idx)
+{
+    m_file->seek(idx);
+
     char c = '\0';
-    m_buffer->getChar(&c);
+    m_file->getChar(&c);
+
     return static_cast<uchar>(c);
 }
 
-qint64 QFileBuffer::length() const {
-    return m_buffer->size();
-}
+qint64 QFileBuffer::length() const { return m_file->size(); }
 
 void QFileBuffer::insert(qint64 offset, const QByteArray &data) {
     Q_UNUSED(offset)
@@ -38,21 +37,17 @@ void QFileBuffer::remove(qint64 offset, int length) {
 }
 
 QByteArray QFileBuffer::read(qint64 offset, int length) {
-    m_buffer->seek(offset);
-    return m_buffer->read(length);
+    m_file->seek(offset);
+    return m_file->read(length);
 }
 
 bool QFileBuffer::read(QIODevice *device) {
-    m_buffer = qobject_cast<QFile*>(device);
-    if (m_buffer) {
-        m_buffer->setParent(this);
-        if (!m_buffer->isOpen())
-        {
-            m_buffer->open(QIODevice::ReadWrite);
-        }
-        return true;
-    }
-    return false;
+    m_file = qobject_cast<QFile*>(device);
+    if(!m_file) return false;
+
+    m_file->setParent(this);
+    if(!m_file->isOpen()) m_file->open(QIODevice::ReadWrite);
+    return m_file->isOpen();
 }
 
 void QFileBuffer::write(QIODevice *device) {
@@ -62,45 +57,60 @@ void QFileBuffer::write(QIODevice *device) {
 
 qint64 QFileBuffer::indexOf(const QByteArray& ba, qint64 from)
 {
-    qint64 findPos = -1;
-    if (from < m_buffer->size()) {
-        findPos = from;
-        m_buffer->seek(from);
+    const auto MAX = std::numeric_limits<int>::max();
+    qint64 idx = -1;
 
-        while (findPos < m_buffer->size()) {
-            QByteArray data = m_buffer->read(INT_MAX);
-            int idx = data.indexOf(ba);
-            if (idx >= 0) {
-                findPos += idx;
+    if(from < m_file->size())
+    {
+        idx = from;
+        m_file->seek(from);
+
+        while(idx < m_file->size())
+        {
+            QByteArray data = m_file->read(MAX);
+            int sidx = data.indexOf(ba);
+
+            if(sidx >= 0)
+            {
+                idx += sidx;
                 break;
             }
-            if (findPos + data.size() >= m_buffer->size())
-                return -1;
-            m_buffer->seek(m_buffer->pos() + data.size() - ba.size());
+
+            if(idx + data.size() >= m_file->size()) return -1;
+            m_file->seek(m_file->pos() + data.size() - ba.size());
         }
     }
-    return findPos;
+
+    return idx;
 }
 
 qint64 QFileBuffer::lastIndexOf(const QByteArray& ba, qint64 from)
 {
-    qint64 findPos = -1;
-    if (from >= 0 && ba.size() < INT_MAX) {
-        qint64 currPos = from;
-        while (currPos >= 0) {
-            qint64 readPos = (currPos < INT_MAX) ? 0 : currPos - INT_MAX;
-            m_buffer->seek(readPos);
-            QByteArray data = m_buffer->read(currPos - readPos);
-            int idx = data.lastIndexOf(ba, from);
-            if (idx >= 0) {
-                findPos = readPos + idx;
+    const auto MAX = std::numeric_limits<int>::max();
+    qint64 idx = -1;
+
+    if(from >= 0 && ba.size() < MAX) {
+        qint64 currpos = from;
+
+        while(currpos >= 0)
+        {
+            qint64 readpos = (currpos < MAX) ? 0 : currpos - MAX;
+            m_file->seek(readpos);
+
+            QByteArray data = m_file->read(currpos - readpos);
+            int lidx = data.lastIndexOf(ba, from);
+
+            if(lidx >= 0)
+            {
+                idx = readpos + lidx;
                 break;
             }
-            if (readPos <= 0)
-                break;
-            currPos = readPos + ba.size();
+
+            if(readpos <= 0) break;
+            currpos = readpos + ba.size();
         }
 
     }
-    return findPos;
+
+    return idx;
 }
