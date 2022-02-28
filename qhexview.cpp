@@ -113,6 +113,9 @@ void QHexView::checkState()
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         this->verticalScrollBar()->setMaximum(doclines);
     }
+
+    this->setHorizontalScrollBarPolicy(this->viewport()->width() <= this->endColumnX() ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
+    this->horizontalScrollBar()->setMaximum(this->endColumnX());
 }
 
 void QHexView::checkAndUpdate(bool calccolumns)
@@ -257,7 +260,7 @@ qreal QHexView::lineHeight() const { return m_fontmetrics.height(); }
 QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
 {
     QHexCursor::Position pos = QHexCursor::Position::invalid();
-    pt = this->absolutePoint(pt);
+    auto abspt = this->absolutePoint(pt);
 
     switch(this->areaFromPoint(pt))
     {
@@ -265,7 +268,7 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
             pos.column = -1;
 
             for(qint64 i = 0; i < m_hexcolumns.size(); i++) {
-                if((pt.x() >= m_hexcolumns.at(i).left()) && (pt.x() <= m_hexcolumns.at(i).right())) {
+                if((abspt.x() >= m_hexcolumns.at(i).left()) && (abspt.x() <= m_hexcolumns.at(i).right())) {
                     pos.column = i;
                     break;
                 }
@@ -274,13 +277,13 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
             break;
         }
 
-        case Area::Ascii: pos.column = std::floor((pt.x() - this->asciiColumnX()) / this->cellWidth()); break;
+        case Area::Ascii: pos.column = std::floor((abspt.x() - this->asciiColumnX()) / this->cellWidth()); break;
         case Area::Address: pos.column = 0; break;
         case Area::Header: return QHexCursor::Position::invalid();
         default: break;
     }
 
-    pos.line = std::min<qint64>(this->verticalScrollBar()->value() + (pt.y() / this->lineHeight()), m_hexdocument->lines());
+    pos.line = std::min<qint64>(this->verticalScrollBar()->value() + (abspt.y() / this->lineHeight()), m_hexdocument->lines());
     if(this->options()->header) pos.line = std::max<qint64>(0, pos.line - 1);
 
     auto docline = m_hexdocument->getLine(pos.line);
@@ -290,21 +293,17 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
     return pos;
 }
 
-QPoint QHexView::absolutePoint(QPoint pt) const
-{
-    QPoint shift(this->horizontalScrollBar()->value(), 0);
-    return pt + shift;
-}
+QPoint QHexView::absolutePoint(QPoint pt) const { return pt + QPoint(this->horizontalScrollBar()->value(), 0); }
 
 QHexView::Area QHexView::areaFromPoint(QPoint pt) const
 {
+    pt = this->absolutePoint(pt);
     qreal line = this->verticalScrollBar()->value() + pt.y() / this->lineHeight();
-    qreal x = std::ceil(this->horizontalScrollBar()->value() + pt.x());
 
     if(this->options()->header && !std::floor(line)) return Area::Header;
-    if(x < this->hexColumnX()) return Area::Address;
-    if(x < this->asciiColumnX()) return Area::Hex;
-    if(x < this->endColumnX()) return Area::Ascii;
+    if(pt.x() < this->hexColumnX()) return Area::Address;
+    if(pt.x() < this->asciiColumnX()) return Area::Hex;
+    if(pt.x() < this->endColumnX()) return Area::Ascii;
     return Area::Extra;
 }
 
@@ -597,16 +596,18 @@ bool QHexView::event(QEvent* e)
 
 void QHexView::paintEvent(QPaintEvent*)
 {
+    QPainter painter(this->viewport());
+    painter.save();
+
     m_textdocument.clear();
     m_textdocument.setDefaultFont(this->font());
-
-    QPainter painter(this->viewport());
     QTextCursor c(&m_textdocument);
 
+    painter.translate(-this->horizontalScrollBar()->value(), 0);
     this->drawHeader(c);
     this->drawDocument(c);
-
     m_textdocument.drawContents(&painter);
+    painter.restore();
 }
 
 void QHexView::resizeEvent(QResizeEvent* e)
