@@ -268,7 +268,7 @@ QHexCursor::Position QHexView::positionFromPoint(QPoint pt) const
             pos.column = -1;
 
             for(qint64 i = 0; i < m_hexcolumns.size(); i++) {
-                if(m_hexcolumns.at(i).right() > abspt.x()) break;
+                if(m_hexcolumns.at(i).left() > abspt.x()) break;
                 pos.column = i;
             }
 
