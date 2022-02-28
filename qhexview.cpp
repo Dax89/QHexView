@@ -310,13 +310,17 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     QTextCharFormat cf, selcf;
     const auto& options = m_hexdocument->options();
 
-    auto it = options->bytecolors.find(b); if(it != options->bytecolors.end())
+    auto it = options->bytecolors.find(b);
+
+    if(it != options->bytecolors.end())
     {
         if(it->background.isValid()) cf.setBackground(it->background);
         if(it->foreground.isValid()) cf.setForeground(it->foreground);
     }
 
-    const auto* metadataline = m_hexdocument->metadata()->find(line); if(metadataline)
+    const auto* metadataline = m_hexdocument->metadata()->find(line);
+
+    if(metadataline)
     {
         auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
 
@@ -325,6 +329,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
             if(offset < metadata.begin || offset >= metadata.end) continue;
             if(metadata.background.isValid()) cf.setBackground(metadata.background);
             if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
+            if(column < m_hexdocument->lastColumn() - 1) selcf = cf;
 
             if(!metadata.comment.isEmpty())
             {
