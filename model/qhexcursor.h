@@ -50,9 +50,11 @@ class QHexCursor : public QObject
         void removeSelection();
         void clearSelection();
 
-    private:
+    public:
         qint64 positionToOffset(Position pos) const;
         Position offsetToPosition(qint64 offset) const;
+        static qint64 positionToOffset(const QHexOptions* options, Position pos);
+        static Position offsetToPosition(const QHexOptions* options, qint64 offset);
 
     Q_SIGNALS:
         void positionChanged();

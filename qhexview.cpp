@@ -6,6 +6,7 @@
 #include <QTextDocument>
 #include <QTextCursor>
 #include <QScrollBar>
+#include <QToolTip>
 #include <QPalette>
 #include <QPainter>
 #include <climits>
@@ -56,6 +57,7 @@ void QHexView::setDocument(QHexDocument* doc)
 
     if(m_hexdocument)
     {
+        disconnect(m_hexdocument->metadata(), &QHexMetadata::changed, this, nullptr);
         disconnect(m_hexdocument->cursor(), &QHexCursor::positionChanged, this, nullptr);
         disconnect(m_hexdocument->cursor(), &QHexCursor::modeChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::changed, this, nullptr);
@@ -65,12 +67,27 @@ void QHexView::setDocument(QHexDocument* doc)
     connect(m_hexdocument, &QHexDocument::changed, this, [=]() { this->checkAndUpdate(true); });
     connect(m_hexdocument->cursor(), &QHexCursor::positionChanged, this, [=]() { m_writing = false; this->viewport()->update(); });
     connect(m_hexdocument->cursor(), &QHexCursor::modeChanged, this, [=]() { m_writing = false; this->viewport()->update(); });
+    connect(m_hexdocument->metadata(), &QHexMetadata::changed, this, [=]() { this->viewport()->update(); });
     this->checkAndUpdate(true);
 }
 
 void QHexView::setByteColor(quint8 b, QHexColor c) { if(m_hexdocument) m_hexdocument->setByteColor(b, c); }
 void QHexView::setByteForeground(quint8 b, QColor c) { if(m_hexdocument) m_hexdocument->setByteForeground(b, c); }
 void QHexView::setByteBackground(quint8 b, QColor c) { if(m_hexdocument) m_hexdocument->setByteBackground(b, c); }
+void QHexView::setMetadata(qint64 begin, qint64 end, const QColor& fgcolor, const QColor& bgcolor, const QString& comment) { if(m_hexdocument) m_hexdocument->metadata()->setMetadata(begin, end, fgcolor, bgcolor, comment); }
+void QHexView::setForeground(qint64 begin, qint64 end, const QColor& fgcolor) { if(m_hexdocument) m_hexdocument->metadata()->setForeground(begin, end, fgcolor); }
+void QHexView::setBackground(qint64 begin, qint64 end, const QColor& bgcolor) { if(m_hexdocument) m_hexdocument->metadata()->setBackground(begin, end, bgcolor); }
+void QHexView::setComment(qint64 begin, qint64 end, const QString& comment) { if(m_hexdocument) m_hexdocument->metadata()->setComment(begin, end, comment); }
+void QHexView::setMetadataSize(qint64 begin, qint64 length, const QColor& fgcolor, const QColor& bgcolor, const QString& comment) { if(m_hexdocument) m_hexdocument->metadata()->setMetadataSize(begin, length, fgcolor, bgcolor, comment); }
+void QHexView::setForegroundSize(qint64 begin, qint64 length, const QColor& fgcolor) { if(m_hexdocument) m_hexdocument->metadata()->setForegroundSize(begin, length, fgcolor); }
+void QHexView::setBackgroundSize(qint64 begin, qint64 length, const QColor& bgcolor) { if(m_hexdocument) m_hexdocument->metadata()->setBackgroundSize(begin, length, bgcolor); }
+void QHexView::setCommentSize(qint64 begin, qint64 length, const QString& comment) { if(m_hexdocument) m_hexdocument->metadata()->setCommentSize(begin, length, comment); }
+void QHexView::removeMetadata(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeMetadata(line); }
+void QHexView::removeBackground(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeBackground(line); }
+void QHexView::removeForeground(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeForeground(line); }
+void QHexView::removeComments(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeComments(line); }
+void QHexView::unhighlight(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->unhighlight(line); }
+void QHexView::clearMetadata() { if(m_hexdocument) m_hexdocument->metadata()->clear(); }
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
 void QHexView::setLineLength(int l) { m_hexdocument->setLineLength(l); this->checkAndUpdate(true); }
 void QHexView::setGroupLength(int l) { m_hexdocument->setGroupLength(l); }
@@ -300,6 +317,26 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     {
         if(it->background.isValid()) cf.setBackground(it->background);
         if(it->foreground.isValid()) cf.setForeground(it->foreground);
+    }
+
+    const auto* metadataline = m_hexdocument->metadata()->find(line); if(metadataline)
+    {
+        auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
+
+        for(const auto& metadata : *metadataline)
+        {
+            if(offset < metadata.begin || offset >= metadata.end) continue;
+            if(metadata.background.isValid()) cf.setBackground(metadata.background);
+            if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
+
+            if(!metadata.comment.isEmpty())
+            {
+                if(m_hexdocument->options()->commentcolor.isValid())
+                    cf.setUnderlineColor(m_hexdocument->options()->commentcolor);
+
+                cf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::SingleUnderline);
+            }
+        }
     }
 
     if(this->hexCursor()->isSelected(line, column))
@@ -534,10 +571,25 @@ bool QHexView::keyPressAction(QKeyEvent* e)
 
 bool QHexView::event(QEvent* e)
 {
-    if(e->type() == QEvent::FontChange)
+    switch(e->type())
     {
-        m_fontmetrics = QFontMetricsF(this->font());
-        return true;
+        case QEvent::FontChange:
+            m_fontmetrics = QFontMetricsF(this->font());
+            return true;
+
+        case QEvent::ToolTip: {
+            if(m_hexdocument) {
+                auto* helpevent = static_cast<QHelpEvent*>(e);
+                auto pos = this->positionFromPoint(this->absolutePoint(helpevent->pos()));
+                auto comment = m_hexdocument->metadata()->getComment(pos.line, pos.column);
+                if(!comment.isEmpty()) QToolTip::showText(helpevent->globalPos(), comment);
+                return true;
+            }
+
+            break;
+        }
+
+        default: break;
     }
 
     return QAbstractScrollArea::event(e);

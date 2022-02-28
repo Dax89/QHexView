@@ -29,6 +29,20 @@ class QHexView : public QAbstractScrollArea
         void setByteColor(quint8 b, QHexColor c);
         void setByteForeground(quint8 b, QColor c);
         void setByteBackground(quint8 b, QColor c);
+        void setMetadata(qint64 begin, qint64 end, const QColor &fgcolor, const QColor &bgcolor, const QString &comment);
+        void setForeground(qint64 begin, qint64 end, const QColor &fgcolor);
+        void setBackground(qint64 begin, qint64 end, const QColor &bgcolor);
+        void setComment(qint64 begin, qint64 end, const QString& comment);
+        void setMetadataSize(qint64 begin, qint64 length, const QColor &fgcolor, const QColor &bgcolor, const QString &comment);
+        void setForegroundSize(qint64 begin, qint64 length, const QColor &fgcolor);
+        void setBackgroundSize(qint64 begin, qint64 length, const QColor &bgcolor);
+        void setCommentSize(qint64 begin, qint64 length, const QString& comment);
+        void removeMetadata(qint64 line);
+        void removeBackground(qint64 line);
+        void removeForeground(qint64 line);
+        void removeComments(qint64 line);
+        void unhighlight(qint64 line);
+        void clearMetadata();
         void setReadOnly(bool r);
 
     public Q_SLOTS:

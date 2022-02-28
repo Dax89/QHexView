@@ -15,6 +15,7 @@
 
 QHexDocument::QHexDocument(QHexBuffer *buffer, const QHexOptions& options, QObject* parent): QObject(parent), m_options(options), m_baseaddress(0)
 {
+    m_hexmetadata = new QHexMetadata(&m_options, this);
     m_hexcursor = new QHexCursor(this);
 
     m_buffer = buffer;
@@ -53,6 +54,7 @@ bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }
 bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
 QHexCursor* QHexDocument::cursor() const { return m_hexcursor; }
 const QHexOptions* QHexDocument::options() const { return &m_options; }
+QHexMetadata* QHexDocument::metadata() const { return m_hexmetadata; }
 qint64 QHexDocument::length() const { return m_buffer->length(); }
 quint64 QHexDocument::baseAddress() const { return m_baseaddress; }
 uchar QHexDocument::at(int offset) const { return m_buffer->at(offset); }
@@ -64,7 +66,16 @@ void QHexDocument::setBaseAddress(quint64 baseaddress)
     Q_EMIT changed();
 }
 
-void QHexDocument::setOptions(const QHexOptions& options) { m_options = options; Q_EMIT changed(); }
+void QHexDocument::setOptions(const QHexOptions& options)
+{
+    auto oldlinelength = m_options.linelength;
+    m_options = options;
+
+    if(oldlinelength != m_options.linelength)
+        m_hexmetadata->invalidate();
+
+    Q_EMIT changed();
+}
 
 void QHexDocument::setByteColor(quint8 b, QHexColor c)
 {
@@ -140,8 +151,20 @@ bool QHexDocument::saveTo(QIODevice *device)
     return true;
 }
 
-void QHexDocument::setLineLength(unsigned int l) { m_options.linelength = l; Q_EMIT changed(); }
-void QHexDocument::setGroupLength(unsigned int l) { m_options.grouplength = l; Q_EMIT changed(); }
+void QHexDocument::setLineLength(unsigned int l)
+{
+    if(l == m_options.linelength) return;
+    m_options.linelength = l;
+    m_hexmetadata->invalidate();
+    Q_EMIT changed();
+}
+
+void QHexDocument::setGroupLength(unsigned int l)
+{
+    if(l == m_options.grouplength) return;
+    m_options.grouplength = l;
+    Q_EMIT changed();
+}
 
 qint64 QHexDocument::find(const QByteArray &ba, FindDirection fd) const
 {

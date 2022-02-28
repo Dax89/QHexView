@@ -4,6 +4,7 @@
 #include <QFile>
 #include "buffer/qhexbuffer.h"
 #include "buffer/qfilebuffer.h"
+#include "qhexmetadata.h"
 #include "qhexoptions.h"
 
 class QHexView;
@@ -30,6 +31,7 @@ class QHexDocument: public QObject
         bool canRedo() const;
         QHexCursor* cursor() const;
         const QHexOptions* options() const;
+        QHexMetadata* metadata() const;
         qint64 length() const;
         quint64 baseAddress() const;
         qint64 find(const QByteArray &ba, FindDirection fd = FindDirection::Forward) const;
@@ -72,6 +74,7 @@ class QHexDocument: public QObject
 
     private:
         QHexOptions m_options;
+        QHexMetadata* m_hexmetadata;
         QHexCursor* m_hexcursor;
         QHexBuffer* m_buffer;
         QUndoStack m_undostack;

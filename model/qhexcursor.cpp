@@ -161,9 +161,7 @@ void QHexCursor::clearSelection()
     Q_EMIT positionChanged();
 }
 
-qint64 QHexCursor::positionToOffset(Position pos) const { return this->document()->options()->linelength * pos.line + pos.column; }
-
-QHexCursor::Position QHexCursor::offsetToPosition(qint64 offset) const
-{
-    return { offset / this->document()->options()->linelength, offset % this->document()->options()->linelength };
-}
+qint64 QHexCursor::positionToOffset(Position pos) const { return QHexCursor::positionToOffset(this->document()->options(), pos); }
+QHexCursor::Position QHexCursor::offsetToPosition(qint64 offset) const { return QHexCursor::offsetToPosition(this->document()->options(), offset); }
+qint64 QHexCursor::positionToOffset(const QHexOptions* options, Position pos) { return options->linelength * pos.line + pos.column; }
+QHexCursor::Position QHexCursor::offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }

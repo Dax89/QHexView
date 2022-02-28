@@ -29,4 +29,5 @@ struct QHexOptions
     // Colors
     QHash<quint8, QHexColor> bytecolors;
     QColor headercolor;
+    QColor commentcolor;
 };
