@@ -3,7 +3,7 @@ QHexView
 QHexView is a hexadecimal widget for Qt5
 
 <p align="center">
-<img height="400" src="https://raw.githubusercontent.com/Dax89/QHexEdit/master/screenshots/QHexView.png"><br>
+<img height="400" src="https://raw.githubusercontent.com/Dax89/QHexEdit/master/screenshots/QHexView20220228.png"><br>
  <img src="https://img.shields.io/badge/license-MIT-8e725e.svg?style=flat-square">
  <a href="https://github.com/ellerbrock/open-source-badges/">
    <img src="https://badges.frapsoft.com/os/v1/open-source.png?v=103">
