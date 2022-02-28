@@ -575,9 +575,9 @@ bool QHexView::event(QEvent* e)
             return true;
 
         case QEvent::ToolTip: {
-            if(m_hexdocument) {
+            if(m_hexdocument && (m_currentarea == Area::Hex || m_currentarea == Area::Ascii)) {
                 auto* helpevent = static_cast<QHelpEvent*>(e);
-                auto pos = this->positionFromPoint(this->absolutePoint(helpevent->pos()));
+                auto pos = this->positionFromPoint(helpevent->pos());
                 auto comment = m_hexdocument->metadata()->getComment(pos.line, pos.column);
                 if(!comment.isEmpty()) QToolTip::showText(helpevent->globalPos(), comment);
                 return true;
