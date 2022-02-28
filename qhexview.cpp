@@ -1,5 +1,6 @@
 #include "qhexview.h"
 #include "model/qhexcursor.h"
+#include "model/qhexutils.h"
 #include <QMouseEvent>
 #include <QFontDatabase>
 #include <QApplication>
@@ -187,7 +188,7 @@ void QHexView::drawDocument(QTextCursor& c) const
 
             for(auto byteidx = 0u; byteidx < this->options()->grouplength; byteidx++, column++)
             {
-                auto s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : linebytes.mid(column, 1).toHex().toUpper();
+                auto s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : QHexUtils::toHex(linebytes.mid(column, 1)).toUpper();
                 cf = this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Hex, line, column);
             }
 

@@ -5,6 +5,7 @@
 #include "commands/replacecommand.h"
 #include "../qhexview.h"
 #include "qhexcursor.h"
+#include "qhexutils.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QBuffer>
@@ -101,7 +102,7 @@ void QHexDocument::copy(bool hex)
 
     QClipboard* c = qApp->clipboard();
     QByteArray bytes = m_hexcursor->selectedBytes();
-    if(hex) bytes = bytes.toHex(' ').toUpper();
+    if(hex) bytes = QHexUtils::toHex(bytes, ' ').toUpper();
     c->setText(bytes);
 }
 
