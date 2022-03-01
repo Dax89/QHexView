@@ -1,5 +1,5 @@
 <div align="center">
- <img src="https://user-images.githubusercontent.com/1503603/156015099-1180aa1a-107a-4089-87f4-90a3d36f34a2.png" alt="QHexView logo" title="QHexView"/>
+ <img src="https://user-images.githubusercontent.com/1503603/156148159-02d1181a-153e-4d0b-9512-5f9ac30bcd2f.png" alt="QHexView logo" title="QHexView"/>
 </div>
 <br>
 <div align="center">
