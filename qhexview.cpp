@@ -48,7 +48,7 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
 }
 
 QHexDocument* QHexView::hexDocument() const { return m_hexdocument; }
-QHexCursor* QHexView::hexCursor() const { return m_hexdocument->cursor(); }
+QHexCursor* QHexView::hexCursor() const { return m_hexdocument ? m_hexdocument->cursor() : nullptr; }
 const QHexOptions* QHexView::options() const { return m_hexdocument ? m_hexdocument->options() : nullptr; }
 void QHexView::setOptions(const QHexOptions& options) { if(m_hexdocument) m_hexdocument->setOptions(options); }
 
@@ -606,6 +606,8 @@ bool QHexView::event(QEvent* e)
 
 void QHexView::paintEvent(QPaintEvent*)
 {
+    if(!m_hexdocument) return;
+
     QPainter painter(this->viewport());
     painter.save();
 
@@ -629,7 +631,7 @@ void QHexView::resizeEvent(QResizeEvent* e)
 void QHexView::mousePressEvent(QMouseEvent* e)
 {
     QAbstractScrollArea::mousePressEvent(e);
-    if(e->button() != Qt::LeftButton) return;
+    if(!m_hexdocument || e->button() != Qt::LeftButton) return;
 
     auto pos = this->positionFromPoint(e->pos());
     if(!pos.isValid()) return;
