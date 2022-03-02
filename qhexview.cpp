@@ -35,6 +35,8 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
         f.setStyleHint(QFont::TypeWriter);
     }
 
+    m_textdocument.setDocumentMargin(0);
+
     this->setFont(f);
     this->setMouseTracking(true);
     this->setFocusPolicy(Qt::StrongFocus);
@@ -143,7 +145,22 @@ void QHexView::calcColumns()
     }
 }
 
-void QHexView::drawHeader(QTextCursor& c) const
+void QHexView::drawSeparators(QPainter* p) const
+{
+    if(!this->options()->separators) return;
+
+    const auto extramargin = this->cellWidth() / 2.0;
+
+    p->save();
+        p->setPen(this->options()->separatorcolor.isValid() ? this->options()->separatorcolor : this->palette().color(QPalette::Dark));
+        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX() - extramargin, m_fontmetrics.lineSpacing()));
+        p->drawLine(QLineF(this->hexColumnX() - extramargin, 0, this->hexColumnX() - extramargin, this->height()));
+        p->drawLine(QLineF(this->asciiColumnX() - extramargin, 0, this->asciiColumnX() - extramargin, this->height()));
+        p->drawLine(QLineF(this->endColumnX() - extramargin, 0, this->endColumnX() - extramargin, this->height()));
+    p->restore();
+}
+
+void QHexView::renderHeader(QTextCursor& c) const
 {
     if(!this->options()->header) return;
 
@@ -162,7 +179,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     c.insertBlock();
 }
 
-void QHexView::drawDocument(QTextCursor& c) const
+void QHexView::renderDocument(QTextCursor& c) const
 {
     if(!m_hexdocument) return;
 
@@ -210,7 +227,20 @@ void QHexView::drawDocument(QTextCursor& c) const
             this->drawFormat(c, b, s, Area::Ascii, line, column, static_cast<int>(column) < linebytes.size());
         }
 
-        c.insertBlock();
+        QTextBlockFormat bf;
+
+        if(this->options()->linealternatebackground.isValid() && line % 2)
+        {
+            bf.setBackground(this->options()->linealternatebackground);
+            bf.setForeground(QHexView::getTextColor(bf.background().color()));
+        }
+        else if(this->options()->linebackground.isValid() && !(line % 2))
+        {
+            bf.setBackground(this->options()->linebackground);
+            bf.setForeground(QHexView::getTextColor(bf.background().color()));
+        }
+
+        c.insertBlock(bf);
         if(m_hexdocument->isEmpty()) break;
     }
 }
@@ -246,7 +276,7 @@ qreal QHexView::hexColumnWidth() const
     return this->getNCellsWidth(l);
 }
 
-qreal QHexView::addressWidth() const { return 8; }
+unsigned int QHexView::addressWidth() const { return 8; }
 qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth()) + this->cellWidth(); }
 qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth(); }
 qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->cellWidth() + this->getNCellsWidth(this->options()->linelength); }
@@ -610,18 +640,19 @@ void QHexView::paintEvent(QPaintEvent*)
 {
     if(!m_hexdocument) return;
 
-    QPainter painter(this->viewport());
-    painter.save();
-
     m_textdocument.clear();
     m_textdocument.setDefaultFont(this->font());
     QTextCursor c(&m_textdocument);
 
-    painter.translate(-this->horizontalScrollBar()->value(), 0);
-    this->drawHeader(c);
-    this->drawDocument(c);
-    m_textdocument.drawContents(&painter);
+    QPainter painter(this->viewport());
+    painter.save();
+        painter.translate(-this->horizontalScrollBar()->value(), 0);
+        this->renderHeader(c);
+        this->renderDocument(c);
+        m_textdocument.drawContents(&painter);
     painter.restore();
+
+    this->drawSeparators(&painter);
 }
 
 void QHexView::resizeEvent(QResizeEvent* e)
@@ -691,3 +722,12 @@ void QHexView::keyPressEvent(QKeyEvent* e)
     if(handled) e->accept();
     else QAbstractScrollArea::keyPressEvent(e);
 }
+
+bool QHexView::isColorLight(QColor c)
+{
+    return std::sqrt(0.299 * std::pow(c.red(), 2) +
+                     0.587 * std::pow(c.green(), 2) +
+                     0.114 * std::pow(c.blue(), 2)) > 127.5;
+}
+
+QColor QHexView::getTextColor(QColor c) { return QHexView::isColorLight(c) ? Qt::white : Qt::black; }

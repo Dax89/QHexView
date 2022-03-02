@@ -24,10 +24,14 @@ struct QHexOptions
     unsigned int linelength{QHEXVIEW_LINELENGTH};
     unsigned int grouplength{1};
     unsigned int scrollsteps{1};
+    bool separators{false};
     bool header{true};
 
-    // Colors
+    // Colors & Styles
     QHash<quint8, QHexColor> bytecolors;
+    QColor linealternatebackground;
+    QColor linebackground;
     QColor headercolor;
     QColor commentcolor;
+    QColor separatorcolor;
 };

@@ -54,13 +54,14 @@ class QHexView : public QAbstractScrollArea
         void checkState();
         void checkAndUpdate(bool calccolumns = false);
         void calcColumns();
-        void drawHeader(QTextCursor& c) const;
-        void drawDocument(QTextCursor& c) const;
+        void drawSeparators(QPainter* p) const;
+        void renderHeader(QTextCursor& c) const;
+        void renderDocument(QTextCursor& c) const;
         int documentSizeFactor() const;
         int visibleLines() const;
         qreal getNCellsWidth(int n) const;
         qreal hexColumnWidth() const;
-        qreal addressWidth() const;
+        unsigned int addressWidth() const;
         qreal hexColumnX() const;
         qreal asciiColumnX() const;
         qreal endColumnX() const;
@@ -83,6 +84,10 @@ class QHexView : public QAbstractScrollArea
         void mousePressEvent(QMouseEvent* e) override;
         void mouseMoveEvent(QMouseEvent* e) override;
         void keyPressEvent(QKeyEvent *e) override;
+
+    private:
+        static bool isColorLight(QColor c);
+        static QColor getTextColor(QColor c);
 
     private:
         bool m_readonly{false}, m_writing{false};
