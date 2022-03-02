@@ -1,4 +1,5 @@
 #include "qhexmetadata.h"
+#include "qhexcursor.h"
 
 QHexMetadata::QHexMetadata(const QHexOptions* options, QObject *parent) : QObject(parent), m_options(options) { }
 
@@ -13,11 +14,12 @@ QString QHexMetadata::getComment(qint64 line, qint64 column) const
     auto* metadataline = this->find(line);
     if(!metadataline) return QString();
 
+    auto offset = QHexCursor::positionToOffset(m_options, {line, column});
     QStringList comments;
 
     for(auto& mi : *metadataline)
     {
-        if((column < mi.begin || column > mi.end) || mi.comment.isEmpty()) continue;
+        if((offset < mi.begin || offset > mi.end) || mi.comment.isEmpty()) continue;
         comments.push_back(mi.comment);
     }
 
