@@ -145,6 +145,8 @@ void QHexView::calcColumns()
 
 void QHexView::drawHeader(QTextCursor& c) const
 {
+    if(!this->options()->header) return;
+
     QString addressheader = this->options()->addresslabel.rightJustified(this->addressWidth()), hexheader;
 
     for(auto i = 0u; i < this->options()->linelength; i += this->options()->grouplength)
