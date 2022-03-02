@@ -46,7 +46,7 @@ quint64 QHexDocument::lines() const
 {
     if(!m_buffer) return 0;
 
-    auto lines = static_cast<quint64>(std::ceil(m_buffer->length() / m_options.linelength));
+    auto lines = static_cast<quint64>(std::ceil(m_buffer->length() / static_cast<double>(m_options.linelength)));
     return !m_buffer->isEmpty() && !lines ? 1 : lines;
 }
 
