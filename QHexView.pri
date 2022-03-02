@@ -8,6 +8,7 @@ HEADERS += $$PWD/model/commands/hexcommand.h \
            $$PWD/model/buffer/qhexbuffer.h \
            $$PWD/model/buffer/qmemorybuffer.h \
            $$PWD/model/buffer/qmemoryrefbuffer.h \
+           $$PWD/model/qhexutils.h \
            $$PWD/model/qhexcursor.h \
            $$PWD/model/qhexmetadata.h \
            $$PWD/model/qhexoptions.h \
@@ -22,6 +23,7 @@ SOURCES += $$PWD/model/commands/hexcommand.cpp \
            $$PWD/model/buffer/qhexbuffer.cpp \
            $$PWD/model/buffer/qmemorybuffer.cpp \
            $$PWD/model/buffer/qmemoryrefbuffer.cpp \
+           $$PWD/model/qhexutils.cpp \
            $$PWD/model/qhexcursor.cpp \
            $$PWD/model/qhexmetadata.cpp \
            $$PWD/model/qhexdocument.cpp \
