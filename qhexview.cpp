@@ -189,8 +189,9 @@ void QHexView::drawDocument(QTextCursor& c) const
 
             for(auto byteidx = 0u; byteidx < this->options()->grouplength; byteidx++, column++)
             {
-                auto s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : QHexUtils::toHex(linebytes.mid(column, 1)).toUpper();
-                cf = this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Hex, line, column);
+                QString s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : QHexUtils::toHex(linebytes.mid(column, 1)).toUpper();
+                quint8 b = static_cast<int>(column) < linebytes.size() ? linebytes.at(column) : 0x00;
+                cf = this->drawFormat(c, b, s, Area::Hex, line, column, static_cast<int>(column) < linebytes.size());
             }
 
             c.insertText(" ", cf);
@@ -203,7 +204,8 @@ void QHexView::drawDocument(QTextCursor& c) const
                      column >= static_cast<qint64>(linebytes.size()) ? QChar(' ') :
                                                                        (std::isprint(static_cast<quint8>(linebytes.at(column))) ? QChar(linebytes.at(column)) : this->options()->unprintablechar);
 
-            this->drawFormat(c, static_cast<quint8>(linebytes.at(column)), s, Area::Ascii, line, column);
+            quint8 b = static_cast<int>(column) < linebytes.size() ? linebytes.at(column) : 0x00;
+            this->drawFormat(c, b, s, Area::Ascii, line, column, static_cast<int>(column) < linebytes.size());
         }
 
         c.insertBlock();
@@ -307,17 +309,20 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
     return Area::Extra;
 }
 
-QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column) const
+QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool checkbyte) const
 {
     QTextCharFormat cf, selcf;
     const auto& options = m_hexdocument->options();
 
-    auto it = options->bytecolors.find(b);
-
-    if(it != options->bytecolors.end())
+    if(checkbyte)
     {
-        if(it->background.isValid()) cf.setBackground(it->background);
-        if(it->foreground.isValid()) cf.setForeground(it->foreground);
+        auto it = options->bytecolors.find(b);
+
+        if(it != options->bytecolors.end())
+        {
+            if(it->background.isValid()) cf.setBackground(it->background);
+            if(it->foreground.isValid()) cf.setForeground(it->foreground);
+        }
     }
 
     const auto* metadataline = m_hexdocument->metadata()->find(line);
