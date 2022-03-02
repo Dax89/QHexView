@@ -341,12 +341,12 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
     return Area::Extra;
 }
 
-QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool checkbyte) const
+QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool applyformat) const
 {
     QTextCharFormat cf, selcf;
     const auto& options = m_hexdocument->options();
 
-    if(checkbyte)
+    if(applyformat)
     {
         auto it = options->bytecolors.find(b);
 
@@ -355,27 +355,27 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
             if(it->background.isValid()) cf.setBackground(it->background);
             if(it->foreground.isValid()) cf.setForeground(it->foreground);
         }
-    }
 
-    const auto* metadataline = m_hexdocument->metadata()->find(line);
+        const auto* metadataline = m_hexdocument->metadata()->find(line);
 
-    if(metadataline)
-    {
-        auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
-
-        for(const auto& metadata : *metadataline)
+        if(metadataline)
         {
-            if(offset < metadata.begin || offset >= metadata.end) continue;
-            if(metadata.background.isValid()) cf.setBackground(metadata.background);
-            if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
-            if(column < m_hexdocument->lastColumn() - 1) selcf = cf;
+            auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
 
-            if(!metadata.comment.isEmpty())
+            for(const auto& metadata : *metadataline)
             {
-                if(m_hexdocument->options()->commentcolor.isValid())
-                    cf.setUnderlineColor(m_hexdocument->options()->commentcolor);
+                if(offset < metadata.begin || offset >= metadata.end) continue;
+                if(metadata.background.isValid()) cf.setBackground(metadata.background);
+                if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
+                if(column < m_hexdocument->lastColumn() - 1) selcf = cf;
 
-                cf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::SingleUnderline);
+                if(!metadata.comment.isEmpty())
+                {
+                    if(m_hexdocument->options()->commentcolor.isValid())
+                        cf.setUnderlineColor(m_hexdocument->options()->commentcolor);
+
+                    cf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::SingleUnderline);
+                }
             }
         }
     }

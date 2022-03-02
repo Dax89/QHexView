@@ -70,7 +70,7 @@ class QHexView : public QAbstractScrollArea
         QHexCursor::Position positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
         Area areaFromPoint(QPoint pt) const;
-        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool checkbyte) const;
+        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool applyformat) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
         bool keyPressMove(QKeyEvent* e);
