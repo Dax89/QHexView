@@ -210,7 +210,7 @@ void QHexView::renderDocument(QTextCursor& c) const
 
             for(auto byteidx = 0u; byteidx < this->options()->grouplength; byteidx++, column++)
             {
-                QString s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : QHexUtils::toHex(linebytes.mid(column, 1)).toUpper();
+                QString s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : QString(QHexUtils::toHex(linebytes.mid(column, 1)).toUpper());
                 quint8 b = static_cast<int>(column) < linebytes.size() ? linebytes.at(column) : 0x00;
                 cf = this->drawFormat(c, b, s, Area::Hex, line, column, static_cast<int>(column) < linebytes.size());
             }
