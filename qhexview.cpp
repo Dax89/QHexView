@@ -131,6 +131,8 @@ void QHexView::checkAndUpdate(bool calccolumns)
 
 void QHexView::calcColumns()
 {
+    if(!m_hexdocument) return;
+
     m_hexcolumns.clear();
     m_hexcolumns.reserve(this->options()->linelength);
 
@@ -616,6 +618,7 @@ bool QHexView::event(QEvent* e)
     {
         case QEvent::FontChange:
             m_fontmetrics = QFontMetricsF(this->font());
+            this->checkAndUpdate(true);
             return true;
 
         case QEvent::ToolTip: {
@@ -645,10 +648,12 @@ void QHexView::paintEvent(QPaintEvent*)
     QTextCursor c(&m_textdocument);
 
     QPainter painter(this->viewport());
+    painter.setFont(this->font());
+    this->renderHeader(c);
+    this->renderDocument(c);
+
     painter.save();
         painter.translate(-this->horizontalScrollBar()->value(), 0);
-        this->renderHeader(c);
-        this->renderDocument(c);
         m_textdocument.drawContents(&painter);
     painter.restore();
 
