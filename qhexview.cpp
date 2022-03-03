@@ -369,7 +369,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                 if(offset < metadata.begin || offset >= metadata.end) continue;
                 if(metadata.background.isValid()) cf.setBackground(metadata.background);
                 if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
-                if(column < m_hexdocument->lastColumn() - 1) selcf = cf;
+                if(column < m_hexdocument->getLastColumn(line)) selcf = cf;
 
                 if(!metadata.comment.isEmpty())
                 {
@@ -386,10 +386,10 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     {
         cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
         cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(column < m_hexdocument->lastColumn() - 1) selcf = cf;
+        if(column < m_hexdocument->getLastColumn(line)) selcf = cf;
     }
 
-    if(this->hexCursor()->line() == line && this->hexCursor()->column() == column)
+    if(this->hasFocus() && this->hexCursor()->line() == line && this->hexCursor()->column() == column)
     {
         auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
         auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Window);
@@ -426,8 +426,9 @@ void QHexView::moveNext(bool select)
     else
         column++;
 
-    if(select) this->hexCursor()->select(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->lastColumn()));
-    else this->hexCursor()->move(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->lastColumn()));
+    const qint64 offset = this->hexCursor()->mode() == QHexCursor::Mode::Insert ? 1 : 0;
+    if(select) this->hexCursor()->select(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->getLastColumn(line) + offset));
+    else this->hexCursor()->move(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->getLastColumn(line) + offset));
 }
 
 void QHexView::movePrevious(bool select)
@@ -442,8 +443,8 @@ void QHexView::movePrevious(bool select)
     else
         column--;
 
-    if(select) this->hexCursor()->select(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->lastColumn()));
-    else this->hexCursor()->move(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->lastColumn()));
+    if(select) this->hexCursor()->select(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->getLastColumn(line)));
+    else this->hexCursor()->move(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->getLastColumn(line)));
 }
 
 bool QHexView::keyPressMove(QKeyEvent* e)
@@ -489,8 +490,8 @@ bool QHexView::keyPressMove(QKeyEvent* e)
     else if(e->matches(QKeySequence::MoveToEndOfDocument) || e->matches(QKeySequence::SelectEndOfDocument))
     {
         if(m_hexdocument->lastLine() == this->hexCursor()->line()) return true;
-        if(e->matches(QKeySequence::MoveToEndOfDocument)) this->hexCursor()->move(m_hexdocument->lastLine(), m_hexdocument->lastColumn());
-        else this->hexCursor()->select(m_hexdocument->lastLine(), m_hexdocument->lastColumn());
+        if(e->matches(QKeySequence::MoveToEndOfDocument)) this->hexCursor()->move(m_hexdocument->lastLine(), m_hexdocument->getLastColumn(this->hexCursor()->line()));
+        else this->hexCursor()->select(m_hexdocument->lastLine(), m_hexdocument->getLastColumn(m_hexdocument->lastLine()));
     }
     else if(e->matches(QKeySequence::MoveToStartOfLine) || e->matches(QKeySequence::SelectStartOfLine))
     {
@@ -501,12 +502,12 @@ bool QHexView::keyPressMove(QKeyEvent* e)
     {
         if(e->matches(QKeySequence::MoveToEndOfLine))
         {
-            if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->move(this->hexCursor()->line(), m_hexdocument->lastColumn());
+            if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->move(this->hexCursor()->line(), m_hexdocument->getLastColumn(this->hexCursor()->line()));
             else this->hexCursor()->move(this->hexCursor()->line(), this->options()->linelength - 1);
         }
         else
         {
-            if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->select(this->hexCursor()->line(), m_hexdocument->lastColumn()); else
+            if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->select(this->hexCursor()->line(), m_hexdocument->getLastColumn(this->hexCursor()->line())); else
                 this->hexCursor()->select(this->hexCursor()->line(), this->options()->linelength - 1);
         }
     }
@@ -543,7 +544,9 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
             else m_hexdocument->replace(cursor->offset(), ch);
 
             m_writing = !m_writing;
-            if(!m_writing) this->moveNext();
+            if(!m_writing)
+                this->moveNext();
+
             break;
         }
 
@@ -569,7 +572,7 @@ bool QHexView::keyPressAction(QKeyEvent* e)
        if(e->matches(QKeySequence::SelectAll))
        {
            m_hexdocument->cursor()->move(0, 0);
-           m_hexdocument->cursor()->select(m_hexdocument->lastLine(), m_hexdocument->lastColumn() - 1);
+           m_hexdocument->cursor()->select(m_hexdocument->lastLine(), m_hexdocument->getLastColumn(m_hexdocument->cursor()->line()));
        }
        else if(!m_readonly && e->matches(QKeySequence::Undo)) m_hexdocument->undo();
        else if(!m_readonly && e->matches(QKeySequence::Redo)) m_hexdocument->redo();
@@ -655,15 +658,27 @@ void QHexView::paintEvent(QPaintEvent*)
     painter.save();
         painter.translate(-this->horizontalScrollBar()->value(), 0);
         m_textdocument.drawContents(&painter);
+    this->drawSeparators(&painter);
     painter.restore();
 
-    this->drawSeparators(&painter);
 }
 
 void QHexView::resizeEvent(QResizeEvent* e)
 {
     this->checkState();
     QAbstractScrollArea::resizeEvent(e);
+}
+
+void QHexView::focusInEvent(QFocusEvent* e)
+{
+    QAbstractScrollArea::focusInEvent(e);
+    if(m_hexdocument) this->viewport()->update();
+}
+
+void QHexView::focusOutEvent(QFocusEvent* e)
+{
+    QAbstractScrollArea::focusOutEvent(e);
+    if(m_hexdocument) this->viewport()->update();
 }
 
 void QHexView::mousePressEvent(QMouseEvent* e)

@@ -81,6 +81,8 @@ class QHexView : public QAbstractScrollArea
         bool event(QEvent* e) override;
         void paintEvent(QPaintEvent*) override;
         void resizeEvent(QResizeEvent* e) override;
+        void focusInEvent(QFocusEvent* e) override;
+        void focusOutEvent(QFocusEvent* e) override;
         void mousePressEvent(QMouseEvent* e) override;
         void mouseMoveEvent(QMouseEvent* e) override;
         void keyPressEvent(QKeyEvent *e) override;

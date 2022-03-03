@@ -39,7 +39,7 @@ void QHexDocument::checkOptions(QPalette palette)
         m_options.headercolor = palette.color(QPalette::Normal, QPalette::Highlight);
 }
 
-qint64 QHexDocument::lastColumn() const { return this->getLine(this->lastLine()).size(); }
+qint64 QHexDocument::getLastColumn(qint64 line) const { return this->getLine(line).size() - 1; }
 qint64 QHexDocument::lastLine() const { return this->lines() - 1; }
 
 quint64 QHexDocument::lines() const

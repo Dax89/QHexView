@@ -21,7 +21,7 @@ class QHexDocument: public QObject
     private:
         explicit QHexDocument(QHexBuffer* buffer, const QHexOptions& options, QObject *parent = nullptr);
         void checkOptions(QPalette palette);
-        qint64 lastColumn() const;
+        qint64 getLastColumn(qint64 line) const;
         qint64 lastLine() const;
         quint64 lines() const;
 
