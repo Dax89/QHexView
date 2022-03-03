@@ -4,7 +4,7 @@ HEADERS += $$PWD/model/commands/hexcommand.h \
            $$PWD/model/commands/insertcommand.h \
            $$PWD/model/commands/removecommand.h \
            $$PWD/model/commands/replacecommand.h \
-           $$PWD/model/buffer/qfilebuffer.h \
+           $$PWD/model/buffer/qdevicebuffer.h \
            $$PWD/model/buffer/qhexbuffer.h \
            $$PWD/model/buffer/qmemorybuffer.h \
            $$PWD/model/buffer/qmemoryrefbuffer.h \
@@ -19,7 +19,7 @@ SOURCES += $$PWD/model/commands/hexcommand.cpp \
            $$PWD/model/commands/insertcommand.cpp \
            $$PWD/model/commands/removecommand.cpp \
            $$PWD/model/commands/replacecommand.cpp \
-           $$PWD/model/buffer/qfilebuffer.cpp \
+           $$PWD/model/buffer/qdevicebuffer.cpp \
            $$PWD/model/buffer/qhexbuffer.cpp \
            $$PWD/model/buffer/qmemorybuffer.cpp \
            $$PWD/model/buffer/qmemoryrefbuffer.cpp \

@@ -26,10 +26,13 @@ QByteArray QMemoryRefBuffer::read(qint64 offset, int length)
 bool QMemoryRefBuffer::read(QIODevice *device)
 {
     m_buffer = qobject_cast<QBuffer*>(device);
-    if (m_buffer) {
+
+    if(m_buffer)
+    {
         m_buffer->setParent(this);
         return true;
     }
+
     return false;
 }
 

@@ -1,13 +1,10 @@
 #pragma once
 
 #include <QUndoStack>
-#include <QFile>
 #include "buffer/qhexbuffer.h"
-#include "buffer/qfilebuffer.h"
 #include "qhexmetadata.h"
 #include "qhexoptions.h"
 
-class QHexView;
 class QHexCursor;
 class QPalette;
 
@@ -61,11 +58,11 @@ class QHexDocument: public QObject
         void setByteBackground(quint8 b, QColor c);
 
     public:
-        template<typename T> static QHexDocument* fromDevice(QIODevice* iodevice, const QHexOptions& options = { }, QObject* parent = nullptr);
-        template<typename T> static QHexDocument* fromFile(QString filename, const QHexOptions& options = { }, QObject* parent = nullptr);
+        template<typename T, bool Owned = true> static QHexDocument* fromDevice(QIODevice* iodevice, const QHexOptions& options = { }, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromMemory(char *data, int size, const QHexOptions& options = { }, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, const QHexOptions& options = { }, QObject* parent = nullptr);
         static QHexDocument* fromLargeFile(QString filename, const QHexOptions& options = { }, QObject *parent = nullptr);
+        static QHexDocument* fromFile(QString filename, const QHexOptions& options = { }, QObject* parent = nullptr);
         static QHexDocument* create(const QHexOptions& options = { }, QObject* parent = nullptr);
 
     Q_SIGNALS:
@@ -84,48 +81,24 @@ class QHexDocument: public QObject
     friend class QHexView;
 };
 
-template<typename T> QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice, const QHexOptions& options, QObject *parent)
+template<typename T, bool Owned>
+QHexDocument* QHexDocument::fromDevice(QIODevice* iodevice, const QHexOptions& options, QObject *parent)
 {
-    bool needsclose = false;
-
-    if(!iodevice->isOpen())
-    {
-        needsclose = true;
-        iodevice->open(QIODevice::ReadWrite);
-    }
-
-    QHexBuffer* hexbuffer = new T();
-    if (hexbuffer->read(iodevice))
-    {
-        if(needsclose)
-            iodevice->close();
-
-        return new QHexDocument(hexbuffer, options, parent);
-    } else {
-        delete hexbuffer;
-    }
-
-    return nullptr;
+    QHexBuffer* hexbuffer = new T(parent);
+    if(Owned) iodevice->setParent(hexbuffer);
+    return hexbuffer->read(iodevice) ? new QHexDocument(hexbuffer, options, parent) : nullptr;
 }
 
-template<typename T> QHexDocument* QHexDocument::fromFile(QString filename, const QHexOptions& options, QObject *parent)
-{
-    QFile f(filename);
-    f.open(QFile::ReadOnly);
-
-    QHexDocument* doc = QHexDocument::fromDevice<T>(&f, options, parent);
-    f.close();
-    return doc;
-}
-
-template<typename T> QHexDocument* QHexDocument::fromMemory(char *data, int size, const QHexOptions& options, QObject *parent)
+template<typename T>
+QHexDocument* QHexDocument::fromMemory(char *data, int size, const QHexOptions& options, QObject *parent)
 {
     QHexBuffer* hexbuffer = new T();
     hexbuffer->read(data, size);
     return new QHexDocument(hexbuffer, options, parent);
 }
 
-template<typename T> QHexDocument* QHexDocument::fromMemory(const QByteArray& ba, const QHexOptions& options, QObject *parent)
+template<typename T>
+QHexDocument* QHexDocument::fromMemory(const QByteArray& ba, const QHexOptions& options, QObject *parent)
 {
     QHexBuffer* hexbuffer = new T();
     hexbuffer->read(ba);

@@ -3,6 +3,7 @@
 #include "commands/insertcommand.h"
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
+#include "buffer/qdevicebuffer.h"
 #include "../qhexview.h"
 #include "qhexcursor.h"
 #include "qhexutils.h"
@@ -11,7 +12,6 @@
 #include <QBuffer>
 #include <QPalette>
 #include <QFile>
-#include <memory>
 #include <cmath>
 
 QHexDocument::QHexDocument(QHexBuffer *buffer, const QHexOptions& options, QObject* parent): QObject(parent), m_options(options), m_baseaddress(0)
@@ -86,6 +86,14 @@ void QHexDocument::setByteColor(quint8 b, QHexColor c)
 
 void QHexDocument::setByteForeground(quint8 b, QColor c) { this->setByteColor(b, {c, Qt::transparent}); }
 void QHexDocument::setByteBackground(quint8 b, QColor c) { this->setByteColor(b, {Qt::transparent, c}); }
+
+QHexDocument* QHexDocument::fromFile(QString filename, const QHexOptions& options, QObject* parent)
+{
+    QFile f(filename);
+    f.open(QFile::ReadOnly);
+    return QHexDocument::fromMemory<QMemoryBuffer>(f.readAll(), options, parent);
+}
+
 void QHexDocument::undo() { m_undostack.undo(); Q_EMIT changed(); }
 void QHexDocument::redo() { m_undostack.redo(); Q_EMIT changed(); }
 
@@ -200,9 +208,9 @@ QByteArray QHexDocument::getLine(qint64 line) const { return this->read(line * m
 
 QHexDocument* QHexDocument::fromLargeFile(QString filename, const QHexOptions& options, QObject *parent)
 {
-    QFile f(filename);
-    std::unique_ptr<QHexBuffer> hexbuffer(new QFileBuffer());
-    return hexbuffer->read(&f) ? new QHexDocument(hexbuffer.release(), options, parent) : nullptr;
+    QFile* f = new QFile(filename);
+    f->open(QFile::ReadWrite);
+    return QHexDocument::fromDevice<QDeviceBuffer>(f, options, parent);
 }
 
 QHexDocument* QHexDocument::create(const QHexOptions& options, QObject* parent) { return QHexDocument::fromMemory<QMemoryBuffer>({}, options, parent); }

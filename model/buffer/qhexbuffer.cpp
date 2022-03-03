@@ -3,7 +3,7 @@
 
 QHexBuffer::QHexBuffer(QObject *parent) : QObject(parent) { }
 
-uchar QHexBuffer::at(qint64 idx) { return this->read(idx, 1)[0]; }
+uchar QHexBuffer::at(qint64 idx) { return this->read(idx, 1).at(0); }
 bool QHexBuffer::isEmpty() const { return this->length() <= 0; }
 
 void QHexBuffer::replace(qint64 offset, const QByteArray &data)

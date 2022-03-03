@@ -2,15 +2,15 @@
 
 #include "qhexbuffer.h"
 
-class QFile;
+class QIODevice;
 
-class QFileBuffer : public QHexBuffer
+class QDeviceBuffer : public QHexBuffer
 {
     Q_OBJECT
 
     public:
-        explicit QFileBuffer(QObject *parent = nullptr);
-        ~QFileBuffer();
+        explicit QDeviceBuffer(QObject *parent = nullptr);
+        ~QDeviceBuffer();
         uchar at(qint64 idx) override;
         qint64 length() const override;
         void insert(qint64 offset, const QByteArray& data) override;
@@ -22,5 +22,5 @@ class QFileBuffer : public QHexBuffer
         qint64 lastIndexOf(const QByteArray& ba, qint64 from) override;
 
     private:
-        QFile* m_file;
+        QIODevice* m_device{nullptr};
 };
