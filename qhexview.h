@@ -5,7 +5,6 @@
 #include <QAbstractScrollArea>
 #include <QTextCharFormat>
 #include <QFontMetricsF>
-#include <QTextDocument>
 #include <QRectF>
 #include <QList>
 #include "model/qhexdocument.h"
@@ -95,7 +94,6 @@ class QHexView : public QAbstractScrollArea
         bool m_readonly{false}, m_writing{false};
         Area m_currentarea{Area::Ascii};
         QList<QRectF> m_hexcolumns;
-        QTextDocument m_textdocument;
         QFontMetricsF m_fontmetrics;
         QHexDocument* m_hexdocument{nullptr};
 };

@@ -2,6 +2,7 @@
 #include "model/qhexcursor.h"
 #include "model/qhexutils.h"
 #include <QMouseEvent>
+#include <QTextDocument>
 #include <QFontDatabase>
 #include <QApplication>
 #include <QTextDocument>
@@ -34,8 +35,6 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
         f.setFamily("Monospace"); // Force Monospaced font
         f.setStyleHint(QFont::TypeWriter);
     }
-
-    m_textdocument.setDocumentMargin(0);
 
     this->setFont(f);
     this->setMouseTracking(true);
@@ -646,21 +645,22 @@ void QHexView::paintEvent(QPaintEvent*)
 {
     if(!m_hexdocument) return;
 
-    m_textdocument.clear();
-    m_textdocument.setDefaultFont(this->font());
-    QTextCursor c(&m_textdocument);
+    QTextDocument doc;
+    doc.setDocumentMargin(0);
+    doc.setUndoRedoEnabled(false);
+    doc.setDefaultFont(this->font());
 
+    QTextCursor c(&doc);
     QPainter painter(this->viewport());
-    painter.setFont(this->font());
     this->renderHeader(c);
     this->renderDocument(c);
 
     painter.save();
         painter.translate(-this->horizontalScrollBar()->value(), 0);
-        m_textdocument.drawContents(&painter);
-    this->drawSeparators(&painter);
+        doc.drawContents(&painter);
     painter.restore();
 
+    this->drawSeparators(&painter);
 }
 
 void QHexView::resizeEvent(QResizeEvent* e)
@@ -724,7 +724,6 @@ void QHexView::mouseMoveEvent(QMouseEvent* e)
         if(!pos.isValid()) return;
         if(area == Area::Ascii || area == Area::Hex) m_currentarea = area;
         this->hexCursor()->select(pos);
-        this->viewport()->update();
     }
 }
 
