@@ -190,8 +190,13 @@ void QHexView::renderHeader(QTextCursor& c) const
 
     QString addressheader = this->options()->addresslabel.rightJustified(this->addressWidth()), hexheader;
 
-    for(auto i = 0u; i < this->options()->linelength; i += this->options()->grouplength)
-        hexheader.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(this->options()->grouplength * 2, '0')).toUpper());
+    if(this->options()->hexlabel.isEmpty())
+    {
+        for(auto i = 0u; i < this->options()->linelength; i += this->options()->grouplength)
+            hexheader.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(this->options()->grouplength * 2, '0')).toUpper());
+    }
+    else
+        hexheader = this->options()->hexlabel;
 
     QTextCharFormat cf;
     cf.setForeground(this->options()->headercolor);
@@ -199,7 +204,6 @@ void QHexView::renderHeader(QTextCursor& c) const
     c.insertText(m_fontmetrics.elidedText(addressheader, Qt::ElideRight, this->hexColumnX()) + " ", cf);
     c.insertText(hexheader, cf);
     c.insertText(this->options()->asciilabel, cf);
-
     c.insertBlock();
 }
 

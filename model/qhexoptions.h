@@ -4,8 +4,8 @@
 #include <QColor>
 #include <QChar>
 
-#define QHEXVIEW_ADDRESSLABEL    "OFFSET"
-#define QHEXVIEW_ASCIILABEL      "ASCII"
+#define QHEXVIEW_ADDRESSLABEL    ""
+#define QHEXVIEW_ASCIILABEL      "0123456789ABCDEF"
 #define QHEXVIEW_UNPRINTABLECHAR '.'
 #define QHEXVIEW_LINELENGTH      0x10
 
@@ -20,6 +20,7 @@ struct QHexOptions
     // Appearance
     QChar unprintablechar{QHEXVIEW_UNPRINTABLECHAR};
     QString addresslabel{QHEXVIEW_ADDRESSLABEL};
+    QString hexlabel;
     QString asciilabel{QHEXVIEW_ASCIILABEL};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
     unsigned int grouplength{1};
