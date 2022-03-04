@@ -102,6 +102,7 @@ void QHexCursor::move(Position pos)
     this->select(pos);
 }
 
+void QHexCursor::select(qint64 offset) { this->select(this->offsetToPosition(offset)); }
 void QHexCursor::select(qint64 line, qint64 column) { this->select({line, column}); }
 
 void QHexCursor::select(Position pos)
@@ -111,7 +112,7 @@ void QHexCursor::select(Position pos)
     Q_EMIT positionChanged();
 }
 
-void QHexCursor::select(qint64 length)
+void QHexCursor::selectSize(qint64 length)
 {
     auto* opt = this->document()->options();
     Position pos = m_position;
