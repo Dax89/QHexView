@@ -49,6 +49,7 @@ class QHexView : public QAbstractScrollArea
         void setLineLength(unsigned int l);
         void setGroupLength(unsigned int l);
         void setReadOnly(bool r);
+        void setAutoWidth(bool r);
 
     private:
         void checkState();
@@ -93,7 +94,7 @@ class QHexView : public QAbstractScrollArea
         static QColor getTextColor(QColor c);
 
     private:
-        bool m_readonly{false}, m_writing{false};
+        bool m_readonly{false}, m_writing{false}, m_autowidth{false};
         Area m_currentarea{Area::Ascii};
         QList<QRectF> m_hexcolumns;
         QFontMetricsF m_fontmetrics;

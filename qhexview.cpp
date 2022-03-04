@@ -96,6 +96,16 @@ void QHexView::unhighlight(qint64 line) { if(m_hexdocument) m_hexdocument->metad
 void QHexView::clearMetadata() { if(m_hexdocument) m_hexdocument->metadata()->clear(); }
 void QHexView::setScrollSteps(unsigned int l) { if(m_hexdocument) m_hexdocument->setScrollSteps(l); }
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
+
+void QHexView::setAutoWidth(bool r)
+{
+    if(m_autowidth == r) return;
+
+    m_autowidth = r;
+
+    this->checkState();
+}
+
 void QHexView::setLineLength(unsigned int l) { m_hexdocument->setLineLength(l); this->checkAndUpdate(true); }
 void QHexView::setGroupLength(unsigned int l) { m_hexdocument->setGroupLength(l); }
 
@@ -115,6 +125,10 @@ void QHexView::checkState()
 
     this->setHorizontalScrollBarPolicy(this->viewport()->width() <= this->endColumnX() ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
     this->horizontalScrollBar()->setMaximum(this->endColumnX());
+
+    static int oldmw = 0;
+    if(!oldmw) oldmw = this->maximumWidth();
+    this->setMaximumWidth(m_autowidth ? this->endColumnX() + this->verticalScrollBar()->width() : oldmw);
 }
 
 void QHexView::checkAndUpdate(bool calccolumns)
