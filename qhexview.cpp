@@ -347,7 +347,16 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     QTextCharFormat cf, selcf;
     const auto& options = m_hexdocument->options();
 
-    if(applyformat)
+    if(this->hexCursor()->isSelected(line, column))
+    {
+        auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
+        auto selend = m_hexdocument->cursor()->selectionEndOffset();
+
+        cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
+        cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
+        if(offset < selend - 1 && column < m_hexdocument->getLastColumn(line)) selcf = cf;
+    }
+    else if(applyformat)
     {
         auto it = options->bytecolors.find(b);
 
@@ -379,16 +388,6 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                 }
             }
         }
-    }
-
-    if(this->hexCursor()->isSelected(line, column))
-    {
-        auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
-        auto selend = m_hexdocument->cursor()->selectionEndOffset();
-
-        cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
-        cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(offset < selend - 1 && column < m_hexdocument->getLastColumn(line)) selcf = cf;
     }
 
     if(this->hasFocus() && this->hexCursor()->line() == line && this->hexCursor()->column() == column)
