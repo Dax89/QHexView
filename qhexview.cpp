@@ -598,10 +598,15 @@ bool QHexView::keyPressAction(QKeyEvent* e)
            }
 
            if(e->key() == Qt::Key_Backspace) this->movePrevious();
+           m_writing = false;
            break;
        }
 
-       case Qt::Key_Insert: m_hexdocument->cursor()->toggleMode(); break;
+       case Qt::Key_Insert:
+           m_writing = false;
+           m_hexdocument->cursor()->toggleMode();
+           break;
+
        default: return false;
    }
 
