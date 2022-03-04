@@ -272,9 +272,9 @@ void QHexView::renderDocument(QTextCursor& c) const
 
 int QHexView::visibleLines(bool absolute) const
 {
-    quint64 vl = std::ceil(this->height() / this->lineHeight());
+    int vl = static_cast<int>(std::ceil(this->height() / this->lineHeight()));
     if(this->options()->header) vl--;
-    return absolute ? vl : static_cast<int>(std::min(m_hexdocument->lines(), vl));
+    return absolute ? vl : std::min<int>(m_hexdocument->lines(), vl);
 }
 
 qreal QHexView::hexColumnWidth() const
