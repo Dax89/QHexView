@@ -29,6 +29,7 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, const QHexOptions& options, QObje
 void QHexDocument::checkOptions(QPalette palette)
 {
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
+    if(!m_options.scrollsteps) m_options.scrollsteps = 1;
 
     // Round to nearest multiple of 2
     m_options.grouplength = 1u << (static_cast<unsigned int>(std::floor(m_options.grouplength / 2.0)));
@@ -178,7 +179,7 @@ void QHexDocument::setGroupLength(unsigned int l)
 void QHexDocument::setScrollSteps(unsigned int l)
 {
     if(l == m_options.scrollsteps) return;
-    m_options.scrollsteps = l;
+    m_options.scrollsteps = std::max(1u, l);
 }
 
 qint64 QHexDocument::find(const QByteArray &ba, FindDirection fd) const

@@ -2,6 +2,7 @@
 #include "model/qhexcursor.h"
 #include "model/qhexutils.h"
 #include <QMouseEvent>
+#include <QWheelEvent>
 #include <QTextDocument>
 #include <QFontDatabase>
 #include <QApplication>
@@ -103,7 +104,7 @@ void QHexView::checkState()
     qint64 vscrollmax = doclines - vislines;
     if(doclines > vislines) vscrollmax++;
 
-    this->verticalScrollBar()->setMaximum(vscrollmax);
+    this->verticalScrollBar()->setRange(0, std::max<qint64>(0, vscrollmax));
     this->verticalScrollBar()->setPageStep(vislines - 1);
     this->verticalScrollBar()->setSingleStep(this->options()->scrollsteps);
 
@@ -710,6 +711,16 @@ void QHexView::mouseMoveEvent(QMouseEvent* e)
         if(area == Area::Ascii || area == Area::Hex) m_currentarea = area;
         this->hexCursor()->select(pos);
     }
+}
+
+void QHexView::wheelEvent(QWheelEvent* e)
+{
+    e->ignore();
+    if(!m_hexdocument) return;
+
+    auto ydelta = e->angleDelta().y();
+    if(ydelta > 0) this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() - m_hexdocument->options()->scrollsteps);
+    else if(ydelta < 0) this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() + m_hexdocument->options()->scrollsteps);
 }
 
 void QHexView::keyPressEvent(QKeyEvent* e)
