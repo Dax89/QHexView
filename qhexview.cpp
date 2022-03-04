@@ -368,7 +368,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                 if(offset < metadata.begin || offset >= metadata.end) continue;
                 if(metadata.background.isValid()) cf.setBackground(metadata.background);
                 if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
-                if(column < m_hexdocument->getLastColumn(line)) selcf = cf;
+                if(offset < metadata.end - 1 && column < m_hexdocument->getLastColumn(line)) selcf = cf;
 
                 if(!metadata.comment.isEmpty())
                 {
@@ -385,7 +385,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     {
         cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
         cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(column < m_hexdocument->getLastColumn(line)) selcf = cf;
+        if(column < m_hexdocument->getLastColumn(line) - 1) selcf = cf;
     }
 
     if(this->hasFocus() && this->hexCursor()->line() == line && this->hexCursor()->column() == column)
