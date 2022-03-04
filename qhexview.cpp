@@ -282,7 +282,7 @@ qreal QHexView::hexColumnWidth() const
     int l = 0;
 
     for(auto i = 0u; i < this->options()->linelength; i += this->options()->grouplength)
-        l += (1 << this->options()->grouplength) + 1;
+        l += (2 * this->options()->grouplength) + 1;
 
     return this->getNCellsWidth(l);
 }
