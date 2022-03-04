@@ -252,7 +252,7 @@ void QHexView::renderDocument(QTextCursor& c) const
         }
 
         c.setBlockFormat(bf);
-        c.insertBlock();
+        c.insertBlock({});
         if(m_hexdocument->isEmpty()) break;
     }
 }
