@@ -11,7 +11,6 @@
 #include <QToolTip>
 #include <QPalette>
 #include <QPainter>
-#include <climits>
 #include <cctype>
 #include <cmath>
 
@@ -100,22 +99,13 @@ void QHexView::checkState()
     if(!m_hexdocument) return;
     m_hexdocument->checkOptions(this->palette());
 
+    int doclines = static_cast<int>(m_hexdocument->lines()), vislines = this->visibleLines();
+    qint64 vscrollmax = doclines - vislines;
+    if(doclines > vislines) vscrollmax++;
+
+    this->verticalScrollBar()->setMaximum(vscrollmax);
+    this->verticalScrollBar()->setPageStep(vislines - 1);
     this->verticalScrollBar()->setSingleStep(this->options()->scrollsteps);
-    this->verticalScrollBar()->setPageStep(this->options()->scrollsteps);
-
-    quint64 doclines = m_hexdocument->lines();
-    int vislines = this->visibleLines();
-
-    if(doclines > static_cast<quint64>(vislines))
-    {
-        this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-        this->verticalScrollBar()->setMaximum(static_cast<int>((doclines - vislines) / this->documentSizeFactor() + 1));
-    }
-    else
-    {
-        this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        this->verticalScrollBar()->setMaximum(doclines);
-    }
 
     this->setHorizontalScrollBarPolicy(this->viewport()->width() <= this->endColumnX() ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
     this->horizontalScrollBar()->setMaximum(this->endColumnX());
@@ -245,20 +235,6 @@ void QHexView::renderDocument(QTextCursor& c) const
         c.insertBlock();
         if(m_hexdocument->isEmpty()) break;
     }
-}
-
-int QHexView::documentSizeFactor() const
-{
-    const auto M = std::numeric_limits<qint64>::max();
-    int factor = 1;
-
-    if(m_hexdocument)
-    {
-        quint64 doclines = m_hexdocument->lines();
-        if(doclines >= M) factor = static_cast<int>(doclines / M) + 1;
-    }
-
-    return factor;
 }
 
 int QHexView::visibleLines() const
@@ -658,11 +634,8 @@ void QHexView::paintEvent(QPaintEvent*)
     this->renderHeader(c);
     this->renderDocument(c);
 
-    painter.save();
-        painter.translate(-this->horizontalScrollBar()->value(), 0);
-        doc.drawContents(&painter);
-    painter.restore();
-
+    painter.translate(-this->horizontalScrollBar()->value(), 0);
+    doc.drawContents(&painter);
     this->drawSeparators(&painter);
 }
 
