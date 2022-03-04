@@ -111,6 +111,7 @@ void QHexView::checkState()
     this->verticalScrollBar()->setRange(0, std::max<qint64>(0, vscrollmax));
     this->verticalScrollBar()->setPageStep(vislines - 1);
     this->verticalScrollBar()->setSingleStep(this->options()->scrollsteps);
+    this->setVerticalScrollBarPolicy(doclines < this->visibleLines(true) ? Qt::ScrollBarAlwaysOff : Qt::ScrollBarAlwaysOn);
 
     this->setHorizontalScrollBarPolicy(this->viewport()->width() <= this->endColumnX() ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
     this->horizontalScrollBar()->setMaximum(this->endColumnX());
@@ -257,11 +258,11 @@ void QHexView::renderDocument(QTextCursor& c) const
     }
 }
 
-int QHexView::visibleLines() const
+int QHexView::visibleLines(bool absolute) const
 {
     quint64 vl = std::ceil(this->height() / this->lineHeight());
     if(this->options()->header) vl--;
-    return static_cast<int>(std::min(m_hexdocument->lines(), vl));
+    return absolute ? vl : static_cast<int>(std::min(m_hexdocument->lines(), vl));
 }
 
 qreal QHexView::hexColumnWidth() const

@@ -58,7 +58,7 @@ class QHexView : public QAbstractScrollArea
         void drawSeparators(QPainter* p) const;
         void renderHeader(QTextCursor& c) const;
         void renderDocument(QTextCursor& c) const;
-        int visibleLines() const;
+        int visibleLines(bool absolute = false) const;
         qreal getNCellsWidth(int n) const;
         qreal hexColumnWidth() const;
         unsigned int addressWidth() const;
