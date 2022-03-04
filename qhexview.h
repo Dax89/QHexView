@@ -25,6 +25,7 @@ class QHexView : public QAbstractScrollArea
         const QHexOptions* options() const;
         void setOptions(const QHexOptions& options);
         void setDocument(QHexDocument* doc);
+        void setCursorMode(QHexCursor::Mode mode);
         void setByteColor(quint8 b, QHexColor c);
         void setByteForeground(quint8 b, QColor c);
         void setByteBackground(quint8 b, QColor c);
