@@ -241,7 +241,8 @@ void QHexView::renderDocument(QTextCursor& c) const
             bf.setForeground(QHexView::getTextColor(bf.background().color()));
         }
 
-        c.insertBlock(bf);
+        c.setBlockFormat(bf);
+        c.insertBlock();
         if(m_hexdocument->isEmpty()) break;
     }
 }
