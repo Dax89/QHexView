@@ -100,9 +100,7 @@ void QHexView::setReadOnly(bool r) { m_readonly = r; }
 void QHexView::setAutoWidth(bool r)
 {
     if(m_autowidth == r) return;
-
     m_autowidth = r;
-
     this->checkState();
 }
 
@@ -176,14 +174,14 @@ void QHexView::drawSeparators(QPainter* p) const
     if(!this->options()->separators) return;
 
     const auto extramargin = this->cellWidth() / 2.0;
+    auto oldpen = p->pen();
 
-    p->save();
-        p->setPen(this->options()->separatorcolor.isValid() ? this->options()->separatorcolor : this->palette().color(QPalette::Dark));
+    p->setPen(this->options()->separatorcolor.isValid() ? this->options()->separatorcolor : this->palette().color(QPalette::Dark));
         p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX() - extramargin, m_fontmetrics.lineSpacing()));
         p->drawLine(QLineF(this->hexColumnX() - extramargin, 0, this->hexColumnX() - extramargin, this->height()));
         p->drawLine(QLineF(this->asciiColumnX() - extramargin, 0, this->asciiColumnX() - extramargin, this->height()));
         p->drawLine(QLineF(this->endColumnX() - extramargin, 0, this->endColumnX() - extramargin, this->height()));
-    p->restore();
+    p->setPen(oldpen);
 }
 
 void QHexView::renderHeader(QTextCursor& c) const
