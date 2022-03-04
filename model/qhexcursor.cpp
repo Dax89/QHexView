@@ -49,30 +49,25 @@ QHexCursor::Position QHexCursor::selectionEnd() const
     return m_selection;
 }
 
-qint64 QHexCursor::selectionLength() const { return this->selectionEndOffset() - this->selectionStartOffset(); }
+qint64 QHexCursor::selectionLength() const
+{
+    auto selstart = this->selectionStartOffset(), selend = this->selectionEndOffset();
+    return selstart == selend ? 0 : selend - selstart + 1;
+}
+
 QHexCursor::Position QHexCursor::position() const { return m_position; }
 QByteArray QHexCursor::selectedBytes() const { return this->hasSelection() ? this->document()->read(this->selectionStartOffset(), this->selectionLength()) : QByteArray{ }; }
 bool QHexCursor::hasSelection() const { return m_position != m_selection; }
-
-bool QHexCursor::isLineSelected(qint64 line) const
-{
-    if(!this->hasSelection()) return false;
-
-    qint64 first = std::min(m_position.line, m_selection.line);
-    qint64 last = std::max(m_position.line, m_selection.line);
-    return (line >= first) && (line <= last);
-}
 
 bool QHexCursor::isSelected(qint64 line, qint64 column) const
 {
     if(!this->hasSelection()) return false;
 
     auto selstart = this->selectionStart(), selend = this->selectionEnd();
-
     if(line > selstart.line && line < selend.line) return true;
-    if(line == selstart.line && line == selend.line) return column >= selstart.column && column < selend.column;
+    if(line == selstart.line && line == selend.line) return column >= selstart.column && column <= selend.column;
     if(line == selstart.line) return column >= selstart.column;
-    if(line == selend.line) return column < selend.column;
+    if(line == selend.line) return column <= selend.column;
     return false;
 }
 

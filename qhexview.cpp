@@ -341,12 +341,12 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
 
     if(this->hexCursor()->isSelected(line, column))
     {
-        auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
-        auto selend = m_hexdocument->cursor()->selectionEndOffset();
+        auto offset = this->hexCursor()->positionToOffset({line, column});
+        auto selend = this->hexCursor()->selectionEndOffset();
 
         cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
         cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(offset < selend - 1 && column < m_hexdocument->getLastColumn(line)) selcf = cf;
+        if(offset < selend && column < m_hexdocument->getLastColumn(line)) selcf = cf;
     }
     else if(applyformat)
     {
@@ -488,21 +488,15 @@ bool QHexView::keyPressMove(QKeyEvent* e)
     }
     else if(e->matches(QKeySequence::MoveToStartOfLine) || e->matches(QKeySequence::SelectStartOfLine))
     {
-        if(e->matches(QKeySequence::MoveToStartOfLine)) this->hexCursor()->move(this->hexCursor()->line(), 0);
-        else this->hexCursor()->select(this->hexCursor()->line(), 0);
+        auto offset = this->hexCursor()->positionToOffset({this->hexCursor()->line(), 0});
+        if(e->matches(QKeySequence::MoveToStartOfLine)) this->hexCursor()->move(offset);
+        else this->hexCursor()->select(offset);
     }
-    else if(e->matches(QKeySequence::MoveToEndOfLine) || e->matches(QKeySequence::SelectEndOfLine))
+    else if(e->matches(QKeySequence::SelectEndOfLine) || e->matches(QKeySequence::MoveToEndOfLine))
     {
-        if(e->matches(QKeySequence::MoveToEndOfLine))
-        {
-            if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->move(this->hexCursor()->line(), m_hexdocument->getLastColumn(this->hexCursor()->line()));
-            else this->hexCursor()->move(this->hexCursor()->line(), this->options()->linelength - 1);
-        }
-        else
-        {
-            if(this->hexCursor()->line() == m_hexdocument->lastLine()) this->hexCursor()->select(this->hexCursor()->line(), m_hexdocument->getLastColumn(this->hexCursor()->line())); else
-                this->hexCursor()->select(this->hexCursor()->line(), this->options()->linelength - 1);
-        }
+        auto offset = this->hexCursor()->positionToOffset({this->hexCursor()->line(), m_hexdocument->getLastColumn(this->hexCursor()->line())});
+        if(e->matches(QKeySequence::SelectEndOfLine)) this->hexCursor()->select(offset);
+        else this->hexCursor()->move(offset);
     }
     else
         return false;

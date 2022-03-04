@@ -37,7 +37,6 @@ class QHexCursor : public QObject
         Position selectionEnd() const;
         QByteArray selectedBytes() const;
         bool hasSelection() const;
-        bool isLineSelected(qint64 line) const;
         bool isSelected(qint64 line, qint64 column) const;
         void setMode(Mode m);
         void toggleMode();
