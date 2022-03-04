@@ -1,4 +1,5 @@
 #include "qhexview.h"
+#include "model/buffer/qmemorybuffer.h"
 #include "model/qhexcursor.h"
 #include "model/qhexutils.h"
 #include <QMouseEvent>
@@ -44,8 +45,10 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
     QPalette p = this->palette();
     p.setBrush(QPalette::Window, p.base());
 
-    this->checkState();
     connect(this->verticalScrollBar(), &QScrollBar::valueChanged, this, [=](int) { this->viewport()->update(); });
+
+    this->setDocument(QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), { }, this));
+    this->checkState();
 }
 
 QHexDocument* QHexView::hexDocument() const { return m_hexdocument; }
