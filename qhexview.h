@@ -53,6 +53,7 @@ class QHexView : public QAbstractScrollArea
         void checkState();
         void checkAndUpdate(bool calccolumns = false);
         void calcColumns();
+        void ensureVisible();
         void drawSeparators(QPainter* p) const;
         void renderHeader(QTextCursor& c) const;
         void renderDocument(QTextCursor& c) const;

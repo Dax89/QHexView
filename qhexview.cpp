@@ -66,7 +66,7 @@ void QHexView::setDocument(QHexDocument* doc)
 
     m_hexdocument = doc;
     connect(m_hexdocument, &QHexDocument::changed, this, [=]() { this->checkAndUpdate(true); });
-    connect(m_hexdocument->cursor(), &QHexCursor::positionChanged, this, [=]() { m_writing = false; this->viewport()->update(); });
+    connect(m_hexdocument->cursor(), &QHexCursor::positionChanged, this, [=]() { m_writing = false; this->ensureVisible(); });
     connect(m_hexdocument->cursor(), &QHexCursor::modeChanged, this, [=]() { m_writing = false; this->viewport()->update(); });
     connect(m_hexdocument->metadata(), &QHexMetadata::changed, this, [=]() { this->viewport()->update(); });
     this->checkAndUpdate(true);
@@ -134,6 +134,21 @@ void QHexView::calcColumns()
 
         x += this->cellWidth();
     }
+}
+
+void QHexView::ensureVisible()
+{
+    if(!m_hexdocument) return;
+
+    auto selend = m_hexdocument->cursor()->selectionEnd();
+    auto vlines = this->visibleLines();
+
+    if(selend.line < this->verticalScrollBar()->value())
+        this->verticalScrollBar()->setValue(selend.line);
+    else if(selend.line >= (this->verticalScrollBar()->value() + vlines))
+        this->verticalScrollBar()->setValue(selend.line - vlines + 1);
+    else
+        this->viewport()->update();
 }
 
 void QHexView::drawSeparators(QPainter* p) const
