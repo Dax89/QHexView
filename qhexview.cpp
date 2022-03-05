@@ -101,6 +101,8 @@ void QHexView::removeForeground(qint64 line) { if(m_hexdocument) m_hexdocument->
 void QHexView::removeComments(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeComments(line); }
 void QHexView::unhighlight(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->unhighlight(line); }
 void QHexView::clearMetadata() { if(m_hexdocument) m_hexdocument->metadata()->clear(); }
+void QHexView::undo() { if(m_hexdocument) m_hexdocument->undo(); }
+void QHexView::redo() { if(m_hexdocument) m_hexdocument->redo(); }
 void QHexView::cut() { if(m_hexdocument) m_hexdocument->cut(m_currentarea != Area::Ascii); }
 void QHexView::copy() const { if(m_hexdocument) m_hexdocument->copy(m_currentarea != Area::Ascii); }
 void QHexView::paste() { if(m_hexdocument) m_hexdocument->paste(m_currentarea != Area::Ascii); }
@@ -300,6 +302,8 @@ qreal QHexView::hexColumnWidth() const
 }
 
 unsigned int QHexView::addressWidth() const { return 8; }
+bool QHexView::canUndo() const { return m_hexdocument && m_hexdocument->canUndo(); }
+bool QHexView::canRedo() const { return m_hexdocument && m_hexdocument->canRedo(); }
 qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth()) + this->cellWidth(); }
 qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth(); }
 qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->cellWidth() + this->getNCellsWidth(this->options()->linelength); }

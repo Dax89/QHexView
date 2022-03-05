@@ -24,8 +24,10 @@ class QHexView : public QAbstractScrollArea
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
         const QHexOptions* options() const;
-        unsigned int addressWidth() const;
         QColor getReadableColor(QColor c) const;
+        unsigned int addressWidth() const;
+        bool canUndo() const;
+        bool canRedo() const;
         void setOptions(const QHexOptions& options);
         void setRenderDelegate(QHexRenderDelegate* rd);
         void setDocument(QHexDocument* doc);
@@ -49,6 +51,8 @@ class QHexView : public QAbstractScrollArea
         void clearMetadata();
 
     public Q_SLOTS:
+        void undo();
+        void redo();
         void cut();
         void copy() const;
         void paste();
