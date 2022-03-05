@@ -7,6 +7,7 @@
 #include <QFontMetricsF>
 #include <QRectF>
 #include <QList>
+#include "model/qhexrenderdelegate.h"
 #include "model/qhexdocument.h"
 #include "model/qhexcursor.h"
 
@@ -25,6 +26,7 @@ class QHexView : public QAbstractScrollArea
         const QHexOptions* options() const;
         QColor getReadableColor(QColor c) const;
         void setOptions(const QHexOptions& options);
+        void setRenderDelegate(QHexRenderDelegate* rd);
         void setDocument(QHexDocument* doc);
         void setCursorMode(QHexCursor::Mode mode);
         void setByteColor(quint8 b, QHexColor c);
@@ -61,9 +63,9 @@ class QHexView : public QAbstractScrollArea
         void renderHeader(QTextCursor& c) const;
         void renderDocument(QTextCursor& c) const;
         int visibleLines(bool absolute = false) const;
+        unsigned int addressWidth() const;
         qreal getNCellsWidth(int n) const;
         qreal hexColumnWidth() const;
-        unsigned int addressWidth() const;
         qreal hexColumnX() const;
         qreal asciiColumnX() const;
         qreal endColumnX() const;
@@ -99,5 +101,6 @@ class QHexView : public QAbstractScrollArea
         QList<QRectF> m_hexcolumns;
         QFontMetricsF m_fontmetrics;
         QHexDocument* m_hexdocument{nullptr};
+        QHexRenderDelegate* m_hexrenderdelegate{nullptr};
 };
 

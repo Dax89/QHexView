@@ -56,6 +56,13 @@ QHexCursor* QHexView::hexCursor() const { return m_hexdocument ? m_hexdocument->
 const QHexOptions* QHexView::options() const { return m_hexdocument ? m_hexdocument->options() : nullptr; }
 void QHexView::setOptions(const QHexOptions& options) { if(m_hexdocument) m_hexdocument->setOptions(options); }
 
+void QHexView::setRenderDelegate(QHexRenderDelegate* rd)
+{
+    if(m_hexrenderdelegate == rd) return;
+    m_hexrenderdelegate = rd;
+    this->checkAndUpdate();
+}
+
 void QHexView::setDocument(QHexDocument* doc)
 {
     m_writing = false;
@@ -357,6 +364,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
 {
     QTextCharFormat cf, selcf;
     const auto& options = m_hexdocument->options();
+    const auto* cursor = m_hexdocument->cursor();
 
     if(this->hexCursor()->isSelected(line, column))
     {
@@ -369,44 +377,68 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     }
     else if(applyformat)
     {
-        auto it = options->bytecolors.find(b);
+        auto offset = cursor->positionToOffset({line, column});
+        bool hasdelegate = m_hexrenderdelegate && m_hexrenderdelegate->render(offset, b, cf, this);
 
-        if(it != options->bytecolors.end())
+        if(!hasdelegate)
         {
-            if(it->background.isValid()) cf.setBackground(it->background);
-            if(it->foreground.isValid()) cf.setForeground(it->foreground);
+            auto it = options->bytecolors.find(b);
+
+            if(it != options->bytecolors.end())
+            {
+                cf.setBackground(it->background.isValid() ? it->background : this->palette().color(QPalette::Base));
+                cf.setForeground(it->foreground.isValid() ? it->foreground : this->palette().color(QPalette::WindowText));
+            }
         }
 
         const auto* metadataline = m_hexdocument->metadata()->find(line);
 
         if(metadataline)
         {
-            auto offset = m_hexdocument->cursor()->positionToOffset({line, column});
-
             for(const auto& metadata : *metadataline)
             {
                 if(offset < metadata.begin || offset >= metadata.end) continue;
-                if(metadata.background.isValid()) cf.setBackground(metadata.background);
-                if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
-                if(offset < metadata.end - 1 && column < m_hexdocument->getLastColumn(line)) selcf = cf;
+
+                if(!hasdelegate)
+                {
+                    if(metadata.foreground.isValid()) cf.setForeground(metadata.foreground);
+
+                    if(metadata.background.isValid())
+                    {
+                        cf.setBackground(metadata.background);
+
+                        if(!metadata.foreground.isValid())
+                            cf.setForeground(this->getReadableColor(metadata.background));
+                    }
+                }
 
                 if(!metadata.comment.isEmpty())
                 {
-                    if(m_hexdocument->options()->commentcolor.isValid())
-                        cf.setUnderlineColor(m_hexdocument->options()->commentcolor);
-
+                    cf.setUnderlineColor(options->commentcolor.isValid() ? options->commentcolor : this->palette().color(QPalette::WindowText));
                     cf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::SingleUnderline);
+                }
+
+                if(offset < metadata.end - 1 && column < m_hexdocument->getLastColumn(line))
+                    selcf = cf;
+
+                if(offset == metadata.begin) // Remove previous metadata's style, if needed
+                {
+                    if(metadata.comment.isEmpty()) selcf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::NoUnderline);
+                    if(!metadata.foreground.isValid()) selcf.setForeground(this->palette().color(QPalette::WindowText));
+                    if(!metadata.background.isValid()) selcf.setBackground(this->palette().color(QPalette::Base));
                 }
             }
         }
+
+        if(hasdelegate && column < m_hexdocument->getLastColumn(line)) selcf = cf;
     }
 
     if(this->hasFocus() && this->hexCursor()->line() == line && this->hexCursor()->column() == column)
     {
         auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
-        auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Window);
+        auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Base);
         auto discursorbg = this->palette().color(QPalette::Disabled, QPalette::WindowText);
-        auto discursorfg = this->palette().color(QPalette::Disabled, QPalette::Window);
+        auto discursorfg = this->palette().color(QPalette::Disabled, QPalette::Base);
 
         switch(m_hexdocument->cursor()->mode())
         {
@@ -423,6 +455,17 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     }
 
     c.insertText(s, cf);
+
+    //QTextCharFormat rescf;
+
+    //if(column > m_hexdocument->getLastColumn(line))
+    //{
+    //    rescf.setForeground(selcf.foreground());
+    //    rescf.setBackground(selcf.background());
+    //}
+    //else
+    //    rescf = selcf;
+
     return selcf;
 }
 
@@ -573,57 +616,57 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
 
 bool QHexView::keyPressAction(QKeyEvent* e)
 {
-   if(e->modifiers() != Qt::NoModifier)
-   {
-       if(e->matches(QKeySequence::SelectAll))
-       {
-           m_hexdocument->cursor()->move(0, 0);
-           m_hexdocument->cursor()->select(m_hexdocument->lastLine(), m_hexdocument->getLastColumn(m_hexdocument->cursor()->line()));
-       }
-       else if(!m_readonly && e->matches(QKeySequence::Undo)) m_hexdocument->undo();
-       else if(!m_readonly && e->matches(QKeySequence::Redo)) m_hexdocument->redo();
-       else if(!m_readonly && e->matches(QKeySequence::Cut)) m_hexdocument->cut(m_currentarea == Area::Hex);
-       else if(e->matches(QKeySequence::Copy)) m_hexdocument->copy(m_currentarea == Area::Hex);
-       else if(!m_readonly && e->matches(QKeySequence::Paste)) m_hexdocument->paste(m_currentarea == Area::Hex);
-       else return false;
+    if(e->modifiers() != Qt::NoModifier)
+    {
+        if(e->matches(QKeySequence::SelectAll))
+        {
+            m_hexdocument->cursor()->move(0, 0);
+            m_hexdocument->cursor()->select(m_hexdocument->lastLine(), m_hexdocument->getLastColumn(m_hexdocument->cursor()->line()));
+        }
+        else if(!m_readonly && e->matches(QKeySequence::Undo)) m_hexdocument->undo();
+        else if(!m_readonly && e->matches(QKeySequence::Redo)) m_hexdocument->redo();
+        else if(!m_readonly && e->matches(QKeySequence::Cut)) m_hexdocument->cut(m_currentarea == Area::Hex);
+        else if(e->matches(QKeySequence::Copy)) m_hexdocument->copy(m_currentarea == Area::Hex);
+        else if(!m_readonly && e->matches(QKeySequence::Paste)) m_hexdocument->paste(m_currentarea == Area::Hex);
+        else return false;
 
-       return true;
-   }
+        return true;
+    }
 
-   if(m_readonly) return false;
+    if(m_readonly) return false;
 
-   switch(e->key())
-   {
-       case Qt::Key_Backspace:
-       case Qt::Key_Delete: {
-           if(!m_hexdocument->cursor()->hasSelection()) {
-               auto offset = m_hexdocument->cursor()->offset();
-               if(offset <= 0) return true;
+    switch(e->key())
+    {
+        case Qt::Key_Backspace:
+        case Qt::Key_Delete: {
+            if(!m_hexdocument->cursor()->hasSelection()) {
+                auto offset = m_hexdocument->cursor()->offset();
+                if(offset <= 0) return true;
 
-               if(e->key() == Qt::Key_Backspace) m_hexdocument->remove(offset - 1, 1);
-               else m_hexdocument->remove(offset, 1);
-           }
-           else
-           {
-               auto oldpos = m_hexdocument->cursor()->selectionStart();
-               m_hexdocument->cursor()->removeSelection();
-               m_hexdocument->cursor()->move(oldpos);
-           }
+                if(e->key() == Qt::Key_Backspace) m_hexdocument->remove(offset - 1, 1);
+                else m_hexdocument->remove(offset, 1);
+            }
+            else
+            {
+                auto oldpos = m_hexdocument->cursor()->selectionStart();
+                m_hexdocument->cursor()->removeSelection();
+                m_hexdocument->cursor()->move(oldpos);
+            }
 
-           if(e->key() == Qt::Key_Backspace) this->movePrevious();
-           m_writing = false;
-           break;
-       }
+            if(e->key() == Qt::Key_Backspace) this->movePrevious();
+            m_writing = false;
+            break;
+        }
 
-       case Qt::Key_Insert:
-           m_writing = false;
-           m_hexdocument->cursor()->toggleMode();
-           break;
+        case Qt::Key_Insert:
+            m_writing = false;
+            m_hexdocument->cursor()->toggleMode();
+            break;
 
-       default: return false;
-   }
+        default: return false;
+    }
 
-   return true;
+    return true;
 }
 
 bool QHexView::event(QEvent* e)
