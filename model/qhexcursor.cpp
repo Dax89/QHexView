@@ -151,6 +151,8 @@ void QHexCursor::selectAll() { this->document()->selectAll(); }
 void QHexCursor::removeSelection()
 {
     if(!this->hasSelection()) return;
+    this->document()->remove(this->selectionStartOffset(), this->selectionLength() - 1);
+    this->clearSelection();
 }
 
 void QHexCursor::clearSelection()
