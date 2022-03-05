@@ -146,6 +146,8 @@ void QHexCursor::selectSize(qint64 length)
     this->select(pos);
 }
 
+void QHexCursor::selectAll() { this->document()->selectAll(); }
+
 void QHexCursor::removeSelection()
 {
     if(!this->hasSelection()) return;

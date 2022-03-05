@@ -101,6 +101,10 @@ void QHexView::removeForeground(qint64 line) { if(m_hexdocument) m_hexdocument->
 void QHexView::removeComments(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->removeComments(line); }
 void QHexView::unhighlight(qint64 line) { if(m_hexdocument) m_hexdocument->metadata()->unhighlight(line); }
 void QHexView::clearMetadata() { if(m_hexdocument) m_hexdocument->metadata()->clear(); }
+void QHexView::cut() { if(m_hexdocument) m_hexdocument->cut(m_currentarea != Area::Ascii); }
+void QHexView::copy() const { if(m_hexdocument) m_hexdocument->copy(m_currentarea != Area::Ascii); }
+void QHexView::paste() { if(m_hexdocument) m_hexdocument->paste(m_currentarea != Area::Ascii); }
+void QHexView::selectAll() { if(m_hexdocument) m_hexdocument->selectAll(); }
 void QHexView::setScrollSteps(unsigned int l) { if(m_hexdocument) m_hexdocument->setScrollSteps(l); }
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
 
@@ -607,11 +611,7 @@ bool QHexView::keyPressAction(QKeyEvent* e)
 {
     if(e->modifiers() != Qt::NoModifier)
     {
-        if(e->matches(QKeySequence::SelectAll))
-        {
-            m_hexdocument->cursor()->move(0, 0);
-            m_hexdocument->cursor()->select(m_hexdocument->lastLine(), m_hexdocument->getLastColumn(m_hexdocument->cursor()->line()));
-        }
+        if(e->matches(QKeySequence::SelectAll)) m_hexdocument->selectAll();
         else if(!m_readonly && e->matches(QKeySequence::Undo)) m_hexdocument->undo();
         else if(!m_readonly && e->matches(QKeySequence::Redo)) m_hexdocument->redo();
         else if(!m_readonly && e->matches(QKeySequence::Cut)) m_hexdocument->cut(m_currentarea == Area::Hex);

@@ -140,6 +140,12 @@ void QHexDocument::paste(bool hex)
     }
 }
 
+void QHexDocument::selectAll()
+{
+    m_hexcursor->move(0);
+    m_hexcursor->select(m_buffer->length());
+}
+
 void QHexDocument::insert(qint64 offset, uchar b) { this->insert(offset, QByteArray(1, b)); }
 void QHexDocument::replace(qint64 offset, uchar b) { this->replace(offset, QByteArray(1, b)); }
 

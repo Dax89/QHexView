@@ -42,6 +42,7 @@ class QHexDocument: public QObject
         void cut(bool hex = false);
         void copy(bool hex = false);
         void paste(bool hex = false);
+        void selectAll();
         void insert(qint64 offset, uchar b);
         void replace(qint64 offset, uchar b);
         void insert(qint64 offset, const QByteArray& data);

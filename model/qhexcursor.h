@@ -47,6 +47,7 @@ class QHexCursor : public QObject
         void select(qint64 line, qint64 column);
         void select(Position pos);
         void selectSize(qint64 length);
+        void selectAll();
         void removeSelection();
         void clearSelection();
 
