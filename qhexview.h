@@ -24,6 +24,7 @@ class QHexView : public QAbstractScrollArea
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
         const QHexOptions* options() const;
+        unsigned int addressWidth() const;
         QColor getReadableColor(QColor c) const;
         void setOptions(const QHexOptions& options);
         void setRenderDelegate(QHexRenderDelegate* rd);
@@ -63,7 +64,6 @@ class QHexView : public QAbstractScrollArea
         void renderHeader(QTextCursor& c) const;
         void renderDocument(QTextCursor& c) const;
         int visibleLines(bool absolute = false) const;
-        unsigned int addressWidth() const;
         qreal getNCellsWidth(int n) const;
         qreal hexColumnWidth() const;
         qreal hexColumnX() const;
