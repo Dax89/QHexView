@@ -121,12 +121,15 @@ void QHexView::checkState()
     this->verticalScrollBar()->setSingleStep(this->options()->scrollsteps);
     this->setVerticalScrollBarPolicy(doclines < this->visibleLines(true) ? Qt::ScrollBarAlwaysOff : Qt::ScrollBarAlwaysOn);
 
-    this->setHorizontalScrollBarPolicy(this->viewport()->width() <= this->endColumnX() ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
-    this->horizontalScrollBar()->setMaximum(this->endColumnX());
+    int vw = this->verticalScrollBar()->isVisible() ? this->verticalScrollBar()->width() : 0;
 
     static int oldmw = 0;
     if(!oldmw) oldmw = this->maximumWidth();
-    this->setMaximumWidth(m_autowidth ? this->endColumnX() + this->verticalScrollBar()->width() : oldmw);
+    this->setMaximumWidth(m_autowidth ? this->endColumnX() + vw : oldmw);
+
+    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw));
+    this->horizontalScrollBar()->setPageStep(this->width());
+    this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(std::floor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
 }
 
 void QHexView::checkAndUpdate(bool calccolumns)
@@ -441,7 +444,7 @@ void QHexView::moveNext(bool select)
     else
         column++;
 
-    const qint64 offset = this->hexCursor()->mode() == QHexCursor::Mode::Insert ? 1 : 0;
+    qint64 offset = this->hexCursor()->mode() == QHexCursor::Mode::Insert ? 1 : 0;
     if(select) this->hexCursor()->select(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->getLastColumn(line) + offset));
     else this->hexCursor()->move(std::min<qint64>(line, m_hexdocument->lines()), std::min<qint64>(column, m_hexdocument->getLastColumn(line) + offset));
 }
