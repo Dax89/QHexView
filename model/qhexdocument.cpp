@@ -85,8 +85,17 @@ void QHexDocument::setByteColor(quint8 b, QHexColor c)
     Q_EMIT changed();
 }
 
-void QHexDocument::setByteForeground(quint8 b, QColor c) { this->setByteColor(b, {c, Qt::transparent}); }
-void QHexDocument::setByteBackground(quint8 b, QColor c) { this->setByteColor(b, {Qt::transparent, c}); }
+void QHexDocument::setByteForeground(quint8 b, QColor c)
+{
+    m_options.bytecolors[b].foreground = c;
+    Q_EMIT changed();
+}
+
+void QHexDocument::setByteBackground(quint8 b, QColor c)
+{
+    m_options.bytecolors[b].background = c;
+    Q_EMIT changed();
+}
 
 QHexDocument* QHexDocument::fromFile(QString filename, const QHexOptions& options, QObject* parent)
 {
