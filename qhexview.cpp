@@ -261,15 +261,9 @@ void QHexView::renderDocument(QTextCursor& c) const
         QTextBlockFormat bf;
 
         if(this->options()->linealternatebackground.isValid() && line % 2)
-        {
             bf.setBackground(this->options()->linealternatebackground);
-            bf.setForeground(QHexView::getTextColor(bf.background().color()));
-        }
         else if(this->options()->linebackground.isValid() && !(line % 2))
-        {
             bf.setBackground(this->options()->linebackground);
-            bf.setForeground(QHexView::getTextColor(bf.background().color()));
-        }
 
         c.setBlockFormat(bf);
         c.insertBlock({});
@@ -774,4 +768,8 @@ bool QHexView::isColorLight(QColor c)
                      0.114 * std::pow(c.blue(), 2)) > 127.5;
 }
 
-QColor QHexView::getTextColor(QColor c) { return QHexView::isColorLight(c) ? Qt::white : Qt::black; }
+QColor QHexView::getReadableColor(QColor c) const
+{
+    QPalette palette = this->palette();
+    return QHexView::isColorLight(c) ? palette.color(QPalette::WindowText) : palette.color(QPalette::HighlightedText);
+}

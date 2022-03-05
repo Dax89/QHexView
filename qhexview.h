@@ -23,6 +23,7 @@ class QHexView : public QAbstractScrollArea
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
         const QHexOptions* options() const;
+        QColor getReadableColor(QColor c) const;
         void setOptions(const QHexOptions& options);
         void setDocument(QHexDocument* doc);
         void setCursorMode(QHexCursor::Mode mode);
@@ -91,7 +92,6 @@ class QHexView : public QAbstractScrollArea
 
     private:
         static bool isColorLight(QColor c);
-        static QColor getTextColor(QColor c);
 
     private:
         bool m_readonly{false}, m_writing{false}, m_autowidth{false};
