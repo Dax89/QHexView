@@ -455,17 +455,6 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     }
 
     c.insertText(s, cf);
-
-    //QTextCharFormat rescf;
-
-    //if(column > m_hexdocument->getLastColumn(line))
-    //{
-    //    rescf.setForeground(selcf.foreground());
-    //    rescf.setBackground(selcf.background());
-    //}
-    //else
-    //    rescf = selcf;
-
     return selcf;
 }
 
