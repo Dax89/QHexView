@@ -114,7 +114,7 @@ void QHexView::checkState()
 
     int doclines = static_cast<int>(m_hexdocument->lines()), vislines = this->visibleLines();
     qint64 vscrollmax = doclines - vislines;
-    if(doclines > vislines) vscrollmax++;
+    if(doclines >= vislines) vscrollmax++;
 
     this->verticalScrollBar()->setRange(0, std::max<qint64>(0, vscrollmax));
     this->verticalScrollBar()->setPageStep(vislines - 1);
