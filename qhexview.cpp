@@ -400,8 +400,8 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
 
             if(it != options->bytecolors.end())
             {
-                cf.setBackground(it->background.isValid() ? it->background : this->palette().color(QPalette::Base));
-                cf.setForeground(it->foreground.isValid() ? it->foreground : this->palette().color(QPalette::WindowText));
+                if(it->background.isValid()) cf.setBackground(it->background);
+                if(it->foreground.isValid()) cf.setForeground(it->foreground);
             }
         }
 
@@ -438,8 +438,8 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                 if(offset == metadata.begin) // Remove previous metadata's style, if needed
                 {
                     if(metadata.comment.isEmpty()) selcf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::NoUnderline);
-                    if(!metadata.foreground.isValid()) selcf.setForeground(this->palette().color(QPalette::WindowText));
-                    if(!metadata.background.isValid()) selcf.setBackground(this->palette().color(QPalette::Base));
+                    if(!metadata.foreground.isValid()) selcf.setForeground(Qt::color1);
+                    if(!metadata.background.isValid()) selcf.setBackground(Qt::transparent);
                 }
             }
         }
