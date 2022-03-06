@@ -83,6 +83,12 @@ void QHexView::setDocument(QHexDocument* doc)
     this->checkAndUpdate(true);
 }
 
+void QHexView::resetDocument(QHexDocument* doc)
+{
+    if(m_hexdocument) doc->copyState(m_hexdocument);
+    this->setDocument(doc);
+}
+
 void QHexView::setCursorMode(QHexCursor::Mode mode) { if(m_hexdocument) m_hexdocument->cursor()->setMode(mode); }
 void QHexView::setByteColor(quint8 b, QHexColor c) { if(m_hexdocument) m_hexdocument->setByteColor(b, c); }
 void QHexView::setByteForeground(quint8 b, QColor c) { if(m_hexdocument) m_hexdocument->setByteForeground(b, c); }

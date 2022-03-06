@@ -17,6 +17,7 @@ class QHexDocument: public QObject
 
     private:
         explicit QHexDocument(QHexBuffer* buffer, const QHexOptions& options, QObject *parent = nullptr);
+        void copyState(const QHexDocument* doc);
         void checkOptions(QPalette palette);
         qint64 getLastColumn(qint64 line) const;
         qint64 lastLine() const;

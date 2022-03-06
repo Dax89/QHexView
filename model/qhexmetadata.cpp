@@ -92,11 +92,8 @@ void QHexMetadata::unhighlight(qint64 line)
     });
 }
 
-void QHexMetadata::clear()
-{
-    m_metadata.clear();
-    Q_EMIT changed();
-}
+void QHexMetadata::clear() { m_metadata.clear(); Q_EMIT changed(); }
+void QHexMetadata::copy(const QHexMetadata* metadata) { m_metadata = metadata->m_metadata; }
 
 void QHexMetadata::clearMetadata(qint64 line, const ClearMetadataCallback& cb)
 {

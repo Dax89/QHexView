@@ -48,6 +48,7 @@ class QHexMetadata : public QObject
         inline void setCommentSize(qint64 begin, qint64 length, const QString& comment) { this->setComment(begin, begin + length, comment); };
 
     private:
+        void copy(const QHexMetadata* metadata);
         void clearMetadata(qint64 line, const ClearMetadataCallback& cb);
         void setMetadata(const QHexMetadataItem& mi);
         void invalidate();

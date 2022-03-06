@@ -26,6 +26,12 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, const QHexOptions& options, QObje
     connect(&m_undostack, &QUndoStack::canRedoChanged, this, &QHexDocument::canRedoChanged);
 }
 
+void QHexDocument::copyState(const QHexDocument* doc)
+{
+    m_baseaddress = doc->m_baseaddress;
+    m_hexmetadata->copy(doc->m_hexmetadata);
+}
+
 void QHexDocument::checkOptions(QPalette palette)
 {
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
