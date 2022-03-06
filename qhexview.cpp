@@ -131,7 +131,7 @@ void QHexView::checkState()
     if(!m_hexdocument) return;
     m_hexdocument->checkOptions(this->palette());
 
-    int doclines = static_cast<int>(m_hexdocument->lines()), vislines = this->visibleLines();
+    int doclines = static_cast<int>(m_hexdocument->lines()), vislines = this->visibleLines(true);
     qint64 vscrollmax = doclines - vislines;
     if(doclines >= vislines) vscrollmax++;
 
