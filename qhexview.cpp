@@ -432,15 +432,15 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                     cf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::SingleUnderline);
                 }
 
-                if(offset < metadata.end - 1 && column < m_hexdocument->getLastColumn(line))
-                    selcf = cf;
-
                 if(offset == metadata.begin) // Remove previous metadata's style, if needed
                 {
                     if(metadata.comment.isEmpty()) selcf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::NoUnderline);
                     if(!metadata.foreground.isValid()) selcf.setForeground(Qt::color1);
                     if(!metadata.background.isValid()) selcf.setBackground(Qt::transparent);
                 }
+
+                if(offset < metadata.end - 1 && column < m_hexdocument->getLastColumn(line))
+                    selcf = cf;
             }
         }
 
