@@ -28,6 +28,7 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, const QHexOptions& options, QObje
 
 void QHexDocument::copyState(const QHexDocument* doc)
 {
+    m_options = doc->m_options;
     m_baseaddress = doc->m_baseaddress;
     m_hexmetadata->copy(doc->m_hexmetadata);
 }
