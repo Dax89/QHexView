@@ -695,6 +695,12 @@ bool QHexView::event(QEvent* e)
     return QAbstractScrollArea::event(e);
 }
 
+void QHexView::showEvent(QShowEvent* e)
+{
+    QAbstractScrollArea::showEvent(e);
+    this->checkAndUpdate(true);
+}
+
 void QHexView::paintEvent(QPaintEvent*)
 {
     if(!m_hexdocument) return;
