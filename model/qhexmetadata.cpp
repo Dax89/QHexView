@@ -14,7 +14,7 @@ QString QHexMetadata::getComment(qint64 line, qint64 column) const
     auto* metadataline = this->find(line);
     if(!metadataline) return QString();
 
-    auto offset = QHexCursor::positionToOffset(m_options, {line, column});
+    auto offset = QHexUtils::positionToOffset(m_options, {line, column});
     QStringList comments;
 
     for(auto& mi : *metadataline)

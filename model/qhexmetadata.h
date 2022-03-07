@@ -62,4 +62,5 @@ class QHexMetadata : public QObject
         const QHexOptions* m_options;
 
     friend class QHexDocument;
+    friend class QHexView;
 };

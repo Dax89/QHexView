@@ -22,6 +22,7 @@ struct QHexOptions
     QString addresslabel{QHEXVIEW_ADDRESSLABEL};
     QString hexlabel;
     QString asciilabel{QHEXVIEW_ASCIILABEL};
+    quint64 baseaddress{0};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
     unsigned int grouplength{1};
     unsigned int scrollsteps{1};

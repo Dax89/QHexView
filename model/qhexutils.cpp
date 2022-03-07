@@ -1,4 +1,5 @@
 #include "qhexutils.h"
+#include "qhexoptions.h"
 #include <array>
 
 namespace QHexUtils {
@@ -23,5 +24,7 @@ QByteArray toHex(const QByteArray& ba, char sep)
 }
 
 QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
+qint64 positionToOffset(const QHexOptions* options, HexPosition pos) { return options->linelength * pos.line + pos.column; }
+HexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
 
 }

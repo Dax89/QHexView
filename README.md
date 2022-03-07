@@ -40,17 +40,15 @@ Helper methods are provided in order to load a QFile as In-Memory buffer:<br>
 ```cpp
 #include <qhexview.h>
 
-QHexOptions options; // This is optional
+QHexOptions options;
 options.grouplength = 2; // Pack bytes as AABB
 options.bytecolors[0x00] = {Qt::lightGray, QColor()}; // Highlight '00's
 options.bytecolors[0xFF] = {Qt::darkBlue, QColor()};  // Highlight 'FF's
+hexview.setOptions(options);
 
-/* Load data from In-Memory Buffer... */
-QHexDocument* document = QHexDocument::fromMemory<QMemoryBuffer>(bytearray, options);
-/* ...from a generic I/O device... */
-QHexDocument* document = QHexDocument::fromDevice<QMemoryBuffer>(iodevice, options);
-/* ...or from File... */
-QHexDocument* document = QHexDocument::fromFile<QMemoryBuffer>("data.bin", options);
+QHexDocument* document = QHexDocument::fromMemory<QMemoryBuffer>(bytearray); /* Load data from In-Memory Buffer... */
+//QHexDocument* document = QHexDocument::fromDevice<QMemoryBuffer>(iodevice); /* ...from a generic I/O device... */
+//QHexDocument* document = QHexDocument::fromFile<QMemoryBuffer>("data.bin"); /* ...or from File... */
 
 QHexView* hexview = new QHexView();
 hexview->setDocument(document);                  // Associate QHexEditData with this QHexEdit (ownership is not changed)
@@ -62,11 +60,9 @@ document->remove(6, 10);                         // Delete bytes from offset 6 t
 document->replace(30, "New Data");               // Replace bytes from offset 30 with the string "New Data"
 
 // Metatadata management (available from QHexView too)
-QHexMetadata* hexmetadata = document->metadata();
-
-hexmetadata->setBackground(5, 10, Qt::Red);         // Highlight background at offset range [5, 10)
-hexmetadata->setForeground(15, 30, Qt::darkBLue);   // Highlight background at offset range [15, 30)
-hexmetadata->setComment(12, 42, "I'm a comment!");  // Add a comment at offset range [12, 42)
-hexmetadata->unhighlight();                         // Reset highlighting
-hexmetadata->clear();                               // Reset all styles
+hexview->setBackground(5, 10, Qt::Red);         // Highlight background at offset range [5, 10)
+hexview->setForeground(15, 30, Qt::darkBLue);   // Highlight background at offset range [15, 30)
+hexview->setComment(12, 42, "I'm a comment!");  // Add a comment at offset range [12, 42)
+hexview->unhighlight();                         // Reset highlighting
+hexview->clearMetadata();                       // Reset all styles
 ```

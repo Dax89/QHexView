@@ -23,15 +23,21 @@ class QHexView : public QAbstractScrollArea
         explicit QHexView(QWidget *parent = nullptr);
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
-        const QHexOptions* options() const;
+        const QHexMetadata* hexMetadata() const;
+        QHexOptions options() const;
         QColor getReadableColor(QColor c) const;
+        QByteArray selectedBytes() const;
+        QByteArray getLine(qint64 line) const;
         unsigned int addressWidth() const;
         bool canUndo() const;
         bool canRedo() const;
+        quint64 baseAddress() const;
+        quint64 lines() const;
+        qint64 find(const QByteArray &ba, HexFindDirection fd = HexFindDirection::Forward) const;
         void setOptions(const QHexOptions& options);
+        void setBaseAddress(quint64 baseaddress);
         void setRenderDelegate(QHexRenderDelegate* rd);
         void setDocument(QHexDocument* doc);
-        void resetDocument(QHexDocument* doc);
         void setCursorMode(QHexCursor::Mode mode);
         void setByteColor(quint8 b, QHexColor c);
         void setByteForeground(quint8 b, QColor c);
@@ -54,17 +60,20 @@ class QHexView : public QAbstractScrollArea
     public Q_SLOTS:
         void undo();
         void redo();
-        void cut();
-        void copy() const;
-        void paste();
+        void cut(bool hex = false);
+        void copy(bool hex = false) const;
+        void paste(bool hex = false);
         void selectAll();
-        void setScrollSteps(unsigned int l);
+        void removeSelection();
+        void switchMode();
         void setLineLength(unsigned int l);
         void setGroupLength(unsigned int l);
+        void setScrollSteps(unsigned int l);
         void setReadOnly(bool r);
         void setAutoWidth(bool r);
 
     private:
+        void checkOptions();
         void checkState();
         void checkAndUpdate(bool calccolumns = false);
         void calcColumns();
@@ -73,6 +82,8 @@ class QHexView : public QAbstractScrollArea
         void renderHeader(QTextCursor& c) const;
         void renderDocument(QTextCursor& c) const;
         int visibleLines(bool absolute = false) const;
+        qint64 getLastColumn(qint64 line) const;
+        qint64 lastLine() const;
         qreal getNCellsWidth(int n) const;
         qreal hexColumnWidth() const;
         qreal hexColumnX() const;
@@ -80,7 +91,7 @@ class QHexView : public QAbstractScrollArea
         qreal endColumnX() const;
         qreal cellWidth() const;
         qreal lineHeight() const;
-        QHexCursor::Position positionFromPoint(QPoint pt) const;
+        HexPosition positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
         Area areaFromPoint(QPoint pt) const;
         QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool applyformat) const;
@@ -110,7 +121,10 @@ class QHexView : public QAbstractScrollArea
         Area m_currentarea{Area::Ascii};
         QList<QRectF> m_hexcolumns;
         QFontMetricsF m_fontmetrics;
+        QHexOptions m_options;
+        QHexCursor* m_hexcursor{nullptr};
         QHexDocument* m_hexdocument{nullptr};
+        QHexMetadata* m_hexmetadata{nullptr};
         QHexRenderDelegate* m_hexrenderdelegate{nullptr};
 };
 
