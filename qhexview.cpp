@@ -787,7 +787,7 @@ void QHexView::mouseMoveEvent(QMouseEvent* e)
 void QHexView::wheelEvent(QWheelEvent* e)
 {
     e->ignore();
-    if(!m_hexdocument) return;
+    if(!m_hexdocument || !this->verticalScrollBar()->isVisible()) return;
 
     auto ydelta = e->angleDelta().y();
     if(ydelta > 0) this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() - m_hexdocument->options()->scrollsteps);
