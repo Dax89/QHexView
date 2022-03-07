@@ -6,7 +6,7 @@
  <br>
  <br>
  <div align="center">
-  <img src="https://user-images.githubusercontent.com/1503603/156927175-ce4f905c-77bb-4b87-bcaf-46ff99211df3.png" height="400"/>
+  <img src="https://user-images.githubusercontent.com/1503603/157109542-55d12002-4829-404c-9b1c-2f3836f3c754.png" height="400"/>
   <br>
   <img src="https://img.shields.io/badge/license-MIT-8e725e.svg?style=flat-square">
   <a href="https://github.com/ellerbrock/open-source-badges/">
