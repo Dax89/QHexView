@@ -317,7 +317,11 @@ void QHexView::renderHeader(QTextCursor& c) const
 {
     if(m_options.hasFlag(QHexFlags::NoHeader)) return;
 
-    QString addressheader = m_options.addresslabel.rightJustified(this->addressWidth()), hexheader;
+    QString addressheader, hexheader;
+
+    if(m_hexdelegate) addressheader = m_hexdelegate->addressHeader(this);
+    if(addressheader.isEmpty() && !m_options.addresslabel.isEmpty()) addressheader = m_options.addresslabel;
+    addressheader = addressheader.leftJustified(this->addressWidth());
 
     if(m_options.hexlabel.isEmpty())
     {
