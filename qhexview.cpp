@@ -80,10 +80,10 @@ void QHexView::setBaseAddress(quint64 baseaddress)
     this->checkAndUpdate();
 }
 
-void QHexView::setRenderDelegate(QHexRenderDelegate* rd)
+void QHexView::setDelegate(QHexDelegate* rd)
 {
-    if(m_hexrenderdelegate == rd) return;
-    m_hexrenderdelegate = rd;
+    if(m_hexdelegate == rd) return;
+    m_hexdelegate = rd;
     this->checkAndUpdate();
 }
 
@@ -546,7 +546,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
     else if(applyformat)
     {
         auto offset = m_hexcursor->positionToOffset({line, column});
-        bool hasdelegate = m_hexrenderdelegate && m_hexrenderdelegate->render(offset, b, cf, this);
+        bool hasdelegate = m_hexdelegate && m_hexdelegate->render(offset, b, cf, this);
 
         if(!hasdelegate)
         {

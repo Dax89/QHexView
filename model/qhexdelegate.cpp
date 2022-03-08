@@ -1,0 +1,13 @@
+#include "qhexdelegate.h"
+
+QHexDelegate::QHexDelegate(QObject* parent): QObject{parent} { }
+
+bool QHexDelegate::render(quint64 offset, quint8 b, QTextCharFormat& outcf, const QHexView* hexview) const
+{
+    Q_UNUSED(offset);
+    Q_UNUSED(b);
+    Q_UNUSED(outcf);
+    Q_UNUSED(hexview);
+
+    return false;
+}

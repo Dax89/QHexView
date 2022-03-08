@@ -7,7 +7,7 @@
 #include <QFontMetricsF>
 #include <QRectF>
 #include <QList>
-#include "model/qhexrenderdelegate.h"
+#include "model/qhexdelegate.h"
 #include "model/qhexdocument.h"
 #include "model/qhexcursor.h"
 
@@ -36,7 +36,7 @@ class QHexView : public QAbstractScrollArea
         qint64 find(const QByteArray &ba, HexFindDirection fd = HexFindDirection::Forward) const;
         void setOptions(const QHexOptions& options);
         void setBaseAddress(quint64 baseaddress);
-        void setRenderDelegate(QHexRenderDelegate* rd);
+        void setDelegate(QHexDelegate* rd);
         void setDocument(QHexDocument* doc);
         void setCursorMode(QHexCursor::Mode mode);
         void setByteColor(quint8 b, QHexColor c);
@@ -125,6 +125,6 @@ class QHexView : public QAbstractScrollArea
         QHexCursor* m_hexcursor{nullptr};
         QHexDocument* m_hexdocument{nullptr};
         QHexMetadata* m_hexmetadata{nullptr};
-        QHexRenderDelegate* m_hexrenderdelegate{nullptr};
+        QHexDelegate* m_hexdelegate{nullptr};
 };
 
