@@ -35,7 +35,7 @@ struct QHexOptions
     QString hexlabel;
     QString asciilabel{QHEXVIEW_ASCIILABEL};
     quint64 baseaddress{0};
-    unsigned int flags{QHexFlags::NoHeader};
+    unsigned int flags{QHexFlags::None};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
     unsigned int grouplength{1};
     unsigned int scrollsteps{1};
