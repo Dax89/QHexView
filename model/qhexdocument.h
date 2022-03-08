@@ -12,7 +12,10 @@ class QHexDocument: public QObject
     Q_OBJECT
 
     public:
+        enum class ChangeReason { Insert, Remove, Replace };
         enum class FindDirection { Forward, Backward };
+        Q_ENUM(ChangeReason);
+        Q_ENUM(FindDirection);
 
     private:
         explicit QHexDocument(QHexBuffer* buffer, QObject *parent = nullptr);
@@ -51,6 +54,7 @@ class QHexDocument: public QObject
     Q_SIGNALS:
         void canUndoChanged(bool canUndo);
         void canRedoChanged(bool canRedo);
+        void dataChanged(const QByteArray& data, QHexDocument::ChangeReason reason);
         void changed();
         void reset();
 

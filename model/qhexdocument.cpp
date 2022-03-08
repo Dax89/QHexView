@@ -66,19 +66,25 @@ void QHexDocument::replace(qint64 offset, uchar b) { this->replace(offset, QByte
 void QHexDocument::insert(qint64 offset, const QByteArray &data)
 {
     m_undostack.push(new InsertCommand(m_buffer, offset, data));
+
     Q_EMIT changed();
+    Q_EMIT dataChanged(data, ChangeReason::Insert);
 }
 
 void QHexDocument::replace(qint64 offset, const QByteArray &data)
 {
     m_undostack.push(new ReplaceCommand(m_buffer, offset, data));
     Q_EMIT changed();
+    Q_EMIT dataChanged(data, ChangeReason::Replace);
 }
 
 void QHexDocument::remove(qint64 offset, int len)
 {
+    QByteArray data = m_buffer->read(offset, len);
+
     m_undostack.push(new RemoveCommand(m_buffer, offset, len));
     Q_EMIT changed();
+    Q_EMIT dataChanged(data, ChangeReason::Remove);
 }
 
 QByteArray QHexDocument::read(qint64 offset, int len) const { return m_buffer->read(offset, len); }

@@ -55,6 +55,9 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
     m_hexcursor = new QHexCursor(&m_options, this);
     this->setDocument(QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), this));
     this->checkState();
+
+    connect(m_hexcursor, &QHexCursor::positionChanged, this, &QHexView::positionChanged);
+    connect(m_hexcursor, &QHexCursor::modeChanged, this, &QHexView::modeChanged);
 }
 
 QHexDocument* QHexView::hexDocument() const { return m_hexdocument; }
@@ -101,6 +104,7 @@ void QHexView::setDocument(QHexDocument* doc)
         disconnect(m_hexcursor, &QHexCursor::positionChanged, this, nullptr);
         disconnect(m_hexcursor, &QHexCursor::modeChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::changed, this, nullptr);
+        disconnect(m_hexdocument, &QHexDocument::dataChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::reset, this, nullptr);
     }
 
@@ -112,6 +116,7 @@ void QHexView::setDocument(QHexDocument* doc)
         this->checkAndUpdate(true);
     });
 
+    connect(m_hexdocument, &QHexDocument::dataChanged, this, &QHexView::dataChanged);
     connect(m_hexdocument, &QHexDocument::changed, this, [=]() { this->checkAndUpdate(true); });
     connect(m_hexcursor, &QHexCursor::positionChanged, this, [=]() { m_writing = false; this->ensureVisible(); });
     connect(m_hexcursor, &QHexCursor::modeChanged, this, [=]() { m_writing = false; this->viewport()->update(); });

@@ -128,6 +128,11 @@ class QHexView : public QAbstractScrollArea
     private:
         static bool isColorLight(QColor c);
 
+    Q_SIGNALS:
+        void dataChanged(const QByteArray& data, QHexDocument::ChangeReason reason);
+        void positionChanged();
+        void modeChanged();
+
     private:
         bool m_readonly{false}, m_writing{false}, m_autowidth{false};
         Area m_currentarea{Area::Ascii};
