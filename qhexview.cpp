@@ -332,6 +332,14 @@ void QHexView::renderHeader(QTextCursor& c) const
     c.insertText(m_fontmetrics.elidedText(addressheader, Qt::ElideRight, this->hexColumnX()) + " ", cf);
     c.insertText(hexheader, cf);
     c.insertText(m_options.asciilabel, cf);
+
+    if(m_options.hasFlag(QHexFlags::StyledHeader))
+    {
+        QTextBlockFormat bf;
+        bf.setBackground(this->palette().color(QPalette::Window));
+        c.setBlockFormat(bf);
+    }
+
     c.insertBlock();
 }
 
@@ -353,6 +361,10 @@ void QHexView::renderDocument(QTextCursor& c) const
         // Address Part
         QTextCharFormat acf;
         acf.setForeground(m_options.headercolor);
+
+        if(m_options.hasFlag(QHexFlags::StyledHeader))
+            acf.setBackground(this->palette().color(QPalette::Window));
+
         c.insertText(addrstr + " ", acf);
 
         auto linebytes = this->getLine(line);
