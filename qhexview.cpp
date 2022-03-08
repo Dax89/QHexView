@@ -91,15 +91,24 @@ void QHexView::setDocument(QHexDocument* doc)
 {
     m_writing = false;
     m_hexmetadata->clear();
+    m_hexcursor->move(0);
 
     if(m_hexdocument)
     {
         disconnect(m_hexcursor, &QHexCursor::positionChanged, this, nullptr);
         disconnect(m_hexcursor, &QHexCursor::modeChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::changed, this, nullptr);
+        disconnect(m_hexdocument, QOverload<>::of(&QHexDocument::reset), this, nullptr);
     }
 
     m_hexdocument = doc;
+
+    connect(m_hexdocument, QOverload<>::of(&QHexDocument::reset), this, [=]() {
+        m_writing = false;
+        m_hexcursor->move(0);
+        this->checkAndUpdate(true);
+    });
+
     connect(m_hexdocument, &QHexDocument::changed, this, [=]() { this->checkAndUpdate(true); });
     connect(m_hexcursor, &QHexCursor::positionChanged, this, [=]() { m_writing = false; this->ensureVisible(); });
     connect(m_hexcursor, &QHexCursor::modeChanged, this, [=]() { m_writing = false; this->viewport()->update(); });

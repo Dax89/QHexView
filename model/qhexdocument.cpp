@@ -23,6 +23,31 @@ qint64 QHexDocument::lastIndexOf(const QByteArray& ba, qint64 from) { return m_b
 bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
 bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }
 bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
+
+void QHexDocument::reset(const QByteArray& ba)
+{
+    QHexBuffer* mb = new QMemoryBuffer();
+    mb->read(ba);
+    this->reset(mb);
+}
+
+void QHexDocument::reset(QHexBuffer* buffer)
+{
+    if(!buffer) return;
+
+    m_undostack.clear();
+    buffer->setParent(this);
+
+    auto* oldbuffer = m_buffer;
+    m_buffer = buffer;
+    if(oldbuffer) oldbuffer->deleteLater();
+
+    Q_EMIT canUndoChanged(false);
+    Q_EMIT canRedoChanged(false);
+    Q_EMIT changed();
+    Q_EMIT reset();
+}
+
 qint64 QHexDocument::length() const { return m_buffer ? m_buffer->length() : 0; }
 uchar QHexDocument::at(int offset) const { return m_buffer->at(offset); }
 

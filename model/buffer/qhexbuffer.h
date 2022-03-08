@@ -24,7 +24,6 @@ class QHexBuffer : public QObject
         virtual QByteArray read(qint64 offset, int length) = 0;
         virtual bool read(QIODevice* iodevice) = 0;
         virtual void write(QIODevice* iodevice) = 0;
-
         virtual qint64 indexOf(const QByteArray& ba, qint64 from) = 0;
         virtual qint64 lastIndexOf(const QByteArray& ba, qint64 from) = 0;
 
