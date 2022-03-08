@@ -7,16 +7,6 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS *.h)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS *.cpp)
 
-add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-
-if(CMAKE_BUILD_TYPE MATCHES "Debug") # Enforce warnings as errors if not in Release mode
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /W3 /WX /permissive)
-    else()
-        target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wextra -Wno-error=extra -Wshadow -pedantic)
-    endif()
-endif()
+add_library(${PROJECT_NAME} INTERFACE)
+target_sources(${PROJECT_NAME} INTERFACE ${HEADERS} ${SOURCES})
+target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
