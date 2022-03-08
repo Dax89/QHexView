@@ -380,7 +380,7 @@ void QHexView::renderDocument(QTextCursor& c) const
         QTextCharFormat acf;
         acf.setForeground(m_options.headercolor);
 
-        if(m_options.hasFlag(QHexFlags::StyledHeader))
+        if(m_options.hasFlag(QHexFlags::StyledAddress))
             acf.setBackground(this->palette().color(QPalette::Window));
 
         c.insertText(addrstr + " ", acf);
