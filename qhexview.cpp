@@ -89,6 +89,8 @@ void QHexView::setDelegate(QHexDelegate* rd)
 
 void QHexView::setDocument(QHexDocument* doc)
 {
+    if(!doc) doc = QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), this);
+
     m_writing = false;
     m_hexmetadata->clear();
     m_hexcursor->move(0);
@@ -98,12 +100,12 @@ void QHexView::setDocument(QHexDocument* doc)
         disconnect(m_hexcursor, &QHexCursor::positionChanged, this, nullptr);
         disconnect(m_hexcursor, &QHexCursor::modeChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::changed, this, nullptr);
-        disconnect(m_hexdocument, QOverload<>::of(&QHexDocument::reset), this, nullptr);
+        disconnect(m_hexdocument, &QHexDocument::reset, this, nullptr);
     }
 
     m_hexdocument = doc;
 
-    connect(m_hexdocument, QOverload<>::of(&QHexDocument::reset), this, [=]() {
+    connect(m_hexdocument, &QHexDocument::reset, this, [=]() {
         m_writing = false;
         m_hexcursor->move(0);
         this->checkAndUpdate(true);
@@ -115,6 +117,8 @@ void QHexView::setDocument(QHexDocument* doc)
     this->checkAndUpdate(true);
 }
 
+void QHexView::setData(const QByteArray& ba) { m_hexdocument->setData(ba); }
+void QHexView::setData(QHexBuffer* buffer) { m_hexdocument->setData(buffer); }
 void QHexView::setCursorMode(QHexCursor::Mode mode) { m_hexcursor->setMode(mode); }
 
 void QHexView::setByteColor(quint8 b, QHexColor c)

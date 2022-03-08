@@ -23,8 +23,8 @@ class QHexDocument: public QObject
         bool isEmpty() const;
         bool canUndo() const;
         bool canRedo() const;
-        void reset(const QByteArray& ba);
-        void reset(QHexBuffer* buffer);
+        void setData(const QByteArray& ba);
+        void setData(QHexBuffer* buffer);
         qint64 length() const;
         qint64 find(const QByteArray &ba, FindDirection fd = FindDirection::Forward) const;
         QByteArray read(qint64 offset, int len = 0) const;

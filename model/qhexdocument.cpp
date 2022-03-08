@@ -24,14 +24,14 @@ bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
 bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }
 bool QHexDocument::canRedo() const { return m_undostack.canRedo(); }
 
-void QHexDocument::reset(const QByteArray& ba)
+void QHexDocument::setData(const QByteArray& ba)
 {
     QHexBuffer* mb = new QMemoryBuffer();
     mb->read(ba);
-    this->reset(mb);
+    this->setData(mb);
 }
 
-void QHexDocument::reset(QHexBuffer* buffer)
+void QHexDocument::setData(QHexBuffer* buffer)
 {
     if(!buffer) return;
 

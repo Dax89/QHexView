@@ -38,6 +38,8 @@ class QHexView : public QAbstractScrollArea
         void setBaseAddress(quint64 baseaddress);
         void setDelegate(QHexDelegate* rd);
         void setDocument(QHexDocument* doc);
+        void setData(const QByteArray& ba);
+        void setData(QHexBuffer* buffer);
         void setCursorMode(QHexCursor::Mode mode);
         void setByteColor(quint8 b, QHexColor c);
         void setByteForeground(quint8 b, QColor c);
