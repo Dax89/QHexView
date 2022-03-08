@@ -22,6 +22,7 @@ class QHexCursor : public QObject
         qint64 line() const;
         qint64 column() const;
         qint64 offset() const;
+        qint64 address() const;
         qint64 selectionStartOffset() const;
         qint64 selectionEndOffset() const;
         qint64 selectionLength() const;

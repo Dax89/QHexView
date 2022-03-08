@@ -17,6 +17,7 @@ QHexCursor::QHexCursor(const QHexOptions* options, QHexView* parent) : QObject(p
 QHexView* QHexCursor::hexView() const { return qobject_cast<QHexView*>(this->parent()); }
 QHexCursor::Mode QHexCursor::mode() const { return m_mode; }
 qint64 QHexCursor::offset() const { return this->positionToOffset(m_position); }
+qint64 QHexCursor::address() const { return m_options->baseaddress + this->offset(); }
 qint64 QHexCursor::selectionStartOffset() const { return this->positionToOffset(this->selectionStart()); }
 qint64 QHexCursor::selectionEndOffset() const { return this->positionToOffset(this->selectionEnd()); }
 qint64 QHexCursor::line() const { return m_position.line; }

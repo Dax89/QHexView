@@ -455,8 +455,16 @@ qreal QHexView::hexColumnWidth() const
 }
 
 unsigned int QHexView::addressWidth() const { return 8; }
+unsigned int QHexView::lineLength() const { return m_options.linelength; }
 bool QHexView::canUndo() const { return m_hexdocument && m_hexdocument->canUndo(); }
 bool QHexView::canRedo() const { return m_hexdocument && m_hexdocument->canRedo(); }
+quint64 QHexView::offset() const { return m_hexcursor->offset(); }
+quint64 QHexView::address() const { return m_hexcursor->address(); }
+HexPosition QHexView::position() const { return m_hexcursor->position(); }
+HexPosition QHexView::selectionStart() const { return m_hexcursor->selectionStart(); }
+HexPosition QHexView::selectionEnd() const { return m_hexcursor->selectionEnd(); }
+quint64 QHexView::selectionStartOffset() const { return m_hexcursor->selectionStartOffset(); }
+quint64 QHexView::selectionEndOffset() const { return m_hexcursor->selectionEndOffset(); }
 quint64 QHexView::baseAddress() const { return m_options.baseaddress; }
 
 quint64 QHexView::lines() const

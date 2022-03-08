@@ -29,8 +29,16 @@ class QHexView : public QAbstractScrollArea
         QByteArray selectedBytes() const;
         QByteArray getLine(qint64 line) const;
         unsigned int addressWidth() const;
+        unsigned int lineLength() const;
         bool canUndo() const;
         bool canRedo() const;
+        quint64 offset() const;
+        quint64 address() const;
+        HexPosition position() const;
+        HexPosition selectionStart() const;
+        HexPosition selectionEnd() const;
+        quint64 selectionStartOffset() const;
+        quint64 selectionEndOffset() const;
         quint64 baseAddress() const;
         quint64 lines() const;
         qint64 find(const QByteArray &ba, HexFindDirection fd = HexFindDirection::Forward) const;
