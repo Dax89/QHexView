@@ -301,7 +301,7 @@ void QHexView::ensureVisible()
 
 void QHexView::drawSeparators(QPainter* p) const
 {
-    if(!m_options.separators) return;
+    if(!m_options.hasFlag(QHexFlags::Separators)) return;
 
     const auto extramargin = this->cellWidth() / 2.0;
     auto oldpen = p->pen();
@@ -316,7 +316,7 @@ void QHexView::drawSeparators(QPainter* p) const
 
 void QHexView::renderHeader(QTextCursor& c) const
 {
-    if(!m_options.header) return;
+    if(m_options.hasFlag(QHexFlags::NoHeader)) return;
 
     QString addressheader = m_options.addresslabel.rightJustified(this->addressWidth()), hexheader;
 
@@ -341,7 +341,7 @@ void QHexView::renderDocument(QTextCursor& c) const
 {
     if(!m_hexdocument) return;
 
-    qreal y = m_options.header ? this->lineHeight() : 0;
+    qreal y = !m_options.hasFlag(QHexFlags::NoHeader) ? this->lineHeight() : 0;
     quint64 line = static_cast<quint64>(this->verticalScrollBar()->value());
 
     QTextCharFormat addrformat;
@@ -401,7 +401,7 @@ void QHexView::renderDocument(QTextCursor& c) const
 int QHexView::visibleLines(bool absolute) const
 {
     int vl = static_cast<int>(std::ceil(this->height() / this->lineHeight()));
-    if(m_options.header) vl--;
+    if(!m_options.hasFlag(QHexFlags::NoHeader)) vl--;
     return absolute ? vl : std::min<int>(this->lines(), vl);
 }
 
@@ -496,7 +496,7 @@ HexPosition QHexView::positionFromPoint(QPoint pt) const
     }
 
     pos.line = std::min<qint64>(this->verticalScrollBar()->value() + (abspt.y() / this->lineHeight()), this->lines());
-    if(m_options.header) pos.line = std::max<qint64>(0, pos.line - 1);
+    if(!m_options.hasFlag(QHexFlags::NoHeader)) pos.line = std::max<qint64>(0, pos.line - 1);
 
     auto docline = this->getLine(pos.line);
     pos.column = std::min<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size());
@@ -512,7 +512,7 @@ QHexView::Area QHexView::areaFromPoint(QPoint pt) const
     pt = this->absolutePoint(pt);
     qreal line = this->verticalScrollBar()->value() + pt.y() / this->lineHeight();
 
-    if(m_options.header && !std::floor(line)) return Area::Header;
+    if(!m_options.hasFlag(QHexFlags::NoHeader) && !std::floor(line)) return Area::Header;
     if(pt.x() < this->hexColumnX()) return Area::Address;
     if(pt.x() < this->asciiColumnX()) return Area::Hex;
     if(pt.x() < this->endColumnX()) return Area::Ascii;

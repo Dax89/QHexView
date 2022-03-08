@@ -9,6 +9,15 @@
 #define QHEXVIEW_UNPRINTABLECHAR '.'
 #define QHEXVIEW_LINELENGTH      0x10
 
+namespace QHexFlags {
+    enum: unsigned int {
+        None       = (1 << 0),
+        Separators = (1 << 1),
+
+        NoHeader   = (1 << 2),
+    };
+}
+
 struct QHexColor
 {
     QColor foreground;
@@ -23,11 +32,10 @@ struct QHexOptions
     QString hexlabel;
     QString asciilabel{QHEXVIEW_ASCIILABEL};
     quint64 baseaddress{0};
+    unsigned int flags{QHexFlags::NoHeader};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
     unsigned int grouplength{1};
     unsigned int scrollsteps{1};
-    bool separators{false};
-    bool header{true};
 
     // Colors & Styles
     QHash<quint8, QHexColor> bytecolors;
@@ -36,4 +44,6 @@ struct QHexOptions
     QColor headercolor;
     QColor commentcolor;
     QColor separatorcolor;
+
+    inline bool hasFlag(unsigned int flag) const { return flags & flag; }
 };
