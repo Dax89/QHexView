@@ -129,7 +129,7 @@ class QHexView : public QAbstractScrollArea
         static bool isColorLight(QColor c);
 
     Q_SIGNALS:
-        void dataChanged(const QByteArray& data, QHexDocument::ChangeReason reason);
+        void dataChanged(quint64 offset, const QByteArray& data, QHexDocument::ChangeReason reason);
         void positionChanged();
         void modeChanged();
 
