@@ -76,6 +76,7 @@ class QHexView : public QAbstractScrollArea
         void selectAll();
         void removeSelection();
         void switchMode();
+        void setAddressWidth(unsigned int w);
         void setLineLength(unsigned int l);
         void setGroupLength(unsigned int l);
         void setScrollSteps(unsigned int l);
@@ -91,6 +92,7 @@ class QHexView : public QAbstractScrollArea
         void drawSeparators(QPainter* p) const;
         void renderHeader(QTextCursor& c) const;
         void renderDocument(QTextCursor& c) const;
+        unsigned int calcAddressWidth() const;
         int visibleLines(bool absolute = false) const;
         qint64 getLastColumn(qint64 line) const;
         qint64 lastLine() const;

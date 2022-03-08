@@ -14,6 +14,7 @@
 #include <QToolTip>
 #include <QPalette>
 #include <QPainter>
+#include <limits>
 #include <cctype>
 #include <cmath>
 
@@ -204,6 +205,13 @@ void QHexView::removeSelection()
 
 void QHexView::switchMode() { m_hexcursor->switchMode(); }
 
+void QHexView::setAddressWidth(unsigned int w)
+{
+    if(w == m_options.addresswidth) return;
+    m_options.addresswidth = w;
+    this->checkState();
+}
+
 void QHexView::setScrollSteps(unsigned int l)
 {
     if(l == m_options.scrollsteps) return;
@@ -223,6 +231,8 @@ void QHexView::checkOptions()
 {
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
     if(!m_options.scrollsteps) m_options.scrollsteps = 1;
+
+    m_options.addresswidth = std::max<unsigned int>(m_options.addresswidth, this->calcAddressWidth());
 
     // Round to nearest multiple of 2
     m_options.grouplength = 1u << (static_cast<unsigned int>(std::floor(m_options.grouplength / 2.0)));
@@ -434,6 +444,15 @@ void QHexView::renderDocument(QTextCursor& c) const
     }
 }
 
+unsigned int QHexView::calcAddressWidth() const
+{
+    if(!m_hexdocument) return 0;
+
+    auto maxaddr = static_cast<quint64>(m_options.baseaddress + m_hexdocument->length());
+    if(maxaddr <= std::numeric_limits<quint32>::max()) return 8;
+    return QString::number(maxaddr, 16).size();
+}
+
 int QHexView::visibleLines(bool absolute) const
 {
     int vl = static_cast<int>(std::ceil(this->height() / this->lineHeight()));
@@ -454,7 +473,12 @@ qreal QHexView::hexColumnWidth() const
     return this->getNCellsWidth(l);
 }
 
-unsigned int QHexView::addressWidth() const { return 8; }
+unsigned int QHexView::addressWidth() const
+{
+    if(!m_hexdocument || m_options.addresswidth) return m_options.addresswidth;
+    return this->calcAddressWidth();
+}
+
 unsigned int QHexView::lineLength() const { return m_options.linelength; }
 bool QHexView::canUndo() const { return m_hexdocument && m_hexdocument->canUndo(); }
 bool QHexView::canRedo() const { return m_hexdocument && m_hexdocument->canRedo(); }

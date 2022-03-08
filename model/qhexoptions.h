@@ -39,6 +39,7 @@ struct QHexOptions
     quint64 baseaddress{0};
     unsigned int flags{QHexFlags::None};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
+    unsigned int addresswidth{0};
     unsigned int grouplength{1};
     unsigned int scrollsteps{1};
 
