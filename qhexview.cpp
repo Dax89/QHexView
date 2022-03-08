@@ -307,10 +307,8 @@ void QHexView::drawSeparators(QPainter* p) const
     auto oldpen = p->pen();
 
     p->setPen(m_options.separatorcolor.isValid() ? m_options.separatorcolor : this->palette().color(QPalette::Dark));
-        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX() - extramargin, m_fontmetrics.lineSpacing()));
         p->drawLine(QLineF(this->hexColumnX() - extramargin, 0, this->hexColumnX() - extramargin, this->height()));
         p->drawLine(QLineF(this->asciiColumnX() - extramargin, 0, this->asciiColumnX() - extramargin, this->height()));
-        p->drawLine(QLineF(this->endColumnX() - extramargin, 0, this->endColumnX() - extramargin, this->height()));
     p->setPen(oldpen);
 }
 
