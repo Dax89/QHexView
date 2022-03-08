@@ -302,13 +302,13 @@ void QHexView::ensureVisible()
 {
     if(!m_hexdocument) return;
 
-    auto selend = m_hexcursor->selectionEnd();
+    auto pos = m_hexcursor->position();
     auto vlines = this->visibleLines();
 
-    if(selend.line < this->verticalScrollBar()->value())
-        this->verticalScrollBar()->setValue(selend.line);
-    else if(selend.line >= (this->verticalScrollBar()->value() + vlines))
-        this->verticalScrollBar()->setValue(selend.line - vlines + 1);
+    if(pos.line >= (this->verticalScrollBar()->value() + vlines))
+        this->verticalScrollBar()->setValue(pos.line - vlines + 1);
+    else if(pos.line < this->verticalScrollBar()->value())
+        this->verticalScrollBar()->setValue(pos.line);
     else
         this->viewport()->update();
 }
@@ -434,8 +434,7 @@ int QHexView::visibleLines(bool absolute) const
 }
 
 qint64 QHexView::getLastColumn(qint64 line) const { return this->getLine(line).size() - 1; }
-
-qint64 QHexView::lastLine() const { return std::min<qint64>(0, this->lines() - 1); }
+qint64 QHexView::lastLine() const { return std::max<qint64>(0, this->lines() - 1); }
 
 qreal QHexView::hexColumnWidth() const
 {
@@ -684,7 +683,7 @@ bool QHexView::keyPressMove(QKeyEvent* e)
         this->movePrevious(e->matches(QKeySequence::SelectPreviousChar));
     else if(e->matches(QKeySequence::MoveToNextLine) || e->matches(QKeySequence::SelectNextLine))
     {
-        if(this->lastLine() == this->hexCursor()->line()) return true;
+        if(this->hexCursor()->line() == this->lastLine()) return true;
         auto nextline = this->hexCursor()->line() + 1;
         if(e->matches(QKeySequence::MoveToNextLine)) this->hexCursor()->move(nextline, this->hexCursor()->column());
         else this->hexCursor()->select(nextline, this->hexCursor()->column());
