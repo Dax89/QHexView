@@ -333,7 +333,7 @@ void QHexView::drawSeparators(QPainter* p) const
     p->setPen(m_options.separatorcolor.isValid() ? m_options.separatorcolor : this->palette().color(QPalette::Dark));
 
     if(m_options.hasFlag(QHexFlags::HSeparator))
-        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX() - extramargin, m_fontmetrics.lineSpacing()));
+        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX() - extramargin * 2, m_fontmetrics.lineSpacing()));
 
     if(m_options.hasFlag(QHexFlags::VSeparator))
     {
