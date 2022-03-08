@@ -5,7 +5,12 @@ QHexDelegate::QHexDelegate(QObject* parent): QObject{parent} { }
 QString QHexDelegate::addressHeader(const QHexView* hexview) const
 {
     Q_UNUSED(hexview);
+    return QString();
+}
 
+QString QHexDelegate::asciiHeader(const QHexView* hexview) const
+{
+    Q_UNUSED(hexview);
     return QString();
 }
 

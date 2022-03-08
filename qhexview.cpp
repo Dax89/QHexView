@@ -348,26 +348,29 @@ void QHexView::renderHeader(QTextCursor& c) const
 {
     if(m_options.hasFlag(QHexFlags::NoHeader)) return;
 
-    QString addressheader, hexheader;
+    QString addresslabel, hexlabel, asciilabel;
 
-    if(m_hexdelegate) addressheader = m_hexdelegate->addressHeader(this);
-    if(addressheader.isEmpty() && !m_options.addresslabel.isEmpty()) addressheader = m_options.addresslabel;
-    addressheader = addressheader.leftJustified(this->addressWidth());
+    if(m_hexdelegate) addresslabel = m_hexdelegate->addressHeader(this);
+    if(addresslabel.isEmpty() && !m_options.addresslabel.isEmpty()) addresslabel = m_options.addresslabel;
+    addresslabel = addresslabel.leftJustified(this->addressWidth());
 
     if(m_options.hexlabel.isEmpty())
     {
         for(auto i = 0u; i < m_options.linelength; i += m_options.grouplength)
-            hexheader.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(m_options.grouplength * 2, '0')).toUpper());
+            hexlabel.append(QString("%1 ").arg(QString::number(i, 16).rightJustified(m_options.grouplength * 2, '0')).toUpper());
     }
     else
-        hexheader = m_options.hexlabel;
+        hexlabel = m_options.hexlabel;
 
     QTextCharFormat cf;
     cf.setForeground(m_options.headercolor);
 
-    c.insertText(m_fontmetrics.elidedText(addressheader, Qt::ElideRight, this->hexColumnX()) + " ", cf);
-    c.insertText(hexheader, cf);
-    c.insertText(m_options.asciilabel, cf);
+    c.insertText(m_fontmetrics.elidedText(addresslabel, Qt::ElideRight, this->hexColumnX()) + " ", cf);
+    c.insertText(hexlabel, cf);
+
+    if(m_hexdelegate) asciilabel = m_hexdelegate->asciiHeader(this);
+    if(asciilabel.isEmpty() && !m_options.asciilabel.isEmpty()) asciilabel = m_options.asciilabel;
+    c.insertText(m_fontmetrics.elidedText(asciilabel, Qt::ElideRight, this->endColumnX()), cf);
 
     if(m_options.hasFlag(QHexFlags::StyledHeader))
     {
