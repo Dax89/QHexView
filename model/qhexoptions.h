@@ -12,11 +12,13 @@
 namespace QHexFlags {
     enum: unsigned int {
         None          = (1 << 0),
-        Separators    = (1 << 1),
-        StyledHeader  = (1 << 2),
-        StyledAddress = (1 << 3),
-        NoHeader      = (1 << 4),
+        HSeparator    = (1 << 1),
+        VSeparator    = (1 << 2),
+        StyledHeader  = (1 << 3),
+        StyledAddress = (1 << 4),
+        NoHeader      = (1 << 5),
 
+        Separators    = HSeparator | VSeparator,
         Styled        = StyledHeader | StyledAddress,
     };
 }
