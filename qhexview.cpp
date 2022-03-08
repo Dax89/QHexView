@@ -90,6 +90,7 @@ void QHexView::setRenderDelegate(QHexRenderDelegate* rd)
 void QHexView::setDocument(QHexDocument* doc)
 {
     m_writing = false;
+    m_hexmetadata->clear();
 
     if(m_hexdocument)
     {
