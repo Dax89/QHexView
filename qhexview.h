@@ -16,10 +16,6 @@ class QHexView : public QAbstractScrollArea
     Q_OBJECT
 
     public:
-        enum class Area { Header, Address, Hex, Ascii, Extra };
-        Q_ENUM(Area)
-
-    public:
         explicit QHexView(QWidget *parent = nullptr);
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
@@ -92,7 +88,7 @@ class QHexView : public QAbstractScrollArea
         void drawSeparators(QPainter* p) const;
         void drawHeader(QTextCursor& c) const;
         void drawDocument(QTextCursor& c) const;
-        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool applyformat) const;
+        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, HexArea area, qint64 line, qint64 column, bool applyformat) const;
         unsigned int calcAddressWidth() const;
         int visibleLines(bool absolute = false) const;
         qint64 getLastColumn(qint64 line) const;
@@ -106,7 +102,7 @@ class QHexView : public QAbstractScrollArea
         qreal lineHeight() const;
         HexPosition positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
-        Area areaFromPoint(QPoint pt) const;
+        HexArea areaFromPoint(QPoint pt) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
         bool keyPressMove(QKeyEvent* e);
@@ -135,7 +131,7 @@ class QHexView : public QAbstractScrollArea
 
     private:
         bool m_readonly{false}, m_writing{false}, m_autowidth{false};
-        Area m_currentarea{Area::Ascii};
+        HexArea m_currentarea{HexArea::Ascii};
         QList<QRectF> m_hexcolumns;
         QFontMetricsF m_fontmetrics;
         QHexOptions m_options;

@@ -6,6 +6,7 @@
 struct QHexOptions;
 
 enum class HexFindDirection { Forward, Backward };
+enum class HexArea { Header, Address, Hex, Ascii, Extra };
 
 struct HexPosition {
     qint64 line; qint64 column;

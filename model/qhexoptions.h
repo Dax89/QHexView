@@ -5,7 +5,6 @@
 #include <QChar>
 
 #define QHEXVIEW_ADDRESSLABEL    ""
-#define QHEXVIEW_ASCIILABEL      "0123456789ABCDEF"
 #define QHEXVIEW_UNPRINTABLECHAR '.'
 #define QHEXVIEW_LINELENGTH      0x10
 
@@ -35,7 +34,7 @@ struct QHexOptions
     QChar unprintablechar{QHEXVIEW_UNPRINTABLECHAR};
     QString addresslabel{QHEXVIEW_ADDRESSLABEL};
     QString hexlabel;
-    QString asciilabel{QHEXVIEW_ASCIILABEL};
+    QString asciilabel;
     quint64 baseaddress{0};
     unsigned int flags{QHexFlags::None};
     unsigned int linelength{QHEXVIEW_LINELENGTH};
