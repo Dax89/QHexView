@@ -54,7 +54,7 @@ class QHexDocument: public QObject
     Q_SIGNALS:
         void canUndoChanged(bool canUndo);
         void canRedoChanged(bool canRedo);
-        void dataChanged(quint64 offset, const QByteArray& data, QHexDocument::ChangeReason reason);
+        void dataChanged(const QByteArray& data, quint64 offset, QHexDocument::ChangeReason reason);
         void changed();
         void reset();
 
