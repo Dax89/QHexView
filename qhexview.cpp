@@ -458,6 +458,7 @@ void QHexView::drawDocument(QTextCursor& c) const
         c.insertText(" " + addrstr + " ", acf);
 
         auto linebytes = this->getLine(line);
+        c.insertText(" ", { });
 
         // Hex Part
         for(auto column = 0u; column < m_options.linelength; )
@@ -473,6 +474,8 @@ void QHexView::drawDocument(QTextCursor& c) const
 
             c.insertText(" ", cf);
         }
+
+        c.insertText(" ", { });
 
         // Ascii Part
         for(auto column = 0u; column < m_options.linelength; column++)
@@ -578,7 +581,7 @@ qint64 QHexView::find(const QByteArray& ba, HexFindDirection fd) const
 
 qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth() + 2); }
 qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth() + this->cellWidth(); }
-qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->cellWidth() + this->getNCellsWidth(m_options.linelength); }
+qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->getNCellsWidth(m_options.linelength + 1) + (this->cellWidth() / 2); }
 qreal QHexView::getNCellsWidth(int n) const { return n * this->cellWidth(); }
 
 qreal QHexView::cellWidth() const
@@ -651,7 +654,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
 
         cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
         cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(offset < selend && column <= this->getLastColumn(line)) selcf = cf;
+        if(offset < selend && column < this->getLastColumn(line)) selcf = cf;
     }
     else if(applyformat)
     {
@@ -703,7 +706,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                     if(!metadata.background.isValid()) selcf.setBackground(Qt::transparent);
                 }
 
-                if(offset < metadata.end - 1 && column <= this->getLastColumn(line))
+                if(offset < metadata.end - 1 && column < this->getLastColumn(line))
                     selcf = cf;
             }
         }
@@ -732,7 +735,6 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
         }
     }
 
-    if(!column) c.insertText(" ", selcf);
     c.insertText(s, cf);
     return selcf;
 }
