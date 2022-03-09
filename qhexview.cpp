@@ -279,7 +279,7 @@ void QHexView::checkState()
     if(!oldmw) oldmw = this->maximumWidth();
     this->setMaximumWidth(m_autowidth ? this->endColumnX() + vw : oldmw);
 
-    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() + this->cellWidth() - this->width() + vw));
+    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw));
     this->horizontalScrollBar()->setPageStep(this->width());
     this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(std::floor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
 }
@@ -581,7 +581,7 @@ qint64 QHexView::find(const QByteArray& ba, HexFindDirection fd) const
 
 qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth() + 2); }
 qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth() + this->cellWidth(); }
-qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->getNCellsWidth(m_options.linelength + 1) + (this->cellWidth() / 2); }
+qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->getNCellsWidth(m_options.linelength + 1) + this->cellWidth(); }
 qreal QHexView::getNCellsWidth(int n) const { return n * this->cellWidth(); }
 
 qreal QHexView::cellWidth() const
