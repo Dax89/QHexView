@@ -90,8 +90,9 @@ class QHexView : public QAbstractScrollArea
         void calcColumns();
         void ensureVisible();
         void drawSeparators(QPainter* p) const;
-        void renderHeader(QTextCursor& c) const;
-        void renderDocument(QTextCursor& c) const;
+        void drawHeader(QTextCursor& c) const;
+        void drawDocument(QTextCursor& c) const;
+        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool applyformat) const;
         unsigned int calcAddressWidth() const;
         int visibleLines(bool absolute = false) const;
         qint64 getLastColumn(qint64 line) const;
@@ -106,7 +107,6 @@ class QHexView : public QAbstractScrollArea
         HexPosition positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
         Area areaFromPoint(QPoint pt) const;
-        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, Area area, qint64 line, qint64 column, bool applyformat) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
         bool keyPressMove(QKeyEvent* e);

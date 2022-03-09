@@ -283,7 +283,7 @@ void QHexView::checkState()
     if(!oldmw) oldmw = this->maximumWidth();
     this->setMaximumWidth(m_autowidth ? this->endColumnX() + vw : oldmw);
 
-    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw));
+    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() + this->cellWidth() - this->width() + vw));
     this->horizontalScrollBar()->setPageStep(this->width());
     this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(std::floor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
 }
@@ -332,32 +332,30 @@ void QHexView::drawSeparators(QPainter* p) const
 {
     if(!m_options.hasFlag(QHexFlags::Separators)) return;
 
-    const auto extramargin = this->cellWidth() / 2.0;
     auto oldpen = p->pen();
-
     p->setPen(m_options.separatorcolor.isValid() ? m_options.separatorcolor : this->palette().color(QPalette::Dark));
 
     if(m_options.hasFlag(QHexFlags::HSeparator))
-        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX() - extramargin * 2, m_fontmetrics.lineSpacing()));
+        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX(), m_fontmetrics.lineSpacing()));
 
     if(m_options.hasFlag(QHexFlags::VSeparator))
     {
-        p->drawLine(QLineF(this->hexColumnX() - extramargin, 0, this->hexColumnX() - extramargin, this->height()));
-        p->drawLine(QLineF(this->asciiColumnX() - extramargin, 0, this->asciiColumnX() - extramargin, this->height()));
+        p->drawLine(QLineF(this->hexColumnX(), 0, this->hexColumnX(), this->height()));
+        p->drawLine(QLineF(this->asciiColumnX(), 0, this->asciiColumnX(), this->height()));
     }
 
     p->setPen(oldpen);
 }
 
-void QHexView::renderHeader(QTextCursor& c) const
+void QHexView::drawHeader(QTextCursor& c) const
 {
     if(m_options.hasFlag(QHexFlags::NoHeader)) return;
 
-    QString addresslabel, hexlabel, asciilabel;
+    QString addresslabel, hexlabel = " ", asciilabel;
 
     if(m_hexdelegate) addresslabel = m_hexdelegate->addressHeader(this);
     if(addresslabel.isEmpty() && !m_options.addresslabel.isEmpty()) addresslabel = m_options.addresslabel;
-    addresslabel = addresslabel.leftJustified(this->addressWidth());
+    addresslabel = (" " + addresslabel + " ").leftJustified(this->addressWidth());
 
     if(m_options.hexlabel.isEmpty())
     {
@@ -371,11 +369,11 @@ void QHexView::renderHeader(QTextCursor& c) const
     cf.setForeground(m_options.headercolor);
 
     c.insertText(m_fontmetrics.elidedText(addresslabel, Qt::ElideRight, this->hexColumnX()) + " ", cf);
-    c.insertText(hexlabel, cf);
+    c.insertText(" " + hexlabel, cf);
 
     if(m_hexdelegate) asciilabel = m_hexdelegate->asciiHeader(this);
     if(asciilabel.isEmpty() && !m_options.asciilabel.isEmpty()) asciilabel = m_options.asciilabel;
-    c.insertText(m_fontmetrics.elidedText(asciilabel, Qt::ElideRight, this->endColumnX()), cf);
+    c.insertText(m_fontmetrics.elidedText(" " + asciilabel, Qt::ElideRight, this->endColumnX()), cf);
 
     if(m_options.hasFlag(QHexFlags::StyledHeader))
     {
@@ -387,7 +385,7 @@ void QHexView::renderHeader(QTextCursor& c) const
     c.insertBlock();
 }
 
-void QHexView::renderDocument(QTextCursor& c) const
+void QHexView::drawDocument(QTextCursor& c) const
 {
     if(!m_hexdocument) return;
 
@@ -409,7 +407,7 @@ void QHexView::renderDocument(QTextCursor& c) const
         if(m_options.hasFlag(QHexFlags::StyledAddress))
             acf.setBackground(this->palette().color(QPalette::Window));
 
-        c.insertText(addrstr + " ", acf);
+        c.insertText(" " + addrstr + " ", acf);
 
         auto linebytes = this->getLine(line);
 
@@ -518,7 +516,7 @@ qint64 QHexView::find(const QByteArray& ba, HexFindDirection fd) const
     if(startpos < 0) return -1;
 
     auto offset = fd == HexFindDirection::Forward ? m_hexdocument->indexOf(ba, startpos) :
-                                                 m_hexdocument->lastIndexOf(ba, startpos);
+                                                    m_hexdocument->lastIndexOf(ba, startpos);
 
     if(offset > -1)
     {
@@ -530,8 +528,8 @@ qint64 QHexView::find(const QByteArray& ba, HexFindDirection fd) const
     return offset;
 }
 
-qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth()) + this->cellWidth(); }
-qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth(); }
+qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth() + 2); }
+qreal QHexView::asciiColumnX() const { return this->hexColumnX() + this->hexColumnWidth() + this->cellWidth(); }
 qreal QHexView::endColumnX() const { return this->asciiColumnX() + this->cellWidth() + this->getNCellsWidth(m_options.linelength); }
 qreal QHexView::getNCellsWidth(int n) const { return n * this->cellWidth(); }
 
@@ -564,7 +562,7 @@ HexPosition QHexView::positionFromPoint(QPoint pt) const
             break;
         }
 
-        case Area::Ascii: pos.column = std::floor((abspt.x() - this->asciiColumnX()) / this->cellWidth()); break;
+        case Area::Ascii: pos.column = std::max<qint64>(std::floor((abspt.x() - this->asciiColumnX()) / this->cellWidth()) - 1, 0); break;
         case Area::Address: pos.column = 0; break;
         case Area::Header: return HexPosition::invalid();
         default: break;
@@ -605,7 +603,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
 
         cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
         cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(offset < selend && column < this->getLastColumn(line)) selcf = cf;
+        if(offset < selend && column <= this->getLastColumn(line)) selcf = cf;
     }
     else if(applyformat)
     {
@@ -657,7 +655,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                     if(!metadata.background.isValid()) selcf.setBackground(Qt::transparent);
                 }
 
-                if(offset < metadata.end - 1 && column < this->getLastColumn(line))
+                if(offset < metadata.end - 1 && column <= this->getLastColumn(line))
                     selcf = cf;
             }
         }
@@ -686,6 +684,7 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
         }
     }
 
+    if(!column) c.insertText(" ", selcf);
     c.insertText(s, cf);
     return selcf;
 }
@@ -929,8 +928,8 @@ void QHexView::paintEvent(QPaintEvent*)
 
     QTextCursor c(&doc);
     QPainter painter(this->viewport());
-    this->renderHeader(c);
-    this->renderDocument(c);
+    this->drawHeader(c);
+    this->drawDocument(c);
 
     painter.translate(-this->horizontalScrollBar()->value(), 0);
     doc.drawContents(&painter);
