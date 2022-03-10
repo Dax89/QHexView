@@ -56,6 +56,44 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
     connect(m_hexcursor, &QHexCursor::modeChanged, this, &QHexView::modeChanged);
 }
 
+QRectF QHexView::headerRect() const
+{
+    if(m_options.hasFlag(QHexFlags::NoHeader)) return QRectF();
+
+    return QRectF(0,
+                  0,
+                  this->endColumnX(),
+                  this->lineHeight());
+}
+
+QRectF QHexView::addressRect() const
+{
+    return QRectF(0,
+                  m_options.hasFlag(QHexFlags::NoHeader) ? 0 : this->lineHeight(),
+                  this->endColumnX(),
+                  this->lineHeight());
+}
+
+QRectF QHexView::hexRect() const
+{
+    qreal y = m_options.hasFlag(QHexFlags::NoHeader) ? 0 : this->lineHeight();
+
+    return QRectF(this->hexColumnX(),
+                  y,
+                  this->asciiColumnX() - this->hexColumnX(),
+                  this->height() - y);
+}
+
+QRectF QHexView::asciiRect() const
+{
+    qreal y = m_options.hasFlag(QHexFlags::NoHeader) ? 0 : this->lineHeight();
+
+    return QRectF(this->asciiColumnX(),
+                  y,
+                  this->endColumnX() - this->asciiColumnX(),
+                  this->height() - y);
+}
+
 QHexDocument* QHexView::hexDocument() const { return m_hexdocument; }
 QHexCursor* QHexView::hexCursor() const { return m_hexdocument ? m_hexcursor : nullptr; }
 const QHexMetadata* QHexView::hexMetadata() const { return m_hexmetadata; }
@@ -349,12 +387,21 @@ void QHexView::drawSeparators(QPainter* p) const
     p->setPen(m_options.separatorcolor.isValid() ? m_options.separatorcolor : this->palette().color(QPalette::Dark));
 
     if(m_options.hasFlag(QHexFlags::HSeparator))
-        p->drawLine(QLineF(0, m_fontmetrics.lineSpacing(), this->endColumnX(), m_fontmetrics.lineSpacing()));
+    {
+        QLineF l(0, m_fontmetrics.lineSpacing(), this->endColumnX(), m_fontmetrics.lineSpacing());
+        if(!m_hexdelegate || !m_hexdelegate->paintSeparator(p, l, this)) p->drawLine(l);
+    }
 
     if(m_options.hasFlag(QHexFlags::VSeparator))
     {
-        p->drawLine(QLineF(this->hexColumnX(), 0, this->hexColumnX(), this->height()));
-        p->drawLine(QLineF(this->asciiColumnX(), 0, this->asciiColumnX(), this->height()));
+        QLineF l1(this->hexColumnX(), 0, this->hexColumnX(), this->height());
+        QLineF l2(this->asciiColumnX(), 0, this->asciiColumnX(), this->height());
+
+        if(!m_hexdelegate || (m_hexdelegate && !m_hexdelegate->paintSeparator(p, l1, this)))
+            p->drawLine(l1);
+
+        if(!m_hexdelegate || (m_hexdelegate && !m_hexdelegate->paintSeparator(p, l2, this)))
+            p->drawLine(l2);
     }
 
     p->setPen(oldpen);

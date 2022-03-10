@@ -53,6 +53,14 @@ bool QHexDelegate::render(quint64 offset, quint8 b, QTextCharFormat& outcf, cons
     return false;
 }
 
+bool QHexDelegate::paintSeparator(QPainter* painter, QLineF line, const QHexView* hexview) const
+{
+    Q_UNUSED(painter);
+    Q_UNUSED(line);
+    Q_UNUSED(hexview);
+    return false;
+}
+
 void QHexDelegate::paint(QPainter* painter, const QHexView* hexview) const
 {
     Q_UNUSED(hexview);

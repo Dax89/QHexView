@@ -17,6 +17,10 @@ class QHexView : public QAbstractScrollArea
 
     public:
         explicit QHexView(QWidget *parent = nullptr);
+        QRectF headerRect() const;
+        QRectF addressRect() const;
+        QRectF hexRect() const;
+        QRectF asciiRect() const;
         QHexDocument* hexDocument() const;
         QHexCursor* hexCursor() const;
         const QHexMetadata* hexMetadata() const;

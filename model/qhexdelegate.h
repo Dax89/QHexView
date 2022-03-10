@@ -20,5 +20,6 @@ class QHexDelegate: public QObject
         virtual void renderHeader(QTextBlockFormat& bf, const QHexView* hexview) const;
         virtual void renderHeaderPart(const QString& s, HexArea area, QTextCharFormat& cf, const QHexView* hexview) const;
         virtual bool render(quint64 offset, quint8 b, QTextCharFormat& outcf, const QHexView* hexview) const;
+        virtual bool paintSeparator(QPainter* painter, QLineF line, const QHexView* hexview) const;
         virtual void paint(QPainter* painter, const QHexView* hexview) const;
 };
