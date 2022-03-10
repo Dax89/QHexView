@@ -29,6 +29,7 @@ These are the available buffer backends:
 - *QMemoryBuffer*: A simple, flat memory
 - *QMemoryRefBuffer*: QHexView just display the referenced data, editing is disabled
 - *QDeviceBuffer*: A read-only view for QIODevice 
+- *QMappedFileBuffer*: MMIO wrapper for QFile
 
 It's also possible to create new data backends from scratch.
 

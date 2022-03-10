@@ -2,18 +2,17 @@
 
 #include "qhexbuffer.h"
 
-class QIODevice;
-
 class QDeviceBuffer : public QHexBuffer
 {
     Q_OBJECT
 
     public:
         explicit QDeviceBuffer(QObject *parent = nullptr);
-        ~QDeviceBuffer();
+        virtual ~QDeviceBuffer();
         uchar at(qint64 idx) override;
         qint64 length() const override;
         void insert(qint64 offset, const QByteArray& data) override;
+        void replace(qint64 offset, const QByteArray& data) override;
         void remove(qint64 offset, int length) override;
         QByteArray read(qint64 offset, int length) override;
         bool read(QIODevice* device) override;
@@ -21,6 +20,6 @@ class QDeviceBuffer : public QHexBuffer
         qint64 indexOf(const QByteArray& ba, qint64 from) override;
         qint64 lastIndexOf(const QByteArray& ba, qint64 from) override;
 
-    private:
+    protected:
         QIODevice* m_device{nullptr};
 };

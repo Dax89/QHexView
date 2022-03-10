@@ -49,6 +49,7 @@ class QHexDocument: public QObject
         template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, QObject* parent = nullptr);
         static QHexDocument* fromBuffer(QHexBuffer* buffer, QObject* parent = nullptr);
         static QHexDocument* fromLargeFile(QString filename, QObject *parent = nullptr);
+        static QHexDocument* fromMappedFile(QString filename, QObject* parent = nullptr);
         static QHexDocument* fromFile(QString filename, QObject* parent = nullptr);
         static QHexDocument* create(QObject* parent = nullptr);
 

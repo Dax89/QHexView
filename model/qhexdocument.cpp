@@ -4,6 +4,7 @@
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
 #include "buffer/qdevicebuffer.h"
+#include "buffer/qmappedfilebuffer.h"
 #include "qhexutils.h"
 #include <QBuffer>
 #include <QFile>
@@ -97,12 +98,6 @@ bool QHexDocument::saveTo(QIODevice *device)
 }
 
 QHexDocument* QHexDocument::fromBuffer(QHexBuffer* buffer, QObject* parent) { return new QHexDocument(buffer, parent); }
-
-QHexDocument* QHexDocument::fromLargeFile(QString filename, QObject *parent)
-{
-    QFile* f = new QFile(filename);
-    f->open(QFile::ReadWrite);
-    return QHexDocument::fromDevice<QDeviceBuffer>(f, parent);
-}
-
+QHexDocument* QHexDocument::fromLargeFile(QString filename, QObject *parent) { return QHexDocument::fromDevice<QDeviceBuffer>(new QFile(filename), parent); }
+QHexDocument* QHexDocument::fromMappedFile(QString filename, QObject* parent) { return QHexDocument::fromDevice<QMappedFileBuffer>(new QFile(filename), parent); }
 QHexDocument* QHexDocument::create(QObject* parent) { return QHexDocument::fromMemory<QMemoryBuffer>({}, parent); }

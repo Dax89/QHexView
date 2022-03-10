@@ -2,7 +2,7 @@
 #include <QIODevice>
 #include <limits>
 
-QDeviceBuffer::QDeviceBuffer(QObject *parent) : QHexBuffer(parent) { }
+QDeviceBuffer::QDeviceBuffer(QObject *parent) : QHexBuffer{parent} { }
 
 QDeviceBuffer::~QDeviceBuffer()
 {
@@ -28,32 +28,42 @@ uchar QDeviceBuffer::at(qint64 idx)
 
 qint64 QDeviceBuffer::length() const { return m_device->size(); }
 
-void QDeviceBuffer::insert(qint64 offset, const QByteArray &data) {
+void QDeviceBuffer::insert(qint64 offset, const QByteArray &data)
+{
     Q_UNUSED(offset)
     Q_UNUSED(data)
     // Not implemented
 }
 
-void QDeviceBuffer::remove(qint64 offset, int length) {
+void QDeviceBuffer::replace(qint64 offset, const QByteArray& data)
+{
+    m_device->seek(offset);
+    m_device->write(data);
+}
+
+void QDeviceBuffer::remove(qint64 offset, int length)
+{
     Q_UNUSED(offset)
     Q_UNUSED(length)
     // Not implemented
 }
 
-QByteArray QDeviceBuffer::read(qint64 offset, int length) {
+QByteArray QDeviceBuffer::read(qint64 offset, int length)
+{
     m_device->seek(offset);
     return m_device->read(length);
 }
 
-bool QDeviceBuffer::read(QIODevice *device) {
+bool QDeviceBuffer::read(QIODevice *device)
+{
     m_device = device;
     if(!m_device) return false;
-
     if(!m_device->isOpen()) m_device->open(QIODevice::ReadWrite);
     return m_device->isOpen();
 }
 
-void QDeviceBuffer::write(QIODevice *device) {
+void QDeviceBuffer::write(QIODevice *device)
+{
     Q_UNUSED(device)
     // Not implemented
 }
@@ -92,7 +102,8 @@ qint64 QDeviceBuffer::lastIndexOf(const QByteArray& ba, qint64 from)
     const auto MAX = std::numeric_limits<int>::max();
     qint64 idx = -1;
 
-    if(from >= 0 && ba.size() < MAX) {
+    if(from >= 0 && ba.size() < MAX)
+    {
         qint64 currpos = from;
 
         while(currpos >= 0)

@@ -1,8 +1,7 @@
 #include "qhexbuffer.h"
 #include <QBuffer>
 
-QHexBuffer::QHexBuffer(QObject *parent) : QObject(parent) { }
-
+QHexBuffer::QHexBuffer(QObject *parent) : QObject{parent} { }
 uchar QHexBuffer::at(qint64 idx) { return this->read(idx, 1).at(0); }
 bool QHexBuffer::isEmpty() const { return this->length() <= 0; }
 
