@@ -277,7 +277,7 @@ void QHexView::checkState()
 
     static int oldmw = 0;
     if(!oldmw) oldmw = this->maximumWidth();
-    this->setMaximumWidth(m_autowidth ? this->endColumnX() + vw : oldmw);
+    this->setMaximumWidth(m_autowidth ? this->endColumnX() +  vw : oldmw);
 
     this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw));
     this->horizontalScrollBar()->setPageStep(this->width());
@@ -381,8 +381,15 @@ void QHexView::drawHeader(QTextCursor& c) const
                 m_hexdelegate->renderHeaderPart(h, HexArea::Hex, cf, this);
             }
 
+            if(m_hexcursor->column() == static_cast<qint64>(i) && m_options.hasFlag(QHexFlags::HighlightColumn))
+            {
+                cf.setBackground(this->palette().color(QPalette::Highlight));
+                cf.setForeground(this->palette().color(QPalette::HighlightedText));
+            }
+
             c.insertText(h, cf);
             c.insertText(" ", { });
+            RESET_FORMAT(m_options, cf);
         }
     }
     else
@@ -413,7 +420,14 @@ void QHexView::drawHeader(QTextCursor& c) const
                 m_hexdelegate->renderHeaderPart(a, HexArea::Ascii, cf, this);
             }
 
+            if(m_hexcursor->column() == static_cast<qint64>(i) && m_options.hasFlag(QHexFlags::HighlightColumn))
+            {
+                cf.setBackground(this->palette().color(QPalette::Highlight));
+                cf.setForeground(this->palette().color(QPalette::HighlightedText));
+            }
+
             c.insertText(a, cf);
+            RESET_FORMAT(m_options, cf);
         }
 
         c.insertText(" ", { });
@@ -457,6 +471,13 @@ void QHexView::drawDocument(QTextCursor& c) const
             acf.setBackground(this->palette().color(QPalette::Window));
 
         if(m_hexdelegate) m_hexdelegate->renderAddress(address, acf, this);
+
+        if(m_hexcursor->line() == static_cast<qint64>(line) && m_options.hasFlag(QHexFlags::HighlightAddress))
+        {
+            acf.setBackground(this->palette().color(QPalette::Highlight));
+            acf.setForeground(this->palette().color(QPalette::HighlightedText));
+        }
+
         c.insertText(" " + addrstr + " ", acf);
 
         auto linebytes = this->getLine(line);
