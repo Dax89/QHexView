@@ -127,6 +127,7 @@ class QHexView : public QAbstractScrollArea
         void keyPressEvent(QKeyEvent *e) override;
 
     private:
+        static QString reduced(const QString& s, int maxlen);
         static bool isColorLight(QColor c);
 
     Q_SIGNALS:

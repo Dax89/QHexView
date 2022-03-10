@@ -425,8 +425,8 @@ void QHexView::drawHeader(QTextCursor& c) const
     QTextCharFormat cf;
     RESET_FORMAT(m_options, cf);
     if(m_hexdelegate) m_hexdelegate->renderHeaderPart(addresslabel, HexArea::Address, cf, this);
+    c.insertText(" " + QHexView::reduced(addresslabel, this->addressWidth()) + " ", cf);
 
-    c.insertText(m_fontmetrics.elidedText((" " + addresslabel + " ").leftJustified(this->addressWidth() + 1), Qt::ElideRight, this->hexColumnX()) + " ", cf);
     if(m_hexdelegate) RESET_FORMAT(m_options, cf);
 
     QString hexlabel;
@@ -461,9 +461,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     else
     {
         if(m_hexdelegate) m_hexdelegate->renderHeaderPart(hexlabel, HexArea::Hex, cf, this);
-        c.insertText(" ", cf);
-        c.insertText(m_fontmetrics.elidedText(hexlabel.leftJustified(this->hexColumnWidth() / this->cellWidth()), Qt::ElideRight, this->hexColumnWidth()), cf);
-        c.insertText(" ", cf);
+        c.insertText(" " + QHexView::reduced(hexlabel, (this->hexColumnWidth() / this->cellWidth()) - 1) + " ");
     }
 
     if(m_hexdelegate) RESET_FORMAT(m_options, cf);
@@ -501,10 +499,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     else
     {
         if(m_hexdelegate) m_hexdelegate->renderHeaderPart(asciilabel, HexArea::Ascii, cf, this);
-        c.insertText(" ", cf);
-        c.insertText(m_fontmetrics.elidedText(asciilabel.leftJustified(m_options.linelength),
-                                              Qt::ElideRight, this->endColumnX() - this->asciiColumnX() - this->cellWidth()), cf);
-        c.insertText(" ", cf);
+        c.insertText(" " + QHexView::reduced(asciilabel, ((this->endColumnX() - this->asciiColumnX() - this->cellWidth()) / this->cellWidth()) - 1) + " ");
     }
 
     QTextBlockFormat bf;
@@ -1154,6 +1149,12 @@ void QHexView::keyPressEvent(QKeyEvent* e)
 
     if(handled) e->accept();
     else QAbstractScrollArea::keyPressEvent(e);
+}
+
+QString QHexView::reduced(const QString& s, int maxlen)
+{
+    if(s.length() <= maxlen) return s.leftJustified(maxlen);
+    return s.mid(0, maxlen - 1) + "\u2026";
 }
 
 bool QHexView::isColorLight(QColor c)
