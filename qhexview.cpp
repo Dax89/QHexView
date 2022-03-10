@@ -415,6 +415,8 @@ void QHexView::drawHeader(QTextCursor& c) const
 
             c.insertText(a, cf);
         }
+
+        c.insertText(" ", { });
     }
     else
     {
@@ -646,19 +648,11 @@ HexArea QHexView::areaFromPoint(QPoint pt) const
 QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, HexArea area, qint64 line, qint64 column, bool applyformat) const
 {
     QTextCharFormat cf, selcf;
+    HexPosition pos{line, column};
 
-    if(this->hexCursor()->isSelected(line, column))
+    if(applyformat)
     {
-        auto offset = this->hexCursor()->positionToOffset({line, column});
-        auto selend = this->hexCursor()->selectionEndOffset();
-
-        cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
-        cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
-        if(offset < selend && column < this->getLastColumn(line)) selcf = cf;
-    }
-    else if(applyformat)
-    {
-        auto offset = m_hexcursor->positionToOffset({line, column});
+        auto offset = m_hexcursor->positionToOffset(pos);
         bool hasdelegate = m_hexdelegate && m_hexdelegate->render(offset, b, cf, this);
 
         if(!hasdelegate)
@@ -714,7 +708,17 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
         if(hasdelegate && column < this->getLastColumn(line)) selcf = cf;
     }
 
-    if(this->hasFocus() && this->hexCursor()->line() == line && this->hexCursor()->column() == column)
+    if(this->hexCursor()->isSelected(line, column))
+    {
+        auto offset = this->hexCursor()->positionToOffset(pos);
+        auto selend = this->hexCursor()->selectionEndOffset();
+
+        cf.setBackground(this->palette().color(QPalette::Normal, QPalette::Highlight));
+        cf.setForeground(this->palette().color(QPalette::Normal, QPalette::HighlightedText));
+        if(offset < selend && column < this->getLastColumn(line)) selcf = cf;
+    }
+
+    if(this->hasFocus() && this->hexCursor()->position() == pos)
     {
         auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
         auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Base);
