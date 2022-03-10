@@ -1,4 +1,5 @@
 #include "qhexdelegate.h"
+#include "qhexview.h"
 
 QHexDelegate::QHexDelegate(QObject* parent): QObject{parent} { }
 
@@ -50,4 +51,10 @@ bool QHexDelegate::render(quint64 offset, quint8 b, QTextCharFormat& outcf, cons
     Q_UNUSED(hexview);
 
     return false;
+}
+
+void QHexDelegate::paint(QPainter* painter, const QHexView* hexview) const
+{
+    Q_UNUSED(hexview);
+    hexview->paint(painter);
 }

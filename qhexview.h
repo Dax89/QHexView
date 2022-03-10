@@ -80,6 +80,7 @@ class QHexView : public QAbstractScrollArea
         void setAutoWidth(bool r);
 
     private:
+        void paint(QPainter* painter) const;
         void checkOptions();
         void checkState();
         void checkAndUpdate(bool calccolumns = false);
@@ -139,5 +140,7 @@ class QHexView : public QAbstractScrollArea
         QHexDocument* m_hexdocument{nullptr};
         QHexMetadata* m_hexmetadata{nullptr};
         QHexDelegate* m_hexdelegate{nullptr};
+
+    friend class QHexDelegate;
 };
 

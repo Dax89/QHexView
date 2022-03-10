@@ -228,6 +228,23 @@ void QHexView::setAutoWidth(bool r)
     this->checkState();
 }
 
+void QHexView::paint(QPainter* painter) const
+{
+    QTextDocument doc;
+    doc.setDocumentMargin(0);
+    doc.setUndoRedoEnabled(false);
+    doc.setDefaultFont(this->font());
+
+    QTextCursor c(&doc);
+
+    this->drawHeader(c);
+    this->drawDocument(c);
+
+    painter->translate(-this->horizontalScrollBar()->value(), 0);
+    doc.drawContents(painter);
+    this->drawSeparators(painter);
+}
+
 void QHexView::checkOptions()
 {
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
@@ -996,19 +1013,9 @@ void QHexView::paintEvent(QPaintEvent*)
 {
     if(!m_hexdocument) return;
 
-    QTextDocument doc;
-    doc.setDocumentMargin(0);
-    doc.setUndoRedoEnabled(false);
-    doc.setDefaultFont(this->font());
-
-    QTextCursor c(&doc);
     QPainter painter(this->viewport());
-    this->drawHeader(c);
-    this->drawDocument(c);
-
-    painter.translate(-this->horizontalScrollBar()->value(), 0);
-    doc.drawContents(&painter);
-    this->drawSeparators(&painter);
+    if(m_hexdelegate) m_hexdelegate->paint(&painter, this);
+    else this->paint(&painter);
 }
 
 void QHexView::resizeEvent(QResizeEvent* e)
