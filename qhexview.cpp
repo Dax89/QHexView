@@ -1089,7 +1089,7 @@ bool QHexView::isColorLight(QColor c)
 QColor QHexView::getReadableColor(QColor c) const
 {
     QPalette palette = this->palette();
-    return QHexView::isColorLight(c) ? palette.color(QPalette::WindowText) : palette.color(QPalette::HighlightedText);
+    return QHexView::isColorLight(c) ? palette.color(QPalette::Normal, QPalette::WindowText) : palette.color(QPalette::Normal, QPalette::HighlightedText);
 }
 
 QByteArray QHexView::selectedBytes() const { return m_hexcursor->hasSelection() ? m_hexdocument->read(m_hexcursor->selectionStartOffset(), m_hexcursor->selectionLength()) : QByteArray{ }; }
