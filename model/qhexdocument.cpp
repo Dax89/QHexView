@@ -96,6 +96,8 @@ bool QHexDocument::saveTo(QIODevice *device)
     return true;
 }
 
+QHexDocument* QHexDocument::fromBuffer(QHexBuffer* buffer, QObject* parent) { return new QHexDocument(buffer, parent); }
+
 QHexDocument* QHexDocument::fromLargeFile(QString filename, QObject *parent)
 {
     QFile* f = new QFile(filename);
