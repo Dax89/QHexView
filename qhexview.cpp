@@ -68,10 +68,12 @@ QRectF QHexView::headerRect() const
 
 QRectF QHexView::addressRect() const
 {
+    qreal y = m_options.hasFlag(QHexFlags::NoHeader) ? 0 : this->lineHeight();
+
     return QRectF(0,
-                  m_options.hasFlag(QHexFlags::NoHeader) ? 0 : this->lineHeight(),
+                  y,
                   this->endColumnX(),
-                  this->lineHeight());
+                  this->height() - y);
 }
 
 QRectF QHexView::hexRect() const
