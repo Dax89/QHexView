@@ -334,9 +334,9 @@ void QHexView::checkState()
 
     static int oldmw = 0;
     if(!oldmw) oldmw = this->maximumWidth();
-    this->setMaximumWidth(m_autowidth ? std::ceil(this->endColumnX() + vw) : oldmw);
+    this->setMaximumWidth(m_autowidth ? std::ceil(this->endColumnX() + vw + 3) : oldmw);
 
-    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw));
+    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw + 3));
     this->horizontalScrollBar()->setPageStep(this->width());
     this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(std::floor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
 }
