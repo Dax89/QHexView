@@ -114,6 +114,7 @@ void QHexCursor::selectSize(qint64 length)
 {
     if(length > 0) length--;
     else if(length < 0) length++;
+    else return;
     this->select(this->offset() + length);
 }
 
