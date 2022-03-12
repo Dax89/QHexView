@@ -116,13 +116,13 @@ void QHexCursor::selectSize(qint64 length)
 
     if(length > 0)
     {
-        for(qint64 i = 0; i < length; i++)
+        for(qint64 i = 0; i < length - 1; i++)
         {
             pos.column++;
 
             if(pos.column >= m_options->linelength)
             {
-                //TODO: Check if line == EOF
+                if(pos.line + 1 > this->hexView()->lastLine()) break;
                 pos.line++;
                 pos.column = 0;
             }
@@ -130,13 +130,13 @@ void QHexCursor::selectSize(qint64 length)
     }
     else if(length < 0)
     {
-        for(qint64 i = length; i-- > 0; )
+        for(qint64 i = length - 1; i-- > 0; )
         {
             pos.column--;
 
             if(pos.column <= 0)
             {
-                //TODO: Check if line == 0
+                if(pos.line - 1 < 0) break;
                 pos.line--;
                 pos.column = m_options->linelength - 1;
             }
