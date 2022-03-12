@@ -112,40 +112,9 @@ void QHexCursor::select(HexPosition pos)
 
 void QHexCursor::selectSize(qint64 length)
 {
-    HexPosition pos = m_position;
-
-    if(length > 0)
-    {
-        for(qint64 i = 0; i < length - 1; i++)
-        {
-            pos.column++;
-
-            if(pos.column >= m_options->linelength)
-            {
-                if(pos.line + 1 > this->hexView()->lastLine()) break;
-                pos.line++;
-                pos.column = 0;
-            }
-        }
-    }
-    else if(length < 0)
-    {
-        for(qint64 i = length - 1; i-- > 0; )
-        {
-            pos.column--;
-
-            if(pos.column <= 0)
-            {
-                if(pos.line - 1 < 0) break;
-                pos.line--;
-                pos.column = m_options->linelength - 1;
-            }
-        }
-    }
-    else
-        return;
-
-    this->select(pos);
+    if(length > 0) length--;
+    else if(length < 0) length++;
+    this->select(this->offset() + length);
 }
 
 qint64 QHexCursor::find(const QByteArray& ba, HexFindDirection fd) const { return this->hexView()->find(ba, fd); }
