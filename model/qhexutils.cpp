@@ -1,5 +1,6 @@
 #include "qhexutils.h"
 #include "qhexoptions.h"
+#include "../qhexview.h"
 #include <array>
 
 namespace QHexUtils {
@@ -26,5 +27,40 @@ QByteArray toHex(const QByteArray& ba, char sep)
 QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
 qint64 positionToOffset(const QHexOptions* options, HexPosition pos) { return options->linelength * pos.line + pos.column; }
 HexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
+
+std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, HexFindMode mode, HexFindDirection fd)
+{
+    QByteArray v;
+
+    switch(mode)
+    {
+        case HexFindMode::Text: {
+            if(value.type() == QVariant::String) v = value.toString().toUtf8();
+            else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
+            else return {-1, 0};
+            break;
+        }
+
+        case HexFindMode::Hex: {
+            if(value.type() == QVariant::String) v = value.toString().toUtf8();
+            else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
+            else return {-1, 0};
+            break;
+        }
+
+        default: return {-1, 0};
+    }
+
+    QHexDocument* hexdocument = hexview->hexDocument();
+    QHexCursor* hexcursor = hexview->hexCursor();
+
+    qint64 startpos = 0;
+    if(fd != HexFindDirection::All) startpos = hexcursor->hasSelection() ? hexcursor->selectionStartOffset() : hexcursor->offset();
+
+    qint64 offset = fd == HexFindDirection::Backward ? hexdocument->lastIndexOf(v, startpos) :
+                                                       hexdocument->indexOf(v, startpos);
+
+    return {offset, offset > -1 ? v.size() : 0};
+}
 
 }

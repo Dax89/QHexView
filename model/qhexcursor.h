@@ -41,7 +41,7 @@ class QHexCursor : public QObject
         void select(qint64 line, qint64 column);
         void select(HexPosition pos);
         void selectSize(qint64 length);
-        qint64 find(const QByteArray &ba, HexFindDirection fd = HexFindDirection::Forward) const;
+        qint64 find(const QVariant& value, HexFindMode mode = HexFindMode::Text, HexFindDirection fd = HexFindDirection::Forward) const;
         qint64 positionToOffset(HexPosition pos) const;
         HexPosition offsetToPosition(qint64 offset) const;
 

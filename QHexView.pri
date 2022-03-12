@@ -1,5 +1,7 @@
 QT += widgets
 
+DEFINES += "QHEXVIEW_ENABLE_DIALOGS=1"
+
 HEADERS += $$PWD/model/commands/hexcommand.h \
            $$PWD/model/commands/insertcommand.h \
            $$PWD/model/commands/removecommand.h \
@@ -15,6 +17,7 @@ HEADERS += $$PWD/model/commands/hexcommand.h \
            $$PWD/model/qhexmetadata.h \
            $$PWD/model/qhexoptions.h \
            $$PWD/model/qhexdocument.h \
+           $$PWD/dialogs/hexfinddialog.h \
            $$PWD/qhexview.h
 
 SOURCES += $$PWD/model/commands/hexcommand.cpp \
@@ -31,6 +34,7 @@ SOURCES += $$PWD/model/commands/hexcommand.cpp \
            $$PWD/model/qhexcursor.cpp \
            $$PWD/model/qhexmetadata.cpp \
            $$PWD/model/qhexdocument.cpp \
+           $$PWD/dialogs/hexfinddialog.cpp \
            $$PWD/qhexview.cpp
 
 INCLUDEPATH += $$PWD

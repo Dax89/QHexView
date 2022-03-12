@@ -11,6 +11,10 @@
 #include "model/qhexdocument.h"
 #include "model/qhexcursor.h"
 
+#if defined(QHEXVIEW_ENABLE_DIALOGS)
+class HexFindDialog;
+#endif
+
 class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
@@ -41,7 +45,7 @@ class QHexView : public QAbstractScrollArea
         quint64 selectionEndOffset() const;
         quint64 baseAddress() const;
         quint64 lines() const;
-        qint64 find(const QByteArray &ba, HexFindDirection fd = HexFindDirection::Forward) const;
+        qint64 find(const QVariant& value, HexFindMode mode = HexFindMode::Text, HexFindDirection fd = HexFindDirection::Forward) const;
         void setOptions(const QHexOptions& options);
         void setBaseAddress(quint64 baseaddress);
         void setDelegate(QHexDelegate* rd);
@@ -68,6 +72,10 @@ class QHexView : public QAbstractScrollArea
         void clearMetadata();
 
     public Q_SLOTS:
+#if defined(QHEXVIEW_ENABLE_DIALOGS)
+        void showFind();
+        void showReplace();
+#endif
         void undo();
         void redo();
         void cut(bool hex = false);
@@ -145,7 +153,11 @@ class QHexView : public QAbstractScrollArea
         QHexDocument* m_hexdocument{nullptr};
         QHexMetadata* m_hexmetadata{nullptr};
         QHexDelegate* m_hexdelegate{nullptr};
+#if defined(QHEXVIEW_ENABLE_DIALOGS)
+        HexFindDialog* m_hexdlgfind{nullptr};
+#endif
 
     friend class QHexDelegate;
+    friend class QHexCursor;
 };
 

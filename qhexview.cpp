@@ -18,6 +18,10 @@
 #include <cctype>
 #include <cmath>
 
+#if defined(QHEXVIEW_ENABLE_DIALOGS)
+    #include "dialogs/hexfinddialog.h"
+#endif
+
 #if defined(QHEXVIEW_DEBUG)
     #include <QDebug>
     #define qhexview_fmtprint(fmt, ...) qDebug("%s " fmt, __func__, __VA_ARGS__)
@@ -195,6 +199,20 @@ void QHexView::removeForeground(qint64 line) { m_hexmetadata->removeForeground(l
 void QHexView::removeComments(qint64 line) { m_hexmetadata->removeComments(line); }
 void QHexView::unhighlight(qint64 line) { m_hexmetadata->unhighlight(line); }
 void QHexView::clearMetadata() { m_hexmetadata->clear(); }
+
+#if defined(QHEXVIEW_ENABLE_DIALOGS)
+void QHexView::showFind()
+{
+    if(!m_hexdlgfind) m_hexdlgfind = new HexFindDialog(this);
+    m_hexdlgfind->show();
+}
+
+void QHexView::showReplace()
+{
+
+}
+#endif
+
 void QHexView::undo() { if(m_hexdocument) m_hexdocument->undo(); }
 void QHexView::redo() { if(m_hexdocument) m_hexdocument->redo(); }
 
@@ -640,27 +658,17 @@ quint64 QHexView::lines() const
     return !m_hexdocument->isEmpty() && !lines ? 1 : lines;
 }
 
-qint64 QHexView::find(const QByteArray& ba, HexFindDirection fd) const
+qint64 QHexView::find(const QVariant& value, HexFindMode mode, HexFindDirection fd) const
 {
-    qint64 startpos = -1;
+    auto res = QHexUtils::find(this, value, mode, fd);
 
-    if(m_hexcursor->hasSelection()) startpos = m_hexcursor->selectionStartOffset();
-    else startpos = m_hexcursor->offset();
-
-    if(fd == HexFindDirection::Backward) startpos--;
-    if(startpos < 0) return -1;
-
-    auto offset = fd == HexFindDirection::Forward ? m_hexdocument->indexOf(ba, startpos) :
-                                                    m_hexdocument->lastIndexOf(ba, startpos);
-
-    if(offset > -1)
+    if(res.first > -1)
     {
-        m_hexcursor->clearSelection();
-        m_hexcursor->move(offset);
-        m_hexcursor->select(ba.length());
+        m_hexcursor->move(res.first);
+        m_hexcursor->selectSize(res.second);
     }
 
-    return offset;
+    return res.first;
 }
 
 qreal QHexView::hexColumnX() const { return this->getNCellsWidth(this->addressWidth() + 2); }

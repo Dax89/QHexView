@@ -19,8 +19,6 @@ class QHexDocument: public QObject
 
     private:
         explicit QHexDocument(QHexBuffer* buffer, QObject *parent = nullptr);
-        qint64 indexOf(const QByteArray& ba, qint64 from = 0);
-        qint64 lastIndexOf(const QByteArray& ba, qint64 from = 0);
 
     public:
         bool isEmpty() const;
@@ -29,6 +27,8 @@ class QHexDocument: public QObject
         void setData(const QByteArray& ba);
         void setData(QHexBuffer* buffer);
         qint64 length() const;
+        qint64 indexOf(const QByteArray& ba, qint64 from = 0);
+        qint64 lastIndexOf(const QByteArray& ba, qint64 from = 0);
         QByteArray read(qint64 offset, int len = 0) const;
         uchar at(int offset) const;
 
