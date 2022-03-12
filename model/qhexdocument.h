@@ -29,7 +29,6 @@ class QHexDocument: public QObject
         void setData(const QByteArray& ba);
         void setData(QHexBuffer* buffer);
         qint64 length() const;
-        qint64 find(const QByteArray &ba, FindDirection fd = FindDirection::Forward) const;
         QByteArray read(qint64 offset, int len = 0) const;
         uchar at(int offset) const;
 
