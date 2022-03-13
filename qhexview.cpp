@@ -451,7 +451,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     if(m_hexdelegate) hexlabel = m_hexdelegate->hexHeader(this);
     if(hexlabel.isEmpty()) hexlabel = m_options.hexlabel;
 
-    if(hexlabel.isEmpty())
+    if(hexlabel.isNull())
     {
         c.insertText(" ", { });
 
@@ -488,7 +488,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     if(m_hexdelegate) asciilabel = m_hexdelegate->asciiHeader(this);
     if(asciilabel.isEmpty()) asciilabel = m_options.asciilabel;
 
-    if(asciilabel.isEmpty())
+    if(asciilabel.isNull())
     {
         c.insertText(" ", { });
 
