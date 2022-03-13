@@ -442,7 +442,7 @@ void QHexView::drawHeader(QTextCursor& c) const
 
     QTextCharFormat cf;
     RESET_FORMAT(m_options, cf);
-    if(m_hexdelegate) m_hexdelegate->renderHeaderPart(addresslabel, HexArea::Address, cf, this);
+    if(m_hexdelegate) m_hexdelegate->renderHeaderPart(addresslabel, QHexArea::Address, cf, this);
     c.insertText(" " + QHexView::reduced(addresslabel, this->addressWidth()) + " ", cf);
 
     if(m_hexdelegate) RESET_FORMAT(m_options, cf);
@@ -462,7 +462,7 @@ void QHexView::drawHeader(QTextCursor& c) const
             if(m_hexdelegate)
             {
                 RESET_FORMAT(m_options, cf);
-                m_hexdelegate->renderHeaderPart(h, HexArea::Hex, cf, this);
+                m_hexdelegate->renderHeaderPart(h, QHexArea::Hex, cf, this);
             }
 
             if(m_hexcursor->column() == static_cast<qint64>(i) && m_options.hasFlag(QHexFlags::HighlightColumn))
@@ -478,7 +478,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     }
     else
     {
-        if(m_hexdelegate) m_hexdelegate->renderHeaderPart(hexlabel, HexArea::Hex, cf, this);
+        if(m_hexdelegate) m_hexdelegate->renderHeaderPart(hexlabel, QHexArea::Hex, cf, this);
         c.insertText(" " + QHexView::reduced(hexlabel, (this->hexColumnWidth() / this->cellWidth()) - 1) + " ");
     }
 
@@ -499,7 +499,7 @@ void QHexView::drawHeader(QTextCursor& c) const
             if(m_hexdelegate)
             {
                 RESET_FORMAT(m_options, cf);
-                m_hexdelegate->renderHeaderPart(a, HexArea::Ascii, cf, this);
+                m_hexdelegate->renderHeaderPart(a, QHexArea::Ascii, cf, this);
             }
 
             if(m_hexcursor->column() == static_cast<qint64>(i) && m_options.hasFlag(QHexFlags::HighlightColumn))
@@ -516,7 +516,7 @@ void QHexView::drawHeader(QTextCursor& c) const
     }
     else
     {
-        if(m_hexdelegate) m_hexdelegate->renderHeaderPart(asciilabel, HexArea::Ascii, cf, this);
+        if(m_hexdelegate) m_hexdelegate->renderHeaderPart(asciilabel, QHexArea::Ascii, cf, this);
         c.insertText(" " + QHexView::reduced(asciilabel, ((this->endColumnX() - this->asciiColumnX() - this->cellWidth()) / this->cellWidth()) - 1) + " ");
     }
 
@@ -571,7 +571,7 @@ void QHexView::drawDocument(QTextCursor& c) const
             {
                 QString s = linebytes.isEmpty() || column >= static_cast<qint64>(linebytes.size()) ? "  " : QString(QHexUtils::toHex(linebytes.mid(column, 1)).toUpper());
                 quint8 b = static_cast<int>(column) < linebytes.size() ? linebytes.at(column) : 0x00;
-                cf = this->drawFormat(c, b, s, HexArea::Hex, line, column, static_cast<int>(column) < linebytes.size());
+                cf = this->drawFormat(c, b, s, QHexArea::Hex, line, column, static_cast<int>(column) < linebytes.size());
             }
 
             c.insertText(" ", cf);
@@ -587,7 +587,7 @@ void QHexView::drawDocument(QTextCursor& c) const
                                                                        (std::isprint(static_cast<quint8>(linebytes.at(column))) ? QChar(linebytes.at(column)) : m_options.unprintablechar);
 
             quint8 b = static_cast<int>(column) < linebytes.size() ? linebytes.at(column) : 0x00;
-            this->drawFormat(c, b, s, HexArea::Ascii, line, column, static_cast<int>(column) < linebytes.size());
+            this->drawFormat(c, b, s, QHexArea::Ascii, line, column, static_cast<int>(column) < linebytes.size());
         }
 
         QTextBlockFormat bf;
@@ -643,9 +643,9 @@ bool QHexView::canUndo() const { return m_hexdocument && m_hexdocument->canUndo(
 bool QHexView::canRedo() const { return m_hexdocument && m_hexdocument->canRedo(); }
 quint64 QHexView::offset() const { return m_hexcursor->offset(); }
 quint64 QHexView::address() const { return m_hexcursor->address(); }
-HexPosition QHexView::position() const { return m_hexcursor->position(); }
-HexPosition QHexView::selectionStart() const { return m_hexcursor->selectionStart(); }
-HexPosition QHexView::selectionEnd() const { return m_hexcursor->selectionEnd(); }
+QHexPosition QHexView::position() const { return m_hexcursor->position(); }
+QHexPosition QHexView::selectionStart() const { return m_hexcursor->selectionStart(); }
+QHexPosition QHexView::selectionEnd() const { return m_hexcursor->selectionEnd(); }
 quint64 QHexView::selectionStartOffset() const { return m_hexcursor->selectionStartOffset(); }
 quint64 QHexView::selectionEndOffset() const { return m_hexcursor->selectionEndOffset(); }
 quint64 QHexView::baseAddress() const { return m_options.baseaddress; }
@@ -658,9 +658,9 @@ quint64 QHexView::lines() const
     return !m_hexdocument->isEmpty() && !lines ? 1 : lines;
 }
 
-qint64 QHexView::find(const QVariant& value, HexFindMode mode, HexFindDirection fd) const
+qint64 QHexView::find(const QVariant& value, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const
 {
-    auto res = QHexUtils::find(this, value, mode, fd);
+    auto res = QHexUtils::find(this, value, mode, options, fd);
 
     if(res.first > -1)
     {
@@ -687,14 +687,14 @@ qreal QHexView::cellWidth() const
 
 qreal QHexView::lineHeight() const { return m_fontmetrics.height(); }
 
-HexPosition QHexView::positionFromPoint(QPoint pt) const
+QHexPosition QHexView::positionFromPoint(QPoint pt) const
 {
-    HexPosition pos = HexPosition::invalid();
+    QHexPosition pos = QHexPosition::invalid();
     auto abspt = this->absolutePoint(pt);
 
     switch(this->areaFromPoint(pt))
     {
-        case HexArea::Hex: {
+        case QHexArea::Hex: {
             pos.column = -1;
 
             for(qint64 i = 0; i < m_hexcolumns.size(); i++) {
@@ -705,9 +705,9 @@ HexPosition QHexView::positionFromPoint(QPoint pt) const
             break;
         }
 
-        case HexArea::Ascii: pos.column = std::max<qint64>(std::floor((abspt.x() - this->asciiColumnX()) / this->cellWidth()) - 1, 0); break;
-        case HexArea::Address: pos.column = 0; break;
-        case HexArea::Header: return HexPosition::invalid();
+        case QHexArea::Ascii: pos.column = std::max<qint64>(std::floor((abspt.x() - this->asciiColumnX()) / this->cellWidth()) - 1, 0); break;
+        case QHexArea::Address: pos.column = 0; break;
+        case QHexArea::Header: return QHexPosition::invalid();
         default: break;
     }
 
@@ -723,22 +723,22 @@ HexPosition QHexView::positionFromPoint(QPoint pt) const
 
 QPoint QHexView::absolutePoint(QPoint pt) const { return pt + QPoint(this->horizontalScrollBar()->value(), 0); }
 
-HexArea QHexView::areaFromPoint(QPoint pt) const
+QHexArea QHexView::areaFromPoint(QPoint pt) const
 {
     pt = this->absolutePoint(pt);
     qreal line = this->verticalScrollBar()->value() + pt.y() / this->lineHeight();
 
-    if(!m_options.hasFlag(QHexFlags::NoHeader) && !std::floor(line)) return HexArea::Header;
-    if(pt.x() < this->hexColumnX()) return HexArea::Address;
-    if(pt.x() < this->asciiColumnX()) return HexArea::Hex;
-    if(pt.x() < this->endColumnX()) return HexArea::Ascii;
-    return HexArea::Extra;
+    if(!m_options.hasFlag(QHexFlags::NoHeader) && !std::floor(line)) return QHexArea::Header;
+    if(pt.x() < this->hexColumnX()) return QHexArea::Address;
+    if(pt.x() < this->asciiColumnX()) return QHexArea::Hex;
+    if(pt.x() < this->endColumnX()) return QHexArea::Ascii;
+    return QHexArea::Extra;
 }
 
-QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, HexArea area, qint64 line, qint64 column, bool applyformat) const
+QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s, QHexArea area, qint64 line, qint64 column, bool applyformat) const
 {
     QTextCharFormat cf, selcf;
-    HexPosition pos{line, column};
+    QHexPosition pos{line, column};
 
     if(applyformat)
     {
@@ -941,7 +941,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
 
     switch(m_currentarea)
     {
-        case HexArea::Hex: {
+        case QHexArea::Hex: {
             if(!std::isxdigit(key)) return false;
 
             bool ok = false;
@@ -962,7 +962,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
             break;
         }
 
-        case HexArea::Ascii: {
+        case QHexArea::Ascii: {
             if(!std::isprint(key)) return false;
             m_hexcursor->removeSelection();
             if(m_hexcursor->mode() == QHexCursor::Mode::Insert) m_hexdocument->insert(m_hexcursor->offset(), key);
@@ -984,9 +984,9 @@ bool QHexView::keyPressAction(QKeyEvent* e)
         if(e->matches(QKeySequence::SelectAll)) this->selectAll();
         else if(!m_readonly && e->matches(QKeySequence::Undo)) this->undo();
         else if(!m_readonly && e->matches(QKeySequence::Redo)) this->redo();
-        else if(!m_readonly && e->matches(QKeySequence::Cut)) this->cut(m_currentarea != HexArea::Ascii);
-        else if(e->matches(QKeySequence::Copy)) this->copy(m_currentarea != HexArea::Ascii);
-        else if(!m_readonly && e->matches(QKeySequence::Paste)) this->paste(m_currentarea != HexArea::Ascii);
+        else if(!m_readonly && e->matches(QKeySequence::Cut)) this->cut(m_currentarea != QHexArea::Ascii);
+        else if(e->matches(QKeySequence::Copy)) this->copy(m_currentarea != QHexArea::Ascii);
+        else if(!m_readonly && e->matches(QKeySequence::Paste)) this->paste(m_currentarea != QHexArea::Ascii);
         else return false;
 
         return true;
@@ -1038,7 +1038,7 @@ bool QHexView::event(QEvent* e)
             return true;
 
         case QEvent::ToolTip: {
-            if(m_hexdocument && (m_currentarea == HexArea::Hex || m_currentarea == HexArea::Ascii)) {
+            if(m_hexdocument && (m_currentarea == QHexArea::Hex || m_currentarea == QHexArea::Ascii)) {
                 auto* helpevent = static_cast<QHelpEvent*>(e);
                 auto pos = this->positionFromPoint(helpevent->pos());
                 auto comment = m_hexmetadata->getComment(pos.line, pos.column);
@@ -1101,9 +1101,9 @@ void QHexView::mousePressEvent(QMouseEvent* e)
 
     switch(area)
     {
-        case HexArea::Address: this->hexCursor()->move(pos.line, 0); break;
-        case HexArea::Hex: m_currentarea = area; this->hexCursor()->move(pos); break;
-        case HexArea::Ascii: m_currentarea = area; this->hexCursor()->move(pos.line, pos.column); break;
+        case QHexArea::Address: this->hexCursor()->move(pos.line, 0); break;
+        case QHexArea::Hex: m_currentarea = area; this->hexCursor()->move(pos); break;
+        case QHexArea::Ascii: m_currentarea = area; this->hexCursor()->move(pos.line, pos.column); break;
         default: return;
     }
 
@@ -1120,8 +1120,8 @@ void QHexView::mouseMoveEvent(QMouseEvent* e)
 
     switch(area)
     {
-        case HexArea::Header: this->viewport()->setCursor(Qt::ArrowCursor); return;
-        case HexArea::Address: this->viewport()->setCursor(Qt::ArrowCursor); break;
+        case QHexArea::Header: this->viewport()->setCursor(Qt::ArrowCursor); return;
+        case QHexArea::Address: this->viewport()->setCursor(Qt::ArrowCursor); break;
         default: this->viewport()->setCursor(Qt::IBeamCursor); break;
     }
 
@@ -1129,7 +1129,7 @@ void QHexView::mouseMoveEvent(QMouseEvent* e)
     {
         auto pos = this->positionFromPoint(e->pos());
         if(!pos.isValid()) return;
-        if(area == HexArea::Ascii || area == HexArea::Hex) m_currentarea = area;
+        if(area == QHexArea::Ascii || area == QHexArea::Hex) m_currentarea = area;
         this->hexCursor()->select(pos);
     }
 }

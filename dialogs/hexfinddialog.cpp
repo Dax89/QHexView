@@ -38,10 +38,10 @@ HexFindDialog::HexFindDialog(QHexView *parent) : QDialog{parent}
 
     auto* cbfindmode = new QComboBox(this);
     cbfindmode->setObjectName(HexFindDialog::CBFINDMODE);
-    cbfindmode->addItem("Text", static_cast<int>(HexFindMode::Text));
-    cbfindmode->addItem("Hex", static_cast<int>(HexFindMode::Hex));
-    cbfindmode->addItem("Int", static_cast<int>(HexFindMode::Int));
-    cbfindmode->addItem("Float", static_cast<int>(HexFindMode::Float));
+    cbfindmode->addItem("Text", static_cast<int>(QHexFindMode::Text));
+    cbfindmode->addItem("Hex", static_cast<int>(QHexFindMode::Hex));
+    cbfindmode->addItem("Int", static_cast<int>(QHexFindMode::Int));
+    cbfindmode->addItem("Float", static_cast<int>(QHexFindMode::Float));
 
     auto* lefind = new QLineEdit(this);
     lefind->setObjectName(HexFindDialog::LEFIND);
@@ -103,15 +103,20 @@ QHexView* HexFindDialog::hexView() const { return qobject_cast<QHexView*>(this->
 
 void HexFindDialog::updateFindOptions(int)
 {
-    static const std::array<std::pair<QString, int>, 8> INT_TYPES = {
-        std::make_pair("s8", -8), std::make_pair("s16", -16),
-        std::make_pair("s32", -32), std::make_pair("s64", -64),
-        std::make_pair("u8", 8), std::make_pair("u16", 16),
-        std::make_pair("u32", 32), std::make_pair("u64", 64)
+    static const std::array<std::pair<QString, unsigned int>, 8> INT_TYPES = {
+        std::make_pair("s8",  QHexFindOptions::SignedInt8),
+        std::make_pair("s16", QHexFindOptions::SignedInt16),
+        std::make_pair("s32", QHexFindOptions::SignedInt32),
+        std::make_pair("s64", QHexFindOptions::SignedInt64),
+        std::make_pair("u8",  QHexFindOptions::Int8),
+        std::make_pair("u16", QHexFindOptions::Int16),
+        std::make_pair("u32", QHexFindOptions::Int32),
+        std::make_pair("u64", QHexFindOptions::Int64)
     };
 
-    static const std::array<std::pair<QString, int>, 2> FLOAT_TYPES = {
-        std::make_pair("float", 4),  std::make_pair("double", 8)
+    static const std::array<std::pair<QString, unsigned int>, 2> FLOAT_TYPES = {
+        std::make_pair("float",  QHexFindOptions::Float),
+        std::make_pair("double", QHexFindOptions::Double)
     };
 
     QGroupBox* gboptions = this->findChild<QGroupBox*>(HexFindDialog::GBOPTIONS);
@@ -121,28 +126,36 @@ void HexFindDialog::updateFindOptions(int)
     lefind->clear();
 
     bool ok = false;
-    HexFindMode mode = static_cast<HexFindMode>(this->findChild<QComboBox*>(HexFindDialog::CBFINDMODE)->currentData().toInt(&ok));
+    QHexFindMode mode = static_cast<QHexFindMode>(this->findChild<QComboBox*>(HexFindDialog::CBFINDMODE)->currentData().toInt(&ok));
     if(!ok) return;
 
     QVBoxLayout* vlayout = qobject_cast<QVBoxLayout*>(gboptions->layout());
 
+    m_findoptions = QHexFindOptions::None;
+
     switch(mode)
     {
-        case HexFindMode::Text: {
+        case QHexFindMode::Text: {
             lefind->setValidator(nullptr);
             auto* cbcasesensitive = new QCheckBox("Case sensitive", gboptions);
+
+            connect(cbcasesensitive, &QCheckBox::stateChanged, this, [this](int state) {
+                if(state == Qt::Checked) m_findoptions |= QHexFindOptions::CaseSensitive;
+                else m_findoptions &= ~QHexFindOptions::CaseSensitive;
+            });
+
             vlayout->addWidget(cbcasesensitive);
             gboptions->setVisible(true);
             break;
         }
 
-        case HexFindMode::Hex: {
+        case QHexFindMode::Hex: {
             lefind->setValidator(m_hexvalidator);
             gboptions->setVisible(false);
             break;
         }
 
-        case HexFindMode::Int: {
+        case QHexFindMode::Int: {
             lefind->setValidator(nullptr);
 
             auto* cbbits = new QComboBox();
@@ -156,7 +169,7 @@ void HexFindDialog::updateFindOptions(int)
             break;
         }
 
-        case HexFindMode::Float: {
+        case QHexFindMode::Float: {
             lefind->setValidator(nullptr);
 
             bool first = true;
@@ -187,13 +200,13 @@ void HexFindDialog::validateFind()
 void HexFindDialog::find()
 {
     QString q = this->findChild<QLineEdit*>(HexFindDialog::LEFIND)->text();
-    HexFindMode mode = static_cast<HexFindMode>(this->findChild<QComboBox*>(HexFindDialog::CBFINDMODE)->currentData().toUInt());
+    QHexFindMode mode = static_cast<QHexFindMode>(this->findChild<QComboBox*>(HexFindDialog::CBFINDMODE)->currentData().toUInt());
 
-    HexFindDirection fd;
-    if(this->findChild<QRadioButton*>(HexFindDialog::RBBACKWARD)->isChecked()) fd = HexFindDirection::Backward;
-    else if(this->findChild<QRadioButton*>(HexFindDialog::RBFORWARD)->isChecked()) fd = HexFindDirection::Forward;
-    else fd = HexFindDirection::All;
+    QHexFindDirection fd;
+    if(this->findChild<QRadioButton*>(HexFindDialog::RBBACKWARD)->isChecked()) fd = QHexFindDirection::Backward;
+    else if(this->findChild<QRadioButton*>(HexFindDialog::RBFORWARD)->isChecked()) fd = QHexFindDirection::Forward;
+    else fd = QHexFindDirection::All;
 
-    auto offset = this->hexView()->hexCursor()->find(q, mode, fd);
+    auto offset = this->hexView()->hexCursor()->find(q, mode, m_findoptions, fd);
     if(offset == -1) QMessageBox::information(this, tr("Not found"), tr("Cannot find '%1'").arg(q));
 }

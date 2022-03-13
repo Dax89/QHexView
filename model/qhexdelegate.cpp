@@ -35,7 +35,7 @@ void QHexDelegate::renderHeader(QTextBlockFormat& bf, const QHexView* hexview) c
     Q_UNUSED(hexview);
 }
 
-void QHexDelegate::renderHeaderPart(const QString& s, HexArea area, QTextCharFormat& cf, const QHexView* hexview) const
+void QHexDelegate::renderHeaderPart(const QString& s, QHexArea area, QTextCharFormat& cf, const QHexView* hexview) const
 {
     Q_UNUSED(s);
     Q_UNUSED(area);

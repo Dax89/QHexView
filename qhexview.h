@@ -38,14 +38,14 @@ class QHexView : public QAbstractScrollArea
         bool canRedo() const;
         quint64 offset() const;
         quint64 address() const;
-        HexPosition position() const;
-        HexPosition selectionStart() const;
-        HexPosition selectionEnd() const;
+        QHexPosition position() const;
+        QHexPosition selectionStart() const;
+        QHexPosition selectionEnd() const;
         quint64 selectionStartOffset() const;
         quint64 selectionEndOffset() const;
         quint64 baseAddress() const;
         quint64 lines() const;
-        qint64 find(const QVariant& value, HexFindMode mode = HexFindMode::Text, HexFindDirection fd = HexFindDirection::Forward) const;
+        qint64 find(const QVariant& value, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
         void setOptions(const QHexOptions& options);
         void setBaseAddress(quint64 baseaddress);
         void setDelegate(QHexDelegate* rd);
@@ -101,7 +101,7 @@ class QHexView : public QAbstractScrollArea
         void drawSeparators(QPainter* p) const;
         void drawHeader(QTextCursor& c) const;
         void drawDocument(QTextCursor& c) const;
-        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, HexArea area, qint64 line, qint64 column, bool applyformat) const;
+        QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s, QHexArea area, qint64 line, qint64 column, bool applyformat) const;
         unsigned int calcAddressWidth() const;
         int visibleLines(bool absolute = false) const;
         qint64 getLastColumn(qint64 line) const;
@@ -113,9 +113,9 @@ class QHexView : public QAbstractScrollArea
         qreal endColumnX() const;
         qreal cellWidth() const;
         qreal lineHeight() const;
-        HexPosition positionFromPoint(QPoint pt) const;
+        QHexPosition positionFromPoint(QPoint pt) const;
         QPoint absolutePoint(QPoint pt) const;
-        HexArea areaFromPoint(QPoint pt) const;
+        QHexArea areaFromPoint(QPoint pt) const;
         void moveNext(bool select = false);
         void movePrevious(bool select = false);
         bool keyPressMove(QKeyEvent* e);
@@ -145,7 +145,7 @@ class QHexView : public QAbstractScrollArea
 
     private:
         bool m_readonly{false}, m_writing{false}, m_autowidth{false};
-        HexArea m_currentarea{HexArea::Ascii};
+        QHexArea m_currentarea{QHexArea::Ascii};
         QList<QRectF> m_hexcolumns;
         QFontMetricsF m_fontmetrics;
         QHexOptions m_options;

@@ -24,7 +24,7 @@ qint64 QHexCursor::selectionEndOffset() const { return this->positionToOffset(th
 qint64 QHexCursor::line() const { return m_position.line; }
 qint64 QHexCursor::column() const { return m_position.column; }
 
-HexPosition QHexCursor::selectionStart() const
+QHexPosition QHexCursor::selectionStart() const
 {
     if(m_position.line < m_selection.line)
         return m_position;
@@ -38,7 +38,7 @@ HexPosition QHexCursor::selectionStart() const
     return m_selection;
 }
 
-HexPosition QHexCursor::selectionEnd() const
+QHexPosition QHexCursor::selectionEnd() const
 {
     if(m_position.line > m_selection.line)
         return m_position;
@@ -58,7 +58,7 @@ qint64 QHexCursor::selectionLength() const
     return selstart == selend ? 0 : selend - selstart + 1;
 }
 
-HexPosition QHexCursor::position() const { return m_position; }
+QHexPosition QHexCursor::position() const { return m_position; }
 QByteArray QHexCursor::selectedBytes() const { return this->hexView()->selectedBytes(); }
 bool QHexCursor::hasSelection() const { return m_position != m_selection; }
 
@@ -93,7 +93,7 @@ void QHexCursor::switchMode()
 void QHexCursor::move(qint64 offset) { this->move(this->offsetToPosition(offset)); }
 void QHexCursor::move(qint64 line, qint64 column) { return this->move({line, column}); }
 
-void QHexCursor::move(HexPosition pos)
+void QHexCursor::move(QHexPosition pos)
 {
     if(pos.line >= 0) m_selection.line = pos.line;
     if(pos.column >= 0) m_selection.column = pos.column;
@@ -103,7 +103,7 @@ void QHexCursor::move(HexPosition pos)
 void QHexCursor::select(qint64 offset) { this->select(this->offsetToPosition(offset)); }
 void QHexCursor::select(qint64 line, qint64 column) { this->select({line, column}); }
 
-void QHexCursor::select(HexPosition pos)
+void QHexCursor::select(QHexPosition pos)
 {
     if(pos.line >= 0) m_position.line = pos.line;
     if(pos.column >= 0) m_position.column = pos.column;
@@ -118,12 +118,12 @@ void QHexCursor::selectSize(qint64 length)
     this->select(this->offset() + length);
 }
 
-qint64 QHexCursor::find(const QVariant& value, HexFindMode mode, HexFindDirection fd) const { return this->hexView()->find(value, mode, fd); }
+qint64 QHexCursor::find(const QVariant& value, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const { return this->hexView()->find(value, mode, options, fd); }
 void QHexCursor::cut(bool hex) { this->hexView()->cut(hex); }
 void QHexCursor::copy(bool hex) const { this->hexView()->copy(hex); }
 void QHexCursor::paste(bool hex) { this->hexView()->paste(hex); }
 void QHexCursor::selectAll() { this->hexView()->selectAll(); }
 void QHexCursor::removeSelection() { this->hexView()->removeSelection(); }
 void QHexCursor::clearSelection() { m_position = m_selection; Q_EMIT positionChanged(); }
-qint64 QHexCursor::positionToOffset(HexPosition pos) const { return QHexUtils::positionToOffset(m_options, pos); }
-HexPosition QHexCursor::offsetToPosition(qint64 offset) const { return QHexUtils::offsetToPosition(m_options, offset); }
+qint64 QHexCursor::positionToOffset(QHexPosition pos) const { return QHexUtils::positionToOffset(m_options, pos); }
+QHexPosition QHexCursor::offsetToPosition(qint64 offset) const { return QHexUtils::offsetToPosition(m_options, offset); }

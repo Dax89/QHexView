@@ -27,23 +27,23 @@ class QHexCursor : public QObject
         qint64 selectionStartOffset() const;
         qint64 selectionEndOffset() const;
         qint64 selectionLength() const;
-        HexPosition position() const;
-        HexPosition selectionStart() const;
-        HexPosition selectionEnd() const;
+        QHexPosition position() const;
+        QHexPosition selectionStart() const;
+        QHexPosition selectionEnd() const;
         QByteArray selectedBytes() const;
         bool hasSelection() const;
         bool isSelected(qint64 line, qint64 column) const;
         void setMode(Mode m);
         void move(qint64 offset);
         void move(qint64 line, qint64 column);
-        void move(HexPosition pos);
+        void move(QHexPosition pos);
         void select(qint64 offset);
         void select(qint64 line, qint64 column);
-        void select(HexPosition pos);
+        void select(QHexPosition pos);
         void selectSize(qint64 length);
-        qint64 find(const QVariant& value, HexFindMode mode = HexFindMode::Text, HexFindDirection fd = HexFindDirection::Forward) const;
-        qint64 positionToOffset(HexPosition pos) const;
-        HexPosition offsetToPosition(qint64 offset) const;
+        qint64 find(const QVariant& value, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
+        qint64 positionToOffset(QHexPosition pos) const;
+        QHexPosition offsetToPosition(qint64 offset) const;
 
     public Q_SLOTS:
         void cut(bool hex = false);
@@ -61,7 +61,7 @@ class QHexCursor : public QObject
     private:
         const QHexOptions* m_options;
         Mode m_mode{Mode::Overwrite};
-        HexPosition m_position{}, m_selection{};
+        QHexPosition m_position{}, m_selection{};
 
     friend class QHexView;
 };

@@ -106,17 +106,46 @@ QByteArray toHex(const QByteArray& ba, char sep)
 }
 
 QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
-qint64 positionToOffset(const QHexOptions* options, HexPosition pos) { return options->linelength * pos.line + pos.column; }
-HexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
+qint64 positionToOffset(const QHexOptions* options, QHexPosition pos) { return options->linelength * pos.line + pos.column; }
+QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
 
-qint64 findDefault(const QByteArray& value, qint64 startoffset, const QHexView* hexview, HexFindDirection fd)
+qint64 findDefault(const QByteArray& value, qint64 startoffset, const QHexView* hexview, unsigned int options, QHexFindDirection fd)
 {
     QHexDocument* hexdocument = hexview->hexDocument();
-    return fd == HexFindDirection::Backward ? hexdocument->lastIndexOf(value, startoffset) : hexdocument->indexOf(value, startoffset);
+    if(value.size() > hexdocument->length()) return -1;
+
+    qint64 offset = -1;
+
+    for(auto i = fd == QHexFindDirection::Backward ? hexdocument->length() - 1 : startoffset;
+        offset == -1 && (fd == QHexFindDirection::Backward ? (i >= startoffset) : (i < hexdocument->length()));
+        fd == QHexFindDirection::Backward ? i-- : i++)
+    {
+        for(auto j = 0; j < value.size(); j++)
+        {
+            qint64 curroffset = i + j;
+            if(curroffset >= hexdocument->length()) return -1;
+
+            uchar ch1 = hexdocument->at(curroffset);
+            uchar ch2 = value.at(j);
+
+            if(!(options & QHexFindOptions::CaseSensitive))
+            {
+                ch1 = std::tolower(ch1);
+                ch2 = std::tolower(ch2);
+            }
+
+            if(ch1 != ch2) break;
+            if(j == value.size() - 1) offset = i;
+        }
+    }
+
+    return offset;
 }
 
-qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview)
+qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview, unsigned int options)
 {
+    Q_UNUSED(options);
+
     QHexDocument* hexdocument = hexview->hexDocument();
     int patternlen = 0, datasize = hexdocument->length();
     if(!Pattern::check(pattern, patternlen) || (patternlen > hexdocument->length())) return -1;
@@ -130,36 +159,36 @@ qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview)
     return -1;
 }
 
-std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, HexFindMode mode, HexFindDirection fd)
+std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
 {
     qint64 offset = -1, size = 0, startoffset = 0;
 
     QHexCursor* hexcursor = hexview->hexCursor();
-    if(fd != HexFindDirection::All) startoffset = hexcursor->hasSelection() ? hexcursor->selectionStartOffset() : hexcursor->offset();
+    if(fd != QHexFindDirection::All) startoffset = hexcursor->hasSelection() ? hexcursor->selectionStartOffset() : hexcursor->offset();
 
     switch(mode)
     {
-        case HexFindMode::Text: {
+        case QHexFindMode::Text: {
             QByteArray v;
 
             if(value.type() == QVariant::String) v = value.toString().toUtf8();
             else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
             else return {-1, 0};
 
-            offset = QHexUtils::findDefault(v, startoffset, hexview, fd);
+            offset = QHexUtils::findDefault(v, startoffset, hexview, options, fd);
             size = v.size();
             break;
         }
 
-        case HexFindMode::Hex: {
+        case QHexFindMode::Hex: {
             if(value.type() == QVariant::String) {
                 auto v = value.toString();
-                offset = QHexUtils::findPattern(v, startoffset, hexview);
-                size = v.size();
+                offset = QHexUtils::findPattern(v, startoffset, hexview, options);
+                size = v.size() / 2;
             }
             else if(value.type() == QVariant::ByteArray) {
                 auto v = value.toByteArray();
-                offset = QHexUtils::findDefault(v, startoffset, hexview, fd);
+                offset = QHexUtils::findDefault(v, startoffset, hexview, options, fd);
                 size = v.size();
             }
             else return {-1, 0};
