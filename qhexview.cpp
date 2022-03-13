@@ -658,9 +658,9 @@ quint64 QHexView::lines() const
     return !m_hexdocument->isEmpty() && !lines ? 1 : lines;
 }
 
-qint64 QHexView::find(const QVariant& value, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const
+qint64 QHexView::find(const QVariant& value, qint64 offset, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const
 {
-    auto res = QHexUtils::find(this, value, mode, options, fd);
+    auto res = QHexUtils::find(this, value, offset, mode, options, fd);
 
     if(res.first > -1)
     {

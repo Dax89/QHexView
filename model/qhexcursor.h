@@ -41,7 +41,7 @@ class QHexCursor : public QObject
         void select(qint64 line, qint64 column);
         void select(QHexPosition pos);
         void selectSize(qint64 length);
-        qint64 find(const QVariant& value, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
+        qint64 find(const QVariant& value, qint64 offset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
         qint64 positionToOffset(QHexPosition pos) const;
         QHexPosition offsetToPosition(qint64 offset) const;
 

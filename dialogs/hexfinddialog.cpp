@@ -207,6 +207,6 @@ void HexFindDialog::find()
     else if(this->findChild<QRadioButton*>(HexFindDialog::RBFORWARD)->isChecked()) fd = QHexFindDirection::Forward;
     else fd = QHexFindDirection::All;
 
-    auto offset = this->hexView()->hexCursor()->find(q, mode, m_findoptions, fd);
+    auto offset = this->hexView()->hexCursor()->find(q, this->hexView()->offset(), mode, m_findoptions, fd);
     if(offset == -1) QMessageBox::information(this, tr("Not found"), tr("Cannot find '%1'").arg(q));
 }

@@ -45,7 +45,7 @@ class QHexView : public QAbstractScrollArea
         quint64 selectionEndOffset() const;
         quint64 baseAddress() const;
         quint64 lines() const;
-        qint64 find(const QVariant& value, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
+        qint64 find(const QVariant& value, qint64 offset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
         void setOptions(const QHexOptions& options);
         void setBaseAddress(quint64 baseaddress);
         void setDelegate(QHexDelegate* rd);

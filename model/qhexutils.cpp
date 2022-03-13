@@ -148,23 +148,21 @@ qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview,
 
     QHexDocument* hexdocument = hexview->hexDocument();
     int patternlen = 0, datasize = hexdocument->length();
-    if(!Pattern::check(pattern, patternlen) || (patternlen > hexdocument->length())) return -1;
+    if(!Pattern::check(pattern, patternlen) || (patternlen >= hexdocument->length())) return -1;
 
     for(qint64 i = 0, offset = startoffset; offset < hexdocument->length() && datasize >= patternlen; i++, offset++, datasize--)
     {
         if(!datasize) break;
-        if(Pattern::match(hexdocument->read(offset, patternlen), pattern)) return i;
+        if(Pattern::match(hexdocument->read(offset, patternlen), pattern)) return offset;
     }
 
     return -1;
 }
 
-std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
+std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
 {
-    qint64 offset = -1, size = 0, startoffset = 0;
-
-    QHexCursor* hexcursor = hexview->hexCursor();
-    if(fd != QHexFindDirection::All) startoffset = hexcursor->hasSelection() ? hexcursor->selectionStartOffset() : hexcursor->offset();
+    qint64 offset = -1, size = 0;
+    if(startoffset == -1) startoffset = static_cast<qint64>(hexview->offset());
 
     switch(mode)
     {
