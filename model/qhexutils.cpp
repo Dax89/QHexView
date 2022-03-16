@@ -101,9 +101,9 @@ qint64 findIter(qint64 startoffset, QHexFindDirection fd, const QHexView* hexvie
     QHexFindDirection cfd = fd;
     if(cfd == QHexFindDirection::All) cfd = QHexFindDirection::Forward;
 
-    auto i = cfd == QHexFindDirection::Backward ? hexdocument->length() - 1 : startoffset;
+    qint64 i = startoffset;
 
-    while(offset == -1 && (cfd == QHexFindDirection::Backward ? (i >= startoffset) : (i < hexdocument->length())))
+    while(offset == -1 && (cfd == QHexFindDirection::Backward ? (i >= 0) : (i < hexdocument->length())))
     {
         if(!f(i, offset)) break;
 
