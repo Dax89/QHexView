@@ -808,10 +808,10 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
         if(offset < selend && column < this->getLastColumn(line)) selcf = cf;
     }
 
-    if(this->hasFocus() && this->hexCursor()->position() == pos)
+    if(this->hexCursor()->position() == pos)
     {
-        auto cursorbg = this->palette().color(QPalette::Normal, QPalette::WindowText);
-        auto cursorfg = this->palette().color(QPalette::Normal, QPalette::Base);
+        auto cursorbg = this->palette().color(this->hasFocus() ? QPalette::Normal : QPalette::Disabled, QPalette::WindowText);
+        auto cursorfg = this->palette().color(this->hasFocus() ? QPalette::Normal : QPalette::Disabled, QPalette::Base);
         auto discursorbg = this->palette().color(QPalette::Disabled, QPalette::WindowText);
         auto discursorfg = this->palette().color(QPalette::Disabled, QPalette::Base);
 
