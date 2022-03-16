@@ -114,8 +114,7 @@ void QHexCursor::selectSize(qint64 length)
 {
     if(length > 0) length--;
     else if(length < 0) length++;
-    else return;
-    this->select(this->offset() + length);
+    if(length) this->select(this->offset() + length);
 }
 
 qint64 QHexCursor::find(const QVariant& value, qint64 offset, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const { return this->hexView()->find(value, offset, mode, options, fd); }
