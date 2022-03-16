@@ -16,7 +16,7 @@ namespace Pattern {
 
 Q_GLOBAL_STATIC_WITH_ARGS(QString, WILDCARD_BYTE, ("??"))
 
-bool check(QString& p, int& len)
+bool check(QString& p, qint64& len)
 {
     static std::unordered_map<QString, std::pair<QString, size_t>> processed; // Cache processed patterns
 
@@ -72,23 +72,6 @@ bool match(const QByteArray& data, const QString& pattern)
     return true;
 }
 
-int find(const QByteArray& data, int datasize, QString pattern, size_t* patternlen)
-{
-    if(data.isEmpty() || !datasize) return -1;
-
-    int len = 0;
-    if(!Pattern::check(pattern, len) || (len > datasize)) return -1;
-    if(patternlen) *patternlen = len;
-
-    for(size_t i = 0; datasize >= len; i++, datasize--)
-    {
-        if(!datasize) break;
-        if(Pattern::match(i ? data.mid(i) : data, pattern)) return i;
-    }
-
-    return -1;
-}
-
 }
 
 QByteArray toHex(const QByteArray& ba, char sep)
@@ -109,54 +92,69 @@ QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
 qint64 positionToOffset(const QHexOptions* options, QHexPosition pos) { return options->linelength * pos.line + pos.column; }
 QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
 
-qint64 findDefault(const QByteArray& value, qint64 startoffset, const QHexView* hexview, unsigned int options, QHexFindDirection fd)
+template<typename Function>
+qint64 findIter(qint64 startoffset, QHexFindDirection fd, const QHexView* hexview, Function&& f)
 {
     QHexDocument* hexdocument = hexview->hexDocument();
-    if(value.size() > hexdocument->length()) return -1;
-
     qint64 offset = -1;
 
-    for(auto i = fd == QHexFindDirection::Backward ? hexdocument->length() - 1 : startoffset;
-        offset == -1 && (fd == QHexFindDirection::Backward ? (i >= startoffset) : (i < hexdocument->length()));
-        fd == QHexFindDirection::Backward ? i-- : i++)
+    QHexFindDirection cfd = fd;
+    if(cfd == QHexFindDirection::All) cfd = QHexFindDirection::Forward;
+
+    auto i = cfd == QHexFindDirection::Backward ? hexdocument->length() - 1 : startoffset;
+
+    while(offset == -1 && (cfd == QHexFindDirection::Backward ? (i >= startoffset) : (i < hexdocument->length())))
     {
-        for(auto j = 0; j < value.size(); j++)
-        {
-            qint64 curroffset = i + j;
-            if(curroffset >= hexdocument->length()) return -1;
+        if(!f(i, offset)) break;
 
-            uchar ch1 = hexdocument->at(curroffset);
-            uchar ch2 = value.at(j);
+        if(cfd == QHexFindDirection::Backward) i--;
+        else i++;
 
-            if(!(options & QHexFindOptions::CaseSensitive))
-            {
-                ch1 = std::tolower(ch1);
-                ch2 = std::tolower(ch2);
-            }
-
-            if(ch1 != ch2) break;
-            if(j == value.size() - 1) offset = i;
-        }
+        if(fd == QHexFindDirection::All && i >= hexdocument->length()) i = 0;
     }
 
     return offset;
 }
 
-qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview, unsigned int options)
+qint64 findDefault(const QByteArray& value, qint64 startoffset, const QHexView* hexview, unsigned int options, QHexFindDirection fd)
 {
-    Q_UNUSED(options);
-
     QHexDocument* hexdocument = hexview->hexDocument();
-    int patternlen = 0, datasize = hexdocument->length();
+    if(value.size() > hexdocument->length()) return -1;
+
+    return findIter(startoffset, fd, hexview, [options, value, hexdocument](qint64 idx, qint64& offset) -> bool {
+        for(auto i = 0; i < value.size(); i++) {
+            qint64 curroffset = idx + i;
+
+            if(curroffset >= hexdocument->length()) {
+                offset = -1;
+                return false;
+            }
+
+            uchar ch1 = hexdocument->at(curroffset);
+            uchar ch2 = value.at(i);
+
+            if(!(options & QHexFindOptions::CaseSensitive)) {
+                ch1 = std::tolower(ch1);
+                ch2 = std::tolower(ch2);
+            }
+
+            if(ch1 != ch2) break;
+            if(i == value.size() - 1) offset = idx;
+        }
+
+        return true;
+    });
+}
+
+qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview, QHexFindDirection fd, qint64& patternlen)
+{
+    QHexDocument* hexdocument = hexview->hexDocument();
     if(!Pattern::check(pattern, patternlen) || (patternlen >= hexdocument->length())) return -1;
 
-    for(qint64 i = 0, offset = startoffset; offset < hexdocument->length() && datasize >= patternlen; i++, offset++, datasize--)
-    {
-        if(!datasize) break;
-        if(Pattern::match(hexdocument->read(offset, patternlen), pattern)) return offset;
-    }
-
-    return -1;
+    return findIter(startoffset, fd, hexview, [hexdocument, pattern, patternlen](qint64 idx, qint64& offset) -> bool {
+        if(Pattern::match(hexdocument->read(idx, patternlen), pattern)) offset = idx;
+        return true;
+    });
 }
 
 std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
@@ -180,9 +178,7 @@ std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 s
 
         case QHexFindMode::Hex: {
             if(value.type() == QVariant::String) {
-                auto v = value.toString();
-                offset = QHexUtils::findPattern(v, startoffset, hexview, options);
-                size = v.size() / 2;
+                offset = QHexUtils::findPattern(value.toString(), startoffset, hexview, fd, size);
             }
             else if(value.type() == QVariant::ByteArray) {
                 auto v = value.toByteArray();
