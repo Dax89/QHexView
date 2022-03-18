@@ -3,6 +3,8 @@
 #include <QDialog>
 
 class QRegularExpressionValidator;
+class QDoubleValidator;
+class QIntValidator;
 class QHexView;
 
 class HexFindDialog : public QDialog
@@ -19,7 +21,13 @@ class HexFindDialog : public QDialog
         void find();
 
     private:
+        bool validateIntRange(uint v) const;
+
+    private:
         QRegularExpressionValidator* m_hexvalidator;
+        QDoubleValidator* m_dblvalidator;
+        QIntValidator* m_intvalidator;
+        int m_oldidxbits{-1}, m_oldidxendian{-1};
         unsigned int m_findoptions{0};
         qint64 m_startoffset{-1};
 

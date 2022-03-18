@@ -19,12 +19,7 @@ namespace QHexFindOptions {
         Float         = (1 << 6),
         Double        = (1 << 7),
 
-        Signed        = (1 << 10),
-
-        SignedInt8    = Signed | Int8,
-        SignedInt16   = Signed | Int16,
-        SignedInt32   = Signed | Int32,
-        SignedInt64   = Signed | Int64,
+        BigEndian     = (1 << 11),
     };
 }
 
@@ -47,5 +42,6 @@ QByteArray toHex(const QByteArray& ba);
 qint64 positionToOffset(const QHexOptions* options, QHexPosition pos);
 QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward);
 QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset);
+bool checkPattern(QString pattern);
 
 }

@@ -2,8 +2,11 @@
 #include "qhexoptions.h"
 #include "../qhexview.h"
 #include <QGlobalStatic>
+#include <QDataStream>
+#include <QtEndian>
 #include <QList>
 #include <QHash>
+#include <limits>
 
 namespace QHexUtils {
 
@@ -91,6 +94,15 @@ QByteArray toHex(const QByteArray& ba, char sep)
 QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
 qint64 positionToOffset(const QHexOptions* options, QHexPosition pos) { return options->linelength * pos.line + pos.column; }
 QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
+
+unsigned int countBits(uint val)
+{
+    if(val <= std::numeric_limits<quint8>::max()) return QHexFindOptions::Int8;
+    if(val <= std::numeric_limits<quint16>::max()) return QHexFindOptions::Int16;
+    if(val <= std::numeric_limits<quint32>::max()) return QHexFindOptions::Int32;
+
+    return QHexFindOptions::Int64;
+}
 
 template<typename Function>
 qint64 findIter(qint64 startoffset, QHexFindDirection fd, const QHexView* hexview, Function&& f)
@@ -189,10 +201,44 @@ QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 start
             break;
         }
 
+        case QHexFindMode::Int: {
+            bool ok = false;
+            uint val = value.toUInt(&ok);
+            if(!ok) return {-1, 0};
+
+            QByteArray data;
+            QDataStream ds(&data, QIODevice::WriteOnly);
+
+            if(options & QHexFindOptions::BigEndian) {
+                if(options & QHexFindOptions::Int8) ds << qToBigEndian<quint8>(val);
+                else if(options & QHexFindOptions::Int16) ds << qToBigEndian<quint16>(val);
+                else if(options & QHexFindOptions::Int32) ds << qToBigEndian<quint32>(val);
+                else if(options & QHexFindOptions::Int64) ds << qToBigEndian<quint64>(val);
+                else return find(hexview, value, startoffset, mode, options | countBits(val), fd);
+            }
+            else {
+                if(options & QHexFindOptions::Int8) ds << static_cast<quint8>(val);
+                else if(options & QHexFindOptions::Int16) ds << static_cast<quint16>(val);
+                else if(options & QHexFindOptions::Int32) ds << static_cast<quint32>(val);
+                else if(options & QHexFindOptions::Int64) ds << static_cast<quint64>(val);
+                else return find(hexview, value, startoffset, mode, options | countBits(val), fd);
+            }
+
+            offset = QHexUtils::findDefault(data, startoffset, hexview, options, fd);
+            size = data.size();
+            break;
+        }
+
         default: return {-1, 0};
     }
 
     return {offset, offset > -1 ? size : 0};
+}
+
+bool checkPattern(QString pattern)
+{
+    qint64 len = 0;
+    return Pattern::check(pattern, len);
 }
 
 }
