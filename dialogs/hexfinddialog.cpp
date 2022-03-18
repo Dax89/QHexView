@@ -84,17 +84,16 @@ HexFindDialog::HexFindDialog(QHexView *parent) : QDialog{parent}
     auto* buttonbox = new QDialogButtonBox(this);
     buttonbox->setOrientation(Qt::Horizontal);
     buttonbox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
-    buttonbox->button(QDialogButtonBox::Ok)->setEnabled(false);
-
-    vlayout->addWidget(buttonbox);
-
     buttonbox->setObjectName(HexFindDialog::BUTTONBOX);
+    buttonbox->button(QDialogButtonBox::Ok)->setEnabled(false);
     buttonbox->button(QDialogButtonBox::Ok)->setText(tr("Find"));
+    vlayout->addWidget(buttonbox);
 
     connect(lefind, &QLineEdit::textChanged, this, &HexFindDialog::validateFind);
     connect(cbfindmode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &HexFindDialog::updateFindOptions);
     connect(buttonbox, &QDialogButtonBox::accepted, this, &HexFindDialog::find);
     connect(buttonbox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(parent, &QHexView::positionChanged, this, [this]() { m_startoffset = -1; });
 
     this->updateFindOptions(-1);
 }
@@ -207,6 +206,7 @@ void HexFindDialog::find()
     else if(this->findChild<QRadioButton*>(HexFindDialog::RBFORWARD)->isChecked()) fd = QHexFindDirection::Forward;
     else fd = QHexFindDirection::All;
 
-    auto offset = this->hexView()->hexCursor()->find(q, this->hexView()->offset(), mode, m_findoptions, fd);
+    auto offset = this->hexView()->hexCursor()->find(q, m_startoffset > -1 ? m_startoffset : this->hexView()->offset(), mode, m_findoptions, fd);
     if(offset == -1) QMessageBox::information(this, tr("Not found"), tr("Cannot find '%1'").arg(q));
+    else m_startoffset = this->hexView()->selectionEndOffset() + 1;
 }

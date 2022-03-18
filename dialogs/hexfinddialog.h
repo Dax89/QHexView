@@ -20,9 +20,10 @@ class HexFindDialog : public QDialog
 
     private:
         QRegularExpressionValidator* m_hexvalidator;
+        unsigned int m_findoptions{0};
+        qint64 m_startoffset{-1};
 
     private:
-        unsigned int m_findoptions{0};
         static const QString BUTTONBOX;
         static const QString CBFINDMODE;
         static const QString LEFIND;
