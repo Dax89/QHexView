@@ -9,8 +9,7 @@
 
 struct QHexMetadataItem
 {
-    qint64 begin;
-    qint64 end;
+    qint64 begin, end;
     QColor foreground, background;
     QString comment;
 };
@@ -49,7 +48,7 @@ class QHexMetadata : public QObject
 
     private:
         void copy(const QHexMetadata* metadata);
-        void clearMetadata(qint64 line, const ClearMetadataCallback& cb);
+        void clearMetadata(qint64 line, ClearMetadataCallback&& cb);
         void setMetadata(const QHexMetadataItem& mi);
         void invalidate();
 

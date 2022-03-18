@@ -4,10 +4,6 @@
 #include <QColor>
 #include <QChar>
 
-#define QHEXVIEW_ADDRESSLABEL    ""
-#define QHEXVIEW_UNPRINTABLECHAR '.'
-#define QHEXVIEW_LINELENGTH      0x10
-
 namespace QHexFlags {
     enum: unsigned int {
         None             = (1 << 0),
@@ -33,13 +29,13 @@ struct QHexColor
 struct QHexOptions
 {
     // Appearance
-    QChar unprintablechar{QHEXVIEW_UNPRINTABLECHAR};
-    QString addresslabel{QHEXVIEW_ADDRESSLABEL};
+    QChar unprintablechar{'.'};
+    QString addresslabel{""};
     QString hexlabel;
     QString asciilabel;
     quint64 baseaddress{0};
     unsigned int flags{QHexFlags::None};
-    unsigned int linelength{QHEXVIEW_LINELENGTH};
+    unsigned int linelength{0x10};
     unsigned int addresswidth{0};
     unsigned int grouplength{1};
     unsigned int scrollsteps{1};

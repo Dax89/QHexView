@@ -2,15 +2,15 @@
 #include "qhexoptions.h"
 #include "../qhexview.h"
 #include <QGlobalStatic>
-#include <unordered_map>
-#include <array>
+#include <QList>
+#include <QHash>
 
 namespace QHexUtils {
 
-static const std::array<char, 16> HEXMAP = {
+Q_GLOBAL_STATIC_WITH_ARGS(QList<char>, HEXMAP, ({
     '0', '1', '2', '3', '4', '5', '6', '7',
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-};
+}));
 
 namespace Pattern {
 
@@ -18,14 +18,14 @@ Q_GLOBAL_STATIC_WITH_ARGS(QString, WILDCARD_BYTE, ("??"))
 
 bool check(QString& p, qint64& len)
 {
-    static std::unordered_map<QString, std::pair<QString, size_t>> processed; // Cache processed patterns
+    static QHash<QString, QPair<QString, size_t>> processed; // Cache processed patterns
 
     auto it = processed.find(p);
 
     if(it != processed.end())
     {
-        p = it->second.first;
-        len = it->second.second;
+        p = it.value().first;
+        len = it.value().second;
         return true;
     }
 
@@ -51,7 +51,7 @@ bool check(QString& p, qint64& len)
 
     if(wccount >= p.size()) return false;
     len = p.size() / 2;
-    processed[op] = {p, len}; // Cache processed pattern
+    processed[op] = qMakePair(p, len); // Cache processed pattern
     return true;
 }
 
@@ -81,8 +81,8 @@ QByteArray toHex(const QByteArray& ba, char sep)
     for(auto i = 0, o = 0; i < ba.size(); i++)
     {
         if(sep && i) hex[o++] = static_cast<uchar>(sep);
-        hex[o++] = HEXMAP.at((ba.at(i) & 0xf0) >> 4);
-        hex[o++] = HEXMAP.at(ba.at(i) & 0x0f);
+        hex[o++] = HEXMAP->at((ba.at(i) & 0xf0) >> 4);
+        hex[o++] = HEXMAP->at(ba.at(i) & 0x0f);
     }
 
     return hex;
@@ -157,7 +157,7 @@ qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview,
     });
 }
 
-std::pair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
+QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
 {
     qint64 offset = -1, size = 0;
     if(startoffset == -1) startoffset = static_cast<qint64>(hexview->offset());

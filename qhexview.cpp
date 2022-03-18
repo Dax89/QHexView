@@ -2,6 +2,8 @@
 #include "model/buffer/qmemorybuffer.h"
 #include "model/qhexcursor.h"
 #include "model/qhexutils.h"
+#include <QtGlobal>
+#include <QtMath>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QTextDocument>
@@ -16,7 +18,6 @@
 #include <QPainter>
 #include <limits>
 #include <cctype>
-#include <cmath>
 
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     #include "dialogs/hexfinddialog.h"
@@ -281,7 +282,7 @@ void QHexView::setAddressWidth(unsigned int w)
 void QHexView::setScrollSteps(unsigned int l)
 {
     if(l == m_options.scrollsteps) return;
-    m_options.scrollsteps = std::max(1u, l);
+    m_options.scrollsteps = qMax(1u, l);
 }
 
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
@@ -315,10 +316,10 @@ void QHexView::checkOptions()
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
     if(!m_options.scrollsteps) m_options.scrollsteps = 1;
 
-    m_options.addresswidth = std::max<unsigned int>(m_options.addresswidth, this->calcAddressWidth());
+    m_options.addresswidth = qMax<unsigned int>(m_options.addresswidth, this->calcAddressWidth());
 
     // Round to nearest multiple of 2
-    m_options.grouplength = 1u << (static_cast<unsigned int>(std::floor(m_options.grouplength / 2.0)));
+    m_options.grouplength = 1u << (static_cast<unsigned int>(qFloor(m_options.grouplength / 2.0)));
 
     if(m_options.grouplength <= 1) m_options.grouplength = 1;
 
@@ -350,7 +351,7 @@ void QHexView::checkState()
     qint64 vscrollmax = doclines - vislines;
     if(doclines >= vislines) vscrollmax++;
 
-    this->verticalScrollBar()->setRange(0, std::max<qint64>(0, vscrollmax));
+    this->verticalScrollBar()->setRange(0, qMax<qint64>(0, vscrollmax));
     this->verticalScrollBar()->setPageStep(vislines - 1);
     this->verticalScrollBar()->setSingleStep(m_options.scrollsteps);
     this->setVerticalScrollBarPolicy(doclines < this->visibleLines(true) ? Qt::ScrollBarAlwaysOff : Qt::ScrollBarAlwaysOn);
@@ -359,11 +360,11 @@ void QHexView::checkState()
 
     static int oldmw = 0;
     if(!oldmw) oldmw = this->maximumWidth();
-    this->setMaximumWidth(m_autowidth ? std::ceil(this->endColumnX() + vw + 3) : oldmw);
+    this->setMaximumWidth(m_autowidth ? qCeil(this->endColumnX() + vw + 3) : oldmw);
 
-    this->horizontalScrollBar()->setRange(0, std::max<int>(0, this->endColumnX() - this->width() + vw + 3));
+    this->horizontalScrollBar()->setRange(0, qMax<int>(0, this->endColumnX() - this->width() + vw + 3));
     this->horizontalScrollBar()->setPageStep(this->width());
-    this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(std::floor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
+    this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(qFloor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
 }
 
 void QHexView::checkAndUpdate(bool calccolumns)
@@ -621,13 +622,13 @@ unsigned int QHexView::calcAddressWidth() const
 
 int QHexView::visibleLines(bool absolute) const
 {
-    int vl = static_cast<int>(std::ceil(this->height() / this->lineHeight()));
+    int vl = static_cast<int>(qCeil(this->height() / this->lineHeight()));
     if(!m_options.hasFlag(QHexFlags::NoHeader)) vl--;
-    return absolute ? vl : std::min<int>(this->lines(), vl);
+    return absolute ? vl : qMin<int>(this->lines(), vl);
 }
 
 qint64 QHexView::getLastColumn(qint64 line) const { return this->getLine(line).size() - 1; }
-qint64 QHexView::lastLine() const { return std::max<qint64>(0, this->lines() - 1); }
+qint64 QHexView::lastLine() const { return qMax<qint64>(0, this->lines() - 1); }
 
 qreal QHexView::hexColumnWidth() const
 {
@@ -661,7 +662,7 @@ quint64 QHexView::lines() const
 {
     if(!m_hexdocument) return 0;
 
-    auto lines = static_cast<quint64>(std::ceil(m_hexdocument->length() / static_cast<double>(m_options.linelength)));
+    auto lines = static_cast<quint64>(qCeil(m_hexdocument->length() / static_cast<double>(m_options.linelength)));
     return !m_hexdocument->isEmpty() && !lines ? 1 : lines;
 }
 
@@ -712,17 +713,17 @@ QHexPosition QHexView::positionFromPoint(QPoint pt) const
             break;
         }
 
-        case QHexArea::Ascii: pos.column = std::max<qint64>(std::floor((abspt.x() - this->asciiColumnX()) / this->cellWidth()) - 1, 0); break;
+        case QHexArea::Ascii: pos.column = qMax<qint64>(qFloor((abspt.x() - this->asciiColumnX()) / this->cellWidth()) - 1, 0); break;
         case QHexArea::Address: pos.column = 0; break;
         case QHexArea::Header: return QHexPosition::invalid();
         default: break;
     }
 
-    pos.line = std::min<qint64>(this->verticalScrollBar()->value() + (abspt.y() / this->lineHeight()), this->lines());
-    if(!m_options.hasFlag(QHexFlags::NoHeader)) pos.line = std::max<qint64>(0, pos.line - 1);
+    pos.line = qMin<qint64>(this->verticalScrollBar()->value() + (abspt.y() / this->lineHeight()), this->lines());
+    if(!m_options.hasFlag(QHexFlags::NoHeader)) pos.line = qMax<qint64>(0, pos.line - 1);
 
     auto docline = this->getLine(pos.line);
-    pos.column = std::min<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size());
+    pos.column = qMin<qint64>(pos.column, docline.isEmpty() ? 0 : docline.size());
 
     qhexview_fmtprint("line: %lld, col: %lld", pos.line, pos.column);
     return pos;
@@ -735,7 +736,7 @@ QHexArea QHexView::areaFromPoint(QPoint pt) const
     pt = this->absolutePoint(pt);
     qreal line = this->verticalScrollBar()->value() + pt.y() / this->lineHeight();
 
-    if(!m_options.hasFlag(QHexFlags::NoHeader) && !std::floor(line)) return QHexArea::Header;
+    if(!m_options.hasFlag(QHexFlags::NoHeader) && !qFloor(line)) return QHexArea::Header;
     if(pt.x() < this->hexColumnX()) return QHexArea::Address;
     if(pt.x() < this->asciiColumnX()) return QHexArea::Hex;
     if(pt.x() < this->endColumnX()) return QHexArea::Ascii;
@@ -853,8 +854,8 @@ void QHexView::moveNext(bool select)
         column++;
 
     qint64 offset = this->hexCursor()->mode() == QHexCursor::Mode::Insert ? 1 : 0;
-    if(select) this->hexCursor()->select(std::min<qint64>(line, this->lines()), std::min<qint64>(column, this->getLastColumn(line) + offset));
-    else this->hexCursor()->move(std::min<qint64>(line, this->lines()), std::min<qint64>(column, this->getLastColumn(line) + offset));
+    if(select) this->hexCursor()->select(qMin<qint64>(line, this->lines()), qMin<qint64>(column, this->getLastColumn(line) + offset));
+    else this->hexCursor()->move(qMin<qint64>(line, this->lines()), qMin<qint64>(column, this->getLastColumn(line) + offset));
 }
 
 void QHexView::movePrevious(bool select)
@@ -869,8 +870,8 @@ void QHexView::movePrevious(bool select)
     else
         column--;
 
-    if(select) this->hexCursor()->select(std::min<qint64>(line, this->lines()), std::min<qint64>(column, this->getLastColumn(line)));
-    else this->hexCursor()->move(std::min<qint64>(line, this->lines()), std::min<qint64>(column, this->getLastColumn(line)));
+    if(select) this->hexCursor()->select(qMin<qint64>(line, this->lines()), qMin<qint64>(column, this->getLastColumn(line)));
+    else this->hexCursor()->move(qMin<qint64>(line, this->lines()), qMin<qint64>(column, this->getLastColumn(line)));
 }
 
 bool QHexView::keyPressMove(QKeyEvent* e)
@@ -896,14 +897,14 @@ bool QHexView::keyPressMove(QKeyEvent* e)
     else if(e->matches(QKeySequence::MoveToNextPage) || e->matches(QKeySequence::SelectNextPage))
     {
         if(this->lastLine() == this->hexCursor()->line()) return true;
-        auto pageline = std::min(this->lastLine(), this->hexCursor()->line() + this->visibleLines());
+        auto pageline = qMin(this->lastLine(), this->hexCursor()->line() + this->visibleLines());
         if(e->matches(QKeySequence::MoveToNextPage)) this->hexCursor()->move(pageline, this->hexCursor()->column());
         else this->hexCursor()->select(pageline, this->hexCursor()->column());
     }
     else if(e->matches(QKeySequence::MoveToPreviousPage) || e->matches(QKeySequence::SelectPreviousPage))
     {
         if(!this->hexCursor()->line()) return true;
-        auto pageline = std::max<qint64>(0, this->hexCursor()->line() - this->visibleLines());
+        auto pageline = qMax<qint64>(0, this->hexCursor()->line() - this->visibleLines());
         if(e->matches(QKeySequence::MoveToPreviousPage)) this->hexCursor()->move(pageline, this->hexCursor()->column());
         else this->hexCursor()->select(pageline, this->hexCursor()->column());
     }
