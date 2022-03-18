@@ -56,8 +56,17 @@ QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics
     this->setDocument(QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), this));
     this->checkState();
 
-    connect(m_hexcursor, &QHexCursor::positionChanged, this, &QHexView::positionChanged);
-    connect(m_hexcursor, &QHexCursor::modeChanged, this, &QHexView::modeChanged);
+    connect(m_hexcursor, &QHexCursor::positionChanged, this, [=]() {
+        m_writing = false;
+        this->ensureVisible();
+        Q_EMIT positionChanged();
+    });
+
+    connect(m_hexcursor, &QHexCursor::modeChanged, this, [=]() {
+        m_writing = false;
+        this->viewport()->update();
+        Q_EMIT modeChanged();
+    });
 }
 
 QRectF QHexView::headerRect() const
@@ -141,8 +150,6 @@ void QHexView::setDocument(QHexDocument* doc)
 
     if(m_hexdocument)
     {
-        disconnect(m_hexcursor, &QHexCursor::positionChanged, this, nullptr);
-        disconnect(m_hexcursor, &QHexCursor::modeChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::changed, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::dataChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::reset, this, nullptr);
@@ -158,8 +165,6 @@ void QHexView::setDocument(QHexDocument* doc)
 
     connect(m_hexdocument, &QHexDocument::dataChanged, this, &QHexView::dataChanged);
     connect(m_hexdocument, &QHexDocument::changed, this, [=]() { this->checkAndUpdate(true); });
-    connect(m_hexcursor, &QHexCursor::positionChanged, this, [=]() { m_writing = false; this->ensureVisible(); });
-    connect(m_hexcursor, &QHexCursor::modeChanged, this, [=]() { m_writing = false; this->viewport()->update(); });
     this->checkAndUpdate(true);
 }
 
@@ -218,35 +223,37 @@ void QHexView::redo() { if(m_hexdocument) m_hexdocument->redo(); }
 
 void QHexView::cut(bool hex)
 {
-    if(!m_hexcursor->hasSelection()) return;
     this->copy(hex);
-    m_hexcursor->removeSelection();
+    if(m_readonly) return;
+
+    if(m_hexcursor->hasSelection()) this->removeSelection();
+    else m_hexdocument->remove(m_hexcursor->offset(), 1);
 }
 
 void QHexView::copy(bool hex) const
 {
-    if(!m_hexcursor->hasSelection()) return;
-
     QClipboard* c = qApp->clipboard();
-    QByteArray bytes = m_hexcursor->selectedBytes();
+
+    QByteArray bytes = m_hexcursor->hasSelection() ? m_hexcursor->selectedBytes() :
+                                                     m_hexdocument->read(m_hexcursor->offset(), 1);
+
     if(hex) bytes = QHexUtils::toHex(bytes, ' ').toUpper();
     c->setText(bytes);
 }
 
 void QHexView::paste(bool hex)
 {
+    if(m_readonly) return;
+
     QClipboard* c = qApp->clipboard();
     QByteArray pastedata = c->text().toUtf8();
     if(pastedata.isEmpty()) return;
 
-    m_hexcursor->removeSelection();
+    this->removeSelection();
     if(hex) pastedata = QByteArray::fromHex(pastedata);
 
-    switch(m_hexcursor->mode())
-    {
-        case QHexCursor::Mode::Insert: m_hexdocument->insert(m_hexcursor->offset(), pastedata); break;
-        default: m_hexdocument->replace(m_hexcursor->offset(), pastedata); break;
-    }
+    if(m_hexcursor->mode() == QHexCursor::Mode::Insert) m_hexdocument->insert(m_hexcursor->offset(), pastedata);
+    else m_hexdocument->replace(m_hexcursor->offset(), pastedata);
 }
 
 void QHexView::selectAll()
@@ -258,7 +265,7 @@ void QHexView::selectAll()
 void QHexView::removeSelection()
 {
     if(!m_hexcursor->hasSelection()) return;
-    m_hexdocument->remove(m_hexcursor->selectionStartOffset(), m_hexcursor->selectionLength() - 1);
+    if(!m_readonly) m_hexdocument->remove(m_hexcursor->selectionStartOffset(), m_hexcursor->selectionLength() - 1);
     m_hexcursor->clearSelection();
 }
 
