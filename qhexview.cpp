@@ -209,13 +209,14 @@ void QHexView::clearMetadata() { m_hexmetadata->clear(); }
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
 void QHexView::showFind()
 {
-    if(!m_hexdlgfind) m_hexdlgfind = new HexFindDialog(this);
+    if(!m_hexdlgfind) m_hexdlgfind = new HexFindDialog(HexFindDialog::Type::Find, this);
     m_hexdlgfind->show();
 }
 
 void QHexView::showReplace()
 {
-
+    if(!m_hexdlgreplace) m_hexdlgreplace = new HexFindDialog(HexFindDialog::Type::Replace, this);
+    m_hexdlgreplace->show();
 }
 #endif
 
@@ -664,6 +665,19 @@ quint64 QHexView::lines() const
 
     auto lines = static_cast<quint64>(qCeil(m_hexdocument->length() / static_cast<double>(m_options.linelength)));
     return !m_hexdocument->isEmpty() && !lines ? 1 : lines;
+}
+
+qint64 QHexView::replace(const QVariant& oldvalue, const QVariant& newvalue, qint64 offset, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const
+{
+    auto res = QHexUtils::replace(this, oldvalue, newvalue, offset, mode, options, fd);
+
+    if(res.first > -1)
+    {
+        m_hexcursor->move(res.first);
+        m_hexcursor->selectSize(res.second);
+    }
+
+    return res.first;
 }
 
 qint64 QHexView::find(const QVariant& value, qint64 offset, QHexFindMode mode, unsigned int options, QHexFindDirection fd) const

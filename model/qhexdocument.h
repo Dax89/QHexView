@@ -47,14 +47,14 @@ class QHexDocument: public QObject
         template<typename T> static QHexDocument* fromMemory(char *data, int size, QObject* parent = nullptr);
         template<typename T> static QHexDocument* fromMemory(const QByteArray& ba, QObject* parent = nullptr);
         static QHexDocument* fromBuffer(QHexBuffer* buffer, QObject* parent = nullptr);
-        static QHexDocument* fromLargeFile(QString filename, QObject *parent = nullptr);
+        static QHexDocument* fromLargeFile(QString filename, QObject* parent = nullptr);
         static QHexDocument* fromMappedFile(QString filename, QObject* parent = nullptr);
         static QHexDocument* fromFile(QString filename, QObject* parent = nullptr);
         static QHexDocument* create(QObject* parent = nullptr);
 
     Q_SIGNALS:
-        void canUndoChanged(bool canUndo);
-        void canRedoChanged(bool canRedo);
+        void canUndoChanged(bool canundo);
+        void canRedoChanged(bool canredo);
         void dataChanged(const QByteArray& data, quint64 offset, QHexDocument::ChangeReason reason);
         void changed();
         void reset();

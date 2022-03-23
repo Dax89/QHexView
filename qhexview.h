@@ -45,6 +45,7 @@ class QHexView : public QAbstractScrollArea
         quint64 selectionEndOffset() const;
         quint64 baseAddress() const;
         quint64 lines() const;
+        qint64 replace(const QVariant& oldvalue, const QVariant& newvalue, qint64 offset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
         qint64 find(const QVariant& value, qint64 offset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward) const;
         void setOptions(const QHexOptions& options);
         void setBaseAddress(quint64 baseaddress);
@@ -154,7 +155,7 @@ class QHexView : public QAbstractScrollArea
         QHexMetadata* m_hexmetadata{nullptr};
         QHexDelegate* m_hexdelegate{nullptr};
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
-        HexFindDialog* m_hexdlgfind{nullptr};
+        HexFindDialog *m_hexdlgfind{nullptr}, *m_hexdlgreplace{nullptr};
 #endif
 
     friend class QHexDelegate;

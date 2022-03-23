@@ -169,67 +169,82 @@ qint64 findPattern(QString pattern, qint64 startoffset, const QHexView* hexview,
     });
 }
 
-QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
+QByteArray variantToByteArray(QVariant value, QHexFindMode mode, unsigned int options)
 {
-    qint64 offset = -1, size = 0;
-    if(startoffset == -1) startoffset = static_cast<qint64>(hexview->offset());
+    QByteArray v;
 
     switch(mode)
     {
-        case QHexFindMode::Text: {
-            QByteArray v;
-
+        case QHexFindMode::Text:
             if(value.type() == QVariant::String) v = value.toString().toUtf8();
             else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
-            else return {-1, 0};
-
-            offset = QHexUtils::findDefault(v, startoffset, hexview, options, fd);
-            size = v.size();
             break;
-        }
 
         case QHexFindMode::Hex: {
             if(value.type() == QVariant::String) {
-                offset = QHexUtils::findPattern(value.toString(), startoffset, hexview, fd, size);
+                qint64 len = 0;
+                auto s = value.toString();
+                if(!Pattern::check(s, len)) return { };
+
+                bool ok = true;
+                for(auto i = 0; ok && i < s.size(); i += 2) v.push_back(static_cast<char>(s.midRef(i, 2).toUInt(&ok, 16)));
+                if(!ok) return { };
             }
-            else if(value.type() == QVariant::ByteArray) {
-                auto v = value.toByteArray();
-                offset = QHexUtils::findDefault(v, startoffset, hexview, options, fd);
-                size = v.size();
-            }
-            else return {-1, 0};
+            else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
             break;
         }
 
         case QHexFindMode::Int: {
             bool ok = false;
             uint val = value.toUInt(&ok);
-            if(!ok) return {-1, 0};
+            if(!ok) return QByteArray{ };
 
-            QByteArray data;
-            QDataStream ds(&data, QIODevice::WriteOnly);
+            QDataStream ds(&v, QIODevice::WriteOnly);
 
             if(options & QHexFindOptions::BigEndian) {
                 if(options & QHexFindOptions::Int8) ds << qToBigEndian<quint8>(val);
                 else if(options & QHexFindOptions::Int16) ds << qToBigEndian<quint16>(val);
                 else if(options & QHexFindOptions::Int32) ds << qToBigEndian<quint32>(val);
                 else if(options & QHexFindOptions::Int64) ds << qToBigEndian<quint64>(val);
-                else return find(hexview, value, startoffset, mode, options | countBits(val), fd);
+                else return variantToByteArray(value, mode, options | countBits(val));
             }
             else {
                 if(options & QHexFindOptions::Int8) ds << static_cast<quint8>(val);
                 else if(options & QHexFindOptions::Int16) ds << static_cast<quint16>(val);
                 else if(options & QHexFindOptions::Int32) ds << static_cast<quint32>(val);
                 else if(options & QHexFindOptions::Int64) ds << static_cast<quint64>(val);
-                else return find(hexview, value, startoffset, mode, options | countBits(val), fd);
+                else return variantToByteArray(value, mode, options | countBits(val));
             }
 
-            offset = QHexUtils::findDefault(data, startoffset, hexview, options, fd);
-            size = data.size();
             break;
         }
 
-        default: return {-1, 0};
+        default: break;
+    }
+
+    return v;
+}
+
+QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
+{
+    qint64 offset = -1, size = 0;
+    if(startoffset == -1) startoffset = static_cast<qint64>(hexview->offset());
+
+    if(mode == QHexFindMode::Hex && value.type() == QVariant::String)
+    {
+        offset = QHexUtils::findPattern(value.toString(), startoffset, hexview, fd, size);
+    }
+    else
+    {
+        auto ba = variantToByteArray(value, mode, options);
+
+        if(!ba.isEmpty())
+        {
+            offset = QHexUtils::findDefault(ba, startoffset, hexview, options, fd);
+            size = ba.size();
+        }
+        else
+            offset = -1;
     }
 
     return {offset, offset > -1 ? size : 0};
@@ -239,6 +254,31 @@ bool checkPattern(QString pattern)
 {
     qint64 len = 0;
     return Pattern::check(pattern, len);
+}
+
+QPair<qint64, qint64> replace(const QHexView* hexview, QVariant oldvalue, QVariant newvalue, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
+{
+    auto res = find(hexview, oldvalue, startoffset, mode, options, fd);
+
+    if(res.first != -1 && res.second > 0)
+    {
+        QHexDocument* hexdocument = hexview->hexDocument();
+        auto ba = variantToByteArray(newvalue, mode, options);
+
+        if(!ba.isEmpty())
+        {
+            hexdocument->remove(res.first, res.second);
+            hexdocument->insert(res.first, ba);
+            res.second = ba.size();
+        }
+        else
+        {
+            res.first = -1;
+            res.second = 0;
+        }
+    }
+
+    return res;
 }
 
 }

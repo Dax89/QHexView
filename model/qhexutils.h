@@ -41,6 +41,7 @@ QByteArray toHex(const QByteArray& ba, char sep);
 QByteArray toHex(const QByteArray& ba);
 qint64 positionToOffset(const QHexOptions* options, QHexPosition pos);
 QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward);
+QPair<qint64, qint64> replace(const QHexView* hexview, QVariant oldvalue, QVariant newvalue, qint64 startoffset, QHexFindMode mode = QHexFindMode::Text, unsigned int options = QHexFindOptions::None, QHexFindDirection fd = QHexFindDirection::Forward);
 QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset);
 bool checkPattern(QString pattern);
 
