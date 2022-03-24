@@ -28,6 +28,7 @@ class HexFindDialog : public QDialog
     private:
         bool prepareOptions(QString& q, QHexFindMode& mode, QHexFindDirection& fd);
         bool validateIntRange(uint v) const;
+        void checkResult(const QString& q, qint64 offset, QHexFindDirection fd);
 
     private:
         QRegularExpressionValidator *m_hexvalidator, *m_hexpvalidator;

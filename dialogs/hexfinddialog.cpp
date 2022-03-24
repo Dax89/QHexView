@@ -249,6 +249,18 @@ bool HexFindDialog::validateIntRange(uint v) const
     return true;
 }
 
+void HexFindDialog::checkResult(const QString& q, qint64 offset, QHexFindDirection fd)
+{
+    if(offset == -1)
+    {
+        QMessageBox::information(this, tr("Not found"), tr("Cannot find '%1'").arg(q));
+        return;
+    }
+
+    if(fd == QHexFindDirection::Backward) m_startoffset = this->hexView()->selectionStartOffset() - 1;
+    else m_startoffset = this->hexView()->selectionEndOffset() + 1;
+}
+
 void HexFindDialog::validateActions()
 {
     auto mode = static_cast<QHexFindMode>(this->findChild<QComboBox*>(HexFindDialog::CBFINDMODE)->currentData().toUInt());
@@ -298,8 +310,7 @@ void HexFindDialog::replace()
 
     QString q2 = this->findChild<QLineEdit*>(HexFindDialog::LEREPLACE)->text();
     auto offset = this->hexView()->hexCursor()->replace(q1, q2, m_startoffset > -1 ? m_startoffset : this->hexView()->offset(), mode, m_findoptions, fd);
-    if(offset == -1) QMessageBox::information(this, tr("Not found"), tr("Cannot find '%1'").arg(q1));
-    else m_startoffset = this->hexView()->selectionEndOffset() + 1;
+    this->checkResult(q1, offset, fd);
 }
 
 void HexFindDialog::find()
@@ -311,8 +322,7 @@ void HexFindDialog::find()
     if(!this->prepareOptions(q, mode, fd)) return;
 
     auto offset = this->hexView()->hexCursor()->find(q, m_startoffset > -1 ? m_startoffset : this->hexView()->offset(), mode, m_findoptions, fd);
-    if(offset == -1) QMessageBox::information(this, tr("Not found"), tr("Cannot find '%1'").arg(q));
-    else m_startoffset = this->hexView()->selectionEndOffset() + 1;
+    this->checkResult(q, offset, fd);
 }
 
 bool HexFindDialog::prepareOptions(QString& q, QHexFindMode& mode, QHexFindDirection& fd)
