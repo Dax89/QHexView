@@ -355,7 +355,6 @@ void QHexView::checkState()
     this->verticalScrollBar()->setRange(0, qMax<qint64>(0, vscrollmax));
     this->verticalScrollBar()->setPageStep(vislines - 1);
     this->verticalScrollBar()->setSingleStep(m_options.scrollsteps);
-    this->setVerticalScrollBarPolicy(doclines < this->visibleLines(true) ? Qt::ScrollBarAlwaysOff : Qt::ScrollBarAlwaysOn);
 
     int vw = this->verticalScrollBar()->isVisible() ? this->verticalScrollBar()->width() : 0;
 
@@ -365,7 +364,6 @@ void QHexView::checkState()
 
     this->horizontalScrollBar()->setRange(0, qMax<int>(0, this->endColumnX() - this->width() + vw + 3));
     this->horizontalScrollBar()->setPageStep(this->width());
-    this->setHorizontalScrollBarPolicy(this->width() < static_cast<int>(qFloor(this->endColumnX())) ? Qt::ScrollBarAlwaysOn : Qt::ScrollBarAlwaysOff);
 }
 
 void QHexView::checkAndUpdate(bool calccolumns)
