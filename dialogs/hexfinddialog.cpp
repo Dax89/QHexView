@@ -31,8 +31,8 @@ const QString HexFindDialog::RBBACKWARD = "qhexview_rbbackward";
 
 HexFindDialog::HexFindDialog(Type type, QHexView *parent) : QDialog{parent}, m_type{type}
 {
-    m_hexvalidator = new QRegularExpressionValidator(QRegularExpression{"[0-9A-fa-f ]+"}, this);
-    m_hexpvalidator = new QRegularExpressionValidator(QRegularExpression{"[0-9A-fa-f \\?]+"}, this);
+    m_hexvalidator = new QRegularExpressionValidator(QRegularExpression{"[0-9A-Fa-f ]+"}, this);
+    m_hexpvalidator = new QRegularExpressionValidator(QRegularExpression{"[0-9A-Fa-f \\?]+"}, this);
     m_dblvalidator = new QDoubleValidator(this);
     m_intvalidator = new QIntValidator(this);
 
