@@ -219,6 +219,14 @@ QByteArray variantToByteArray(QVariant value, QHexFindMode mode, unsigned int op
             break;
         }
 
+        case QHexFindMode::Float: {
+            bool ok = false;
+            QDataStream ds(&v, QIODevice::WriteOnly);
+            if(options & QHexFindOptions::Float) ds << value.toFloat(&ok);
+            else if(options & QHexFindOptions::Double) ds << value.toDouble(&ok);
+            if(!ok) return { };
+        }
+
         default: break;
     }
 
