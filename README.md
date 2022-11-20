@@ -52,9 +52,9 @@ document->replace(30, "New Data");               // Replace bytes from offset 30
 // Metatadata management
 QHexMetadata* hexmetadata = document->metadata();
 
-hexmetadata->background(6, 0, 10, Qt::Red);      // Highlight background to line 6, from 0 to 10 
-hexmetadata->foreground(8, 0, 15, Qt::darkBLue); // Highlight foreground to line 8, from 0 to 15
-hexmetadata->comment(16, "I'm a comment!");      // Add a comment to line 16
+hexmetadata->background(6, 0, 10, Qt::red);      // Highlight background to line 6, from 0 to 10 
+hexmetadata->foreground(8, 0, 15, Qt::darkBlue); // Highlight foreground to line 8, from 0 to 15
+hexmetadata->comment(16, 0, 16, "I'm a comment!");      // Add a comment to line 16, from 0 to 16
 hexmetadata->clear();                            // Reset styling
 ```
 
