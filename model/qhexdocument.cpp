@@ -1,5 +1,5 @@
 #include "qhexdocument.h"
-#include "model/buffer/qmemorybuffer.h"
+#include "buffer/qmemorybuffer.h"
 #include "commands/insertcommand.h"
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
