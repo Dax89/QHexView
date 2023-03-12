@@ -77,23 +77,7 @@ bool match(const QByteArray& data, const QString& pattern)
 
 }
 
-QByteArray toHex(const QByteArray& ba, char sep)
-{
-    QByteArray hex(sep ? (ba.size() * 3 - 1) : (ba.size() * 2), Qt::Uninitialized);
-
-    for(auto i = 0, o = 0; i < ba.size(); i++)
-    {
-        if(sep && i) hex[o++] = static_cast<uchar>(sep);
-        hex[o++] = HEXMAP->at((ba.at(i) & 0xf0) >> 4);
-        hex[o++] = HEXMAP->at(ba.at(i) & 0x0f);
-    }
-
-    return hex;
-}
-
-QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
-qint64 positionToOffset(const QHexOptions* options, QHexPosition pos) { return options->linelength * pos.line + pos.column; }
-QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
+namespace {
 
 unsigned int countBits(uint val)
 {
@@ -232,6 +216,26 @@ QByteArray variantToByteArray(QVariant value, QHexFindMode mode, unsigned int op
 
     return v;
 }
+
+} // namespace
+
+QByteArray toHex(const QByteArray& ba, char sep)
+{
+    QByteArray hex(sep ? (ba.size() * 3 - 1) : (ba.size() * 2), Qt::Uninitialized);
+
+    for(auto i = 0, o = 0; i < ba.size(); i++)
+    {
+        if(sep && i) hex[o++] = static_cast<uchar>(sep);
+        hex[o++] = HEXMAP->at((ba.at(i) & 0xf0) >> 4);
+        hex[o++] = HEXMAP->at(ba.at(i) & 0x0f);
+    }
+
+    return hex;
+}
+
+QByteArray toHex(const QByteArray& ba) { return QHexUtils::toHex(ba, '\0'); }
+qint64 positionToOffset(const QHexOptions* options, QHexPosition pos) { return options->linelength * pos.line + pos.column; }
+QHexPosition offsetToPosition(const QHexOptions* options, qint64 offset) { return { offset / options->linelength, offset % options->linelength }; }
 
 QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 startoffset, QHexFindMode mode, unsigned int options, QHexFindDirection fd)
 {
