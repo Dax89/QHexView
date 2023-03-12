@@ -20,6 +20,10 @@ class QHexView : public QAbstractScrollArea
     Q_OBJECT
 
     public:
+        enum class CopyMode { Visual, HexArraySquare, HexArrayCurly, HexCharArray };
+        Q_ENUM(CopyMode);
+
+    public:
         explicit QHexView(QWidget *parent = nullptr);
         QRectF headerRect() const;
         QRectF addressRect() const;
@@ -80,6 +84,7 @@ class QHexView : public QAbstractScrollArea
         void undo();
         void redo();
         void cut(bool hex = false);
+        void copyAs(CopyMode mode = CopyMode::Visual) const;
         void copy(bool hex = false) const;
         void paste(bool hex = false);
         void selectAll();

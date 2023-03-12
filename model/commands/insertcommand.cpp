@@ -12,4 +12,5 @@ void InsertCommand::undo()
     m_buffer->remove(m_offset, m_data.length());
     Q_EMIT m_hexdocument->dataChanged(m_data, m_offset, QHexDocument::ChangeReason::Remove);
 }
+
 void InsertCommand::redo() { m_buffer->insert(m_offset, m_data); }

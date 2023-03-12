@@ -231,6 +231,44 @@ void QHexView::cut(bool hex)
     else m_hexdocument->remove(m_hexcursor->offset(), 1);
 }
 
+void QHexView::copyAs(CopyMode mode) const
+{
+    QClipboard* c = qApp->clipboard();
+
+    QByteArray bytes = m_hexcursor->hasSelection() ? m_hexcursor->selectedBytes() :
+                                                     m_hexdocument->read(m_hexcursor->offset(), 1);
+
+    switch(mode)
+    {
+        case CopyMode::HexArrayCurly:
+        case CopyMode::HexArraySquare: {
+            QString hexchar;
+
+            for(char b : bytes) {
+                if(!hexchar.isEmpty()) hexchar += ", ";
+                hexchar += "0x" + QString::number(static_cast<uint>(b), 16).toUpper();
+            }
+
+            c->setText(QString(mode == CopyMode::HexArraySquare ? "[%1]" : "{%1}").arg(hexchar));
+            break;
+        }
+
+        case CopyMode::HexCharArray: {
+            QString hexchar;
+
+            for(char b : bytes)
+                hexchar += "\\x" + QString::number(static_cast<uint>(b), 16).toUpper();
+
+            c->setText(QString("\"%1\"").arg(hexchar));
+            break;
+        }
+
+        default:
+            this->copy(true);
+            break;
+    }
+}
+
 void QHexView::copy(bool hex) const
 {
     QClipboard* c = qApp->clipboard();
