@@ -17,7 +17,6 @@
 #include <QPalette>
 #include <QPainter>
 #include <limits>
-#include <cctype>
 
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     #include "dialogs/hexfinddialog.h"
@@ -591,7 +590,7 @@ void QHexView::drawDocument(QTextCursor& c) const
         {
             auto s = linebytes.isEmpty() ||
                      column >= static_cast<qint64>(linebytes.size()) ? QChar(' ') :
-                                                                       (std::isprint(static_cast<quint8>(linebytes.at(column))) ? QChar(linebytes.at(column)) : m_options.unprintablechar);
+                                                                       (QChar::isPrint(linebytes.at(column)) ? QChar(linebytes.at(column)) : m_options.unprintablechar);
 
             quint8 b = static_cast<int>(column) < linebytes.size() ? linebytes.at(column) : 0x00;
             this->drawFormat(c, b, s, QHexArea::Ascii, line, column, static_cast<int>(column) < linebytes.size());
@@ -983,7 +982,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
         }
 
         case QHexArea::Ascii: {
-            if(!std::isprint(key)) return false;
+            if(!QChar::isPrint(key)) return false;
             m_hexcursor->removeSelection();
             if(m_hexcursor->mode() == QHexCursor::Mode::Insert) m_hexdocument->insert(m_hexcursor->offset(), key);
             else m_hexdocument->replace(m_hexcursor->offset(), key);
