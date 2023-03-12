@@ -20,7 +20,7 @@ class QHexView : public QAbstractScrollArea
     Q_OBJECT
 
     public:
-        enum class CopyMode { Visual, HexArraySquare, HexArrayCurly, HexCharArray };
+        enum class CopyMode { Visual, HexArraySquare, HexArrayCurly, HexArrayChar };
         Q_ENUM(CopyMode);
 
     public:

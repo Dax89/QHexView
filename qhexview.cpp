@@ -253,7 +253,7 @@ void QHexView::copyAs(CopyMode mode) const
             break;
         }
 
-        case CopyMode::HexCharArray: {
+        case CopyMode::HexArrayChar: {
             QString hexchar;
 
             for(char b : bytes)
