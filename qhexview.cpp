@@ -243,9 +243,14 @@ void QHexView::copyAs(CopyMode mode) const
         case CopyMode::HexArrayCurly:
         case CopyMode::HexArraySquare: {
             QString hexchar;
+            int i = 0;
 
             for(char b : bytes) {
-                if(!hexchar.isEmpty()) hexchar += ", ";
+                if(!hexchar.isEmpty()) {
+                    hexchar += ", ";
+                    if(m_options.copybreak && !(++i % m_options.linelength)) hexchar += "\n";
+                }
+
                 hexchar += "0x" + QString::number(static_cast<uint>(b), 16).toUpper();
             }
 
@@ -255,17 +260,35 @@ void QHexView::copyAs(CopyMode mode) const
 
         case CopyMode::HexArrayChar: {
             QString hexchar;
+            int i = 0;
 
-            for(char b : bytes)
+            for(char b : bytes) 
                 hexchar += "\\x" + QString::number(static_cast<uint>(b), 16).toUpper();
 
             c->setText(QString("\"%1\"").arg(hexchar));
             break;
         }
 
-        default:
-            this->copy(true);
+        default: {
+            QString hexchar;
+            int i = 0;
+
+            for(int i = 0; i < bytes.size(); i++) {
+                if(!(i % m_options.grouplength)) {
+                    if(!hexchar.isEmpty()) {
+                        hexchar += ", ";
+                        if(m_options.copybreak && !(i % m_options.linelength)) hexchar += "\n";
+                    }
+
+                    hexchar += "0x";
+                }
+
+                hexchar += QString("%1").arg(static_cast<uint>(bytes[i]), 2, 16, QLatin1Char('0')).toUpper();
+            }
+
+            c->setText(hexchar);
             break;
+        }
     }
 }
 
