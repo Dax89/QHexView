@@ -681,7 +681,7 @@ unsigned int QHexView::calcAddressWidth() const
 
 int QHexView::visibleLines(bool absolute) const
 {
-    int vl = static_cast<int>(qCeil(this->height() / this->lineHeight()));
+    int vl = static_cast<int>(qCeil(this->viewport()->height() / this->lineHeight()));
     if(!m_options.hasFlag(QHexFlags::NoHeader)) vl--;
     return absolute ? vl : qMin<int>(this->lines(), vl);
 }
