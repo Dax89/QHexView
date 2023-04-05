@@ -260,7 +260,6 @@ void QHexView::copyAs(CopyMode mode) const
 
         case CopyMode::HexArrayChar: {
             QString hexchar;
-            int i = 0;
 
             for(char b : bytes) 
                 hexchar += "\\x" + QString::number(static_cast<uint>(b), 16).toUpper();
@@ -271,7 +270,6 @@ void QHexView::copyAs(CopyMode mode) const
 
         default: {
             QString hexchar;
-            int i = 0;
 
             for(int i = 0; i < bytes.size(); i++) {
                 if(!(i % m_options.grouplength)) {
