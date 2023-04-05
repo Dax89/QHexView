@@ -1016,7 +1016,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
     bool atend = m_hexcursor->offset() >= m_hexdocument->length();
     if(atend && m_hexcursor->mode() == QHexCursor::Mode::Overwrite) return false;
 
-    auto key = static_cast<quint8>(e->text().at(0).toLatin1());
+    char key = e->text().at(0).toLatin1();
 
     switch(m_currentarea)
     {

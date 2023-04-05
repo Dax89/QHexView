@@ -8,6 +8,12 @@
 #include <QHash>
 #include <limits>
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    #define QHEXVIEW_VARIANT_EQ(x, t) ((x).metaType().id() == QMetaType::Q##t)
+#else
+    #define QHEXVIEW_VARIANT_EQ(x, t) ((x).type() == QVariant::t)
+#endif
+
 namespace QHexUtils {
 
 Q_GLOBAL_STATIC_WITH_ARGS(QList<char>, HEXMAP, ({
@@ -64,7 +70,12 @@ bool match(const QByteArray& data, const QString& pattern)
     {
         if(idx >= data.size()) return false;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        QStringView hexb = QStringView{pattern}.mid(i, 2);
+#else
         const QStringRef& hexb = pattern.midRef(i, 2);
+#endif
+
         if(hexb == *WILDCARD_BYTE) continue;
 
         bool ok = false;
@@ -160,21 +171,27 @@ QByteArray variantToByteArray(QVariant value, QHexFindMode mode, unsigned int op
     switch(mode)
     {
         case QHexFindMode::Text:
-            if(value.type() == QVariant::String) v = value.toString().toUtf8();
-            else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
+            if(QHEXVIEW_VARIANT_EQ(value, String)) v = value.toString().toUtf8();
+            else if(QHEXVIEW_VARIANT_EQ(value, ByteArray)) v = value.toByteArray();
             break;
 
         case QHexFindMode::Hex: {
-            if(value.type() == QVariant::String) {
+            if(QHEXVIEW_VARIANT_EQ(value, String)) {
                 qint64 len = 0;
                 auto s = value.toString();
                 if(!PatternUtils::check(s, len)) return { };
 
                 bool ok = true;
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                for(auto i = 0; ok && i < s.size(); i += 2) v.push_back(static_cast<char>(QStringView{s}.mid(i, 2).toUInt(&ok, 16)));
+#else
                 for(auto i = 0; ok && i < s.size(); i += 2) v.push_back(static_cast<char>(s.midRef(i, 2).toUInt(&ok, 16)));
+#endif
+
                 if(!ok) return { };
             }
-            else if(value.type() == QVariant::ByteArray) v = value.toByteArray();
+            else if(QHEXVIEW_VARIANT_EQ(value, ByteArray)) v = value.toByteArray();
             break;
         }
 
@@ -242,7 +259,7 @@ QPair<qint64, qint64> find(const QHexView* hexview, QVariant value, qint64 start
     qint64 offset = -1, size = 0;
     if(startoffset == -1) startoffset = static_cast<qint64>(hexview->offset());
 
-    if(mode == QHexFindMode::Hex && value.type() == QVariant::String)
+    if(mode == QHexFindMode::Hex && QHEXVIEW_VARIANT_EQ(value, String))
     {
         offset = QHexUtils::findWildcard(value.toString(), startoffset, hexview, fd, size);
     }
