@@ -143,6 +143,7 @@ void QHexView::setDelegate(QHexDelegate* rd)
 void QHexView::setDocument(QHexDocument* doc)
 {
     if(!doc) doc = QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), this);
+    if(!doc->parent()) doc->setParent(this);
 
     m_writing = false;
     m_hexmetadata->clear();
