@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(QHexView)
 
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Widgets)
 
 if(NOT Qt6_FOUND)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
