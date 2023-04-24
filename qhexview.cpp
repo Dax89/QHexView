@@ -29,6 +29,17 @@
     #define qhexview_fmtprint(fmt, ...)
 #endif
 
+namespace impl {
+
+bool ishex(char ch)
+{
+    return (ch >= '0' && ch <= '9') ||
+           (ch >= 'A' && ch <= 'F') ||
+           (ch >= 'a' && ch <= 'f');
+}
+
+} // namespace impl
+
 QHexView::QHexView(QWidget *parent) : QAbstractScrollArea(parent), m_fontmetrics(this->font())
 {
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -1021,7 +1032,7 @@ bool QHexView::keyPressTextInput(QKeyEvent* e)
     switch(m_currentarea)
     {
         case QHexArea::Hex: {
-            if(!std::isxdigit(key)) return false;
+            if(!impl::ishex(key)) return false;
 
             bool ok = false;
             auto val = static_cast<quint8>(QString(key).toUInt(&ok, 16));
