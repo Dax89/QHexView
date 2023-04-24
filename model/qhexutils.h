@@ -37,6 +37,7 @@ struct QHexPosition {
 
 namespace QHexUtils {
 
+bool isHex(char ch);
 QByteArray toHex(const QByteArray& ba, char sep);
 QByteArray toHex(const QByteArray& ba);
 qint64 positionToOffset(const QHexOptions* options, QHexPosition pos);

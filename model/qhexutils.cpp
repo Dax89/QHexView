@@ -21,6 +21,13 @@ Q_GLOBAL_STATIC_WITH_ARGS(QList<char>, HEXMAP, ({
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
 }));
 
+bool isHex(char ch)
+{
+    return (ch >= '0' && ch <= '9') ||
+           (ch >= 'A' && ch <= 'F') ||
+           (ch >= 'a' && ch <= 'f');
+}
+
 namespace PatternUtils {
 
 Q_GLOBAL_STATIC_WITH_ARGS(QString, WILDCARD_BYTE, ("??"))
@@ -54,7 +61,7 @@ bool check(QString& p, qint64& len)
             continue;
         }
 
-        if(!std::isxdigit(hexb.front().toLatin1()) || !std::isxdigit(hexb.back().toLatin1()))
+        if(!QHexUtils::isHex(hexb.front().toLatin1()) || !QHexUtils::isHex(hexb.back().toLatin1()))
             return false;
     }
 
