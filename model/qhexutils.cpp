@@ -61,7 +61,7 @@ bool check(QString& p, qint64& len)
             continue;
         }
 
-        if(!QHexUtils::isHex(hexb.front().toLatin1()) || !QHexUtils::isHex(hexb.back().toLatin1()))
+        if(!QHexUtils::isHex(hexb.at(0).toLatin1()) || !QHexUtils::isHex(hexb.at(1).toLatin1()))
             return false;
     }
 
