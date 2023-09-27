@@ -245,6 +245,11 @@ QByteArray variantToByteArray(QVariant value, QHexFindMode mode, unsigned int op
 
 QByteArray toHex(const QByteArray& ba, char sep)
 {
+    if (ba.isEmpty())
+    {
+        return QByteArray();
+    }
+	
     QByteArray hex(sep ? (ba.size() * 3 - 1) : (ba.size() * 2), Qt::Uninitialized);
 
     for(auto i = 0, o = 0; i < ba.size(); i++)
