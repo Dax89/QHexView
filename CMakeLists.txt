@@ -2,12 +2,6 @@ cmake_minimum_required(VERSION 3.13)
 
 project(QHexView)
 
-find_package(Qt6 COMPONENTS Widgets)
-
-if(NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Widgets REQUIRED)
-endif()
-
 option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" OFF)
 
 add_library(${PROJECT_NAME} INTERFACE)
