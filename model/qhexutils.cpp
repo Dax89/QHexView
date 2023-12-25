@@ -117,6 +117,8 @@ qint64 findIter(qint64 startoffset, QHexFindDirection fd, const QHexView* hexvie
 
     qint64 i = startoffset;
 
+    bool restartLoopOnce = true;
+
     while(offset == -1 && (cfd == QHexFindDirection::Backward ? (i >= 0) : (i < hexdocument->length())))
     {
         if(!f(i, offset)) break;
@@ -124,7 +126,11 @@ qint64 findIter(qint64 startoffset, QHexFindDirection fd, const QHexView* hexvie
         if(cfd == QHexFindDirection::Backward) i--;
         else i++;
 
-        if(fd == QHexFindDirection::All && i >= hexdocument->length()) i = 0;
+        if(fd == QHexFindDirection::All && i >= hexdocument->length() && restartLoopOnce)
+        {
+            i = 0; 
+            restartLoopOnce = false; 
+        }
     }
 
     return offset;
