@@ -67,3 +67,15 @@ hexview->setComment(12, 42, "I'm a comment!");  // Add a comment at offset range
 hexview->unhighlight();                         // Reset highlighting
 hexview->clearMetadata();                       // Reset all styles
 ```
+For QT beginners
+-----
+For the people who just start QT framework, steps below can be applied to integrate QHexView to new project.
+
+1) Create a new folder named as QHexView in the path that contains source files (main.cpp)
+2) Copy the repo (5.0 branch) to the QHexView folder
+3) Add add_subdirectory(QHexView) to CMakeList.txt
+4) Go to right click > promoted widgets in mainwindow.ui
+5) Fill class name as QHexView, you can use QFrame as base class then click promote
+6) Add Frame widget to the user interface
+7) Then apply right click > promote to > QHexView
+8) Finally, you can use QHexView as in Usage section
