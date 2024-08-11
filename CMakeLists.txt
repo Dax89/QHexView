@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 project(QHexView)
 
 option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" OFF)
+option(QHEXVIEW_ENABLE_EXAMPLE "Build the QHexView example program." OFF)
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -87,3 +88,8 @@ target_link_libraries(${PROJECT_NAME}
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
 )
+
+
+if (QHEXVIEW_ENABLE_EXAMPLE)
+    add_subdirectory(example)
+endif ()
