@@ -5,8 +5,11 @@ project(QHexView)
 option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" OFF)
 option(QHEXVIEW_ENABLE_EXAMPLE "Build the QHexView example program." OFF)
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(${PROJECT_NAME})
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
+)
 
 # Find Qt if not done so before.
 if (NOT DEFINED QT_VERSION_MAJOR)
@@ -27,7 +30,7 @@ qt_wrap_cpp(MOC_SOURCES
 )
 
 target_sources(${PROJECT_NAME}
-    INTERFACE 
+    PRIVATE
         "model/commands/hexcommand.h"
         "model/commands/hexcommand.cpp"
         "model/commands/insertcommand.h"
@@ -57,9 +60,10 @@ target_sources(${PROJECT_NAME}
         "model/qhexoptions.h"
         "model/qhexdocument.cpp"
         "model/qhexdocument.h"
-        "qhexview.h"
         "qhexview.cpp"
         ${MOC_SOURCES}
+    PUBLIC
+        "qhexview.h"
 )
 
 unset(MOC_SOURCES)
@@ -71,7 +75,7 @@ if(QHEXVIEW_ENABLE_DIALOGS)
     )
 
     target_sources(${PROJECT_NAME}
-        INTERFACE
+        PRIVATE
             "dialogs/hexfinddialog.h"
             "dialogs/hexfinddialog.cpp"
             ${MOC_SOURCES}
@@ -79,11 +83,13 @@ if(QHEXVIEW_ENABLE_DIALOGS)
 
     unset(MOC_SOURCES)
 
-    target_compile_definitions(${PROJECT_NAME} INTERFACE QHEXVIEW_ENABLE_DIALOGS)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC QHEXVIEW_ENABLE_DIALOGS
+    )
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-    INTERFACE
+    PUBLIC
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
