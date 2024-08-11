@@ -7,6 +7,24 @@ option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" OFF)
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Find Qt if not done so before.
+if (NOT DEFINED QT_VERSION_MAJOR)
+    find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets)
+endif ()
+
+qt_wrap_cpp(MOC_SOURCES
+    "model/buffer/qdevicebuffer.h"
+    "model/buffer/qhexbuffer.h"
+    "model/buffer/qmemorybuffer.h"
+    "model/buffer/qmemoryrefbuffer.h"
+    "model/qhexdelegate.h"
+    "model/qhexcursor.h"
+    "model/qhexmetadata.h"
+    "model/qhexdocument.h"
+    "qhexview.h"
+)
+
 target_sources(${PROJECT_NAME}
     INTERFACE 
         "model/commands/hexcommand.h"
@@ -40,14 +58,32 @@ target_sources(${PROJECT_NAME}
         "model/qhexdocument.h"
         "qhexview.h"
         "qhexview.cpp"
+        ${MOC_SOURCES}
 )
 
+unset(MOC_SOURCES)
+
+
 if(QHEXVIEW_ENABLE_DIALOGS)
+    qt_wrap_cpp(MOC_SOURCES
+        "dialogs/hexfinddialog.h"
+    )
+
     target_sources(${PROJECT_NAME}
         INTERFACE
             "dialogs/hexfinddialog.h"
             "dialogs/hexfinddialog.cpp"
+            ${MOC_SOURCES}
     )
+
+    unset(MOC_SOURCES)
 
     target_compile_definitions(${PROJECT_NAME} INTERFACE QHEXVIEW_ENABLE_DIALOGS)
 endif()
+
+target_link_libraries(${PROJECT_NAME}
+    INTERFACE
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+)
