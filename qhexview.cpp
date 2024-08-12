@@ -339,10 +339,9 @@ void QHexView::setAddressWidth(unsigned int w)
     this->checkState();
 }
 
-void QHexView::setScrollSteps(unsigned int l)
+void QHexView::setScrollSteps(int scrollsteps)
 {
-    if(l == m_options.scrollsteps) return;
-    m_options.scrollsteps = qMax(1u, l);
+    m_options.scrollsteps = scrollsteps;
 }
 
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
@@ -374,7 +373,6 @@ void QHexView::paint(QPainter* painter) const
 void QHexView::checkOptions()
 {
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
-    if(!m_options.scrollsteps) m_options.scrollsteps = 1;
 
     m_options.addresswidth = qMax<unsigned int>(m_options.addresswidth, this->calcAddressWidth());
 
