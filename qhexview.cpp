@@ -16,7 +16,6 @@
 #include <QToolTip>
 #include <QPalette>
 #include <QPainter>
-#include <cmath>
 #include <limits>
 
 
@@ -1230,7 +1229,7 @@ void QHexView::wheelEvent(QWheelEvent* e)
     int const ydelta = e->angleDelta().y();
     if (0 != ydelta)
     {
-        int const ydeltaAbsolute = std::abs(ydelta);
+        int const ydeltaAbsolute = qAbs(ydelta);
         int const numberOfLinesToMove = (ydeltaAbsolute * m_options.scrollsteps + 119) / 120; // always move at least 1 line
         int const ydeltaSign = ydelta / ydeltaAbsolute;
 
