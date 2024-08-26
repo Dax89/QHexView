@@ -93,7 +93,7 @@ class QHexView : public QAbstractScrollArea
         void setAddressWidth(unsigned int w);
         void setLineLength(unsigned int l);
         void setGroupLength(unsigned int l);
-        void setScrollSteps(unsigned int l);
+        void setScrollSteps(int scrollsteps);
         void setReadOnly(bool r);
         void setAutoWidth(bool r);
 

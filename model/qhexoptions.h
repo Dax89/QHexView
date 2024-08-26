@@ -38,7 +38,7 @@ struct QHexOptions
     unsigned int linelength{0x10};
     unsigned int addresswidth{0};
     unsigned int grouplength{1};
-    unsigned int scrollsteps{1};
+    int scrollsteps{1};
 
     // Colors & Styles
     QHash<quint8, QHexColor> bytecolors;

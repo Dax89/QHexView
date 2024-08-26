@@ -18,6 +18,7 @@
 #include <QPainter>
 #include <limits>
 
+
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
     #include "dialogs/hexfinddialog.h"
 #endif
@@ -339,10 +340,9 @@ void QHexView::setAddressWidth(unsigned int w)
     this->checkState();
 }
 
-void QHexView::setScrollSteps(unsigned int l)
+void QHexView::setScrollSteps(int scrollsteps)
 {
-    if(l == m_options.scrollsteps) return;
-    m_options.scrollsteps = qMax(1u, l);
+    m_options.scrollsteps = scrollsteps;
 }
 
 void QHexView::setReadOnly(bool r) { m_readonly = r; }
@@ -374,7 +374,6 @@ void QHexView::paint(QPainter* painter) const
 void QHexView::checkOptions()
 {
     if(m_options.grouplength > m_options.linelength) m_options.grouplength = m_options.linelength;
-    if(!m_options.scrollsteps) m_options.scrollsteps = 1;
 
     m_options.addresswidth = qMax<unsigned int>(m_options.addresswidth, this->calcAddressWidth());
 
@@ -1224,9 +1223,20 @@ void QHexView::wheelEvent(QWheelEvent* e)
     if(!m_hexdocument || !this->verticalScrollBar()->isVisible()) return;
 #endif
 
-    auto ydelta = e->angleDelta().y();
-    if(ydelta > 0) this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() - m_options.scrollsteps);
-    else if(ydelta < 0) this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() + m_options.scrollsteps);
+    // https://doc.qt.io/qt-6/qwheelevent.html
+    // "Returns the relative amount that the wheel was rotated, in eighths of a degree."
+    // "Most mouse types work in steps of 15 degrees, in which case the delta value is a multiple of 120; i.e., 120 units * 1/8 = 15 degrees."
+    int const ydelta = e->angleDelta().y();
+    if (0 != ydelta)
+    {
+        int const ydeltaAbsolute = qAbs(ydelta);
+        int const numberOfLinesToMove = (ydeltaAbsolute * m_options.scrollsteps + 119) / 120; // always move at least 1 line
+        int const ydeltaSign = ydelta / ydeltaAbsolute;
+
+        int const oldValue = this->verticalScrollBar()->value();
+        int const newValue = oldValue - ydeltaSign * numberOfLinesToMove;
+        this->verticalScrollBar()->setValue(newValue);
+    }
 }
 
 void QHexView::keyPressEvent(QKeyEvent* e)
