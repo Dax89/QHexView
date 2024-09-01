@@ -1,14 +1,12 @@
 #include "qmemoryrefbuffer.h"
 #include <QBuffer>
 
-QMemoryRefBuffer::QMemoryRefBuffer(QObject *parent): QDeviceBuffer{parent} { }
+QMemoryRefBuffer::QMemoryRefBuffer(QObject* parent): QDeviceBuffer{parent} {}
 
-bool QMemoryRefBuffer::read(QIODevice *device)
-{
+bool QMemoryRefBuffer::read(QIODevice* device) {
     m_device = qobject_cast<QBuffer*>(device);
 
-    if(m_device)
-    {
+    if(m_device) {
         m_device->setParent(this);
         return QDeviceBuffer::read(device);
     }
@@ -16,9 +14,9 @@ bool QMemoryRefBuffer::read(QIODevice *device)
     return false;
 }
 
-void QMemoryRefBuffer::write(QIODevice *device)
-{
-    if(!m_device || m_device == device) return;
+void QMemoryRefBuffer::write(QIODevice* device) {
+    if(!m_device || m_device == device)
+        return;
 
     static const int CHUNK_SIZE = 4096;
     m_device->seek(0);

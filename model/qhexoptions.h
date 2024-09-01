@@ -1,33 +1,33 @@
 #pragma once
 
-#include <QHash>
-#include <QColor>
 #include <QChar>
+#include <QColor>
+#include <QHash>
 
 namespace QHexFlags {
-    enum: unsigned int {
-        None             = (1 << 0),
-        HSeparator       = (1 << 1),
-        VSeparator       = (1 << 2),
-        StyledHeader     = (1 << 3),
-        StyledAddress    = (1 << 4),
-        NoHeader         = (1 << 5),
-        HighlightAddress = (1 << 6),
-        HighlightColumn  = (1 << 7),
 
-        Separators = HSeparator | VSeparator,
-        Styled     = StyledHeader | StyledAddress,
-    };
+enum : unsigned int {
+    None = (1 << 0),
+    HSeparator = (1 << 1),
+    VSeparator = (1 << 2),
+    StyledHeader = (1 << 3),
+    StyledAddress = (1 << 4),
+    NoHeader = (1 << 5),
+    HighlightAddress = (1 << 6),
+    HighlightColumn = (1 << 7),
+
+    Separators = HSeparator | VSeparator,
+    Styled = StyledHeader | StyledAddress,
+};
+
 }
 
-struct QHexColor
-{
+struct QHexColor {
     QColor foreground;
     QColor background;
 };
 
-struct QHexOptions
-{
+struct QHexOptions {
     // Appearance
     QChar unprintablechar{'.'};
     QString addresslabel{""};
