@@ -41,6 +41,8 @@ public:
     bool canRedo() const;
     quint64 offset() const;
     quint64 address() const;
+    QHexPosition positionFromOffset(quint64 offset) const;
+    QHexPosition positionFromAddress(quint64 address) const;
     QHexPosition position() const;
     QHexPosition selectionStart() const;
     QHexPosition selectionEnd() const;

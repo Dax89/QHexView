@@ -96,6 +96,7 @@ void QHexMetadata::clear() {
     m_metadata.clear();
     Q_EMIT changed();
 }
+
 void QHexMetadata::copy(const QHexMetadata* metadata) {
     m_metadata = metadata->m_metadata;
 }

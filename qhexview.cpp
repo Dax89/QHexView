@@ -157,13 +157,16 @@ void QHexView::setDocument(QHexDocument* doc) {
 
     connect(m_hexdocument, &QHexDocument::dataChanged, this,
             &QHexView::dataChanged);
+
     connect(m_hexdocument, &QHexDocument::changed, this,
             [=]() { this->checkAndUpdate(true); });
+
     this->checkAndUpdate(true);
 }
 
 void QHexView::setData(const QByteArray& ba) { m_hexdocument->setData(ba); }
 void QHexView::setData(QHexBuffer* buffer) { m_hexdocument->setData(buffer); }
+
 void QHexView::setCursorMode(QHexCursor::Mode mode) {
     m_hexcursor->setMode(mode);
 }
@@ -806,27 +809,51 @@ unsigned int QHexView::addressWidth() const {
 }
 
 unsigned int QHexView::lineLength() const { return m_options.linelength; }
+
 bool QHexView::canUndo() const {
     return m_hexdocument && m_hexdocument->canUndo();
 }
+
 bool QHexView::canRedo() const {
     return m_hexdocument && m_hexdocument->canRedo();
 }
+
 quint64 QHexView::offset() const { return m_hexcursor->offset(); }
 quint64 QHexView::address() const { return m_hexcursor->address(); }
+
+QHexPosition QHexView::positionFromOffset(quint64 offset) const {
+    QHexPosition opt = QHexPosition::invalid();
+
+    if(offset < static_cast<quint64>(m_hexdocument->length())) {
+        opt.line = offset / m_options.linelength;
+        opt.column = offset % m_options.linelength;
+    }
+
+    return opt;
+}
+
+QHexPosition QHexView::positionFromAddress(quint64 address) const {
+    return this->positionFromOffset(address - m_options.baseaddress);
+}
+
 QHexPosition QHexView::position() const { return m_hexcursor->position(); }
+
 QHexPosition QHexView::selectionStart() const {
     return m_hexcursor->selectionStart();
 }
+
 QHexPosition QHexView::selectionEnd() const {
     return m_hexcursor->selectionEnd();
 }
+
 quint64 QHexView::selectionStartOffset() const {
     return m_hexcursor->selectionStartOffset();
 }
+
 quint64 QHexView::selectionEndOffset() const {
     return m_hexcursor->selectionEndOffset();
 }
+
 quint64 QHexView::baseAddress() const { return m_options.baseaddress; }
 
 quint64 QHexView::lines() const {
