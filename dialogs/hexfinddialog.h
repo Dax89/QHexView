@@ -29,6 +29,10 @@ private:
     bool prepareOptions(QString& q, QHexFindMode& mode, QHexFindDirection& fd);
     bool validateIntRange(uint v) const;
     void checkResult(const QString& q, qint64 offset, QHexFindDirection fd);
+    void prepareTextMode(QLayout* l);
+    void prepareHexMode(QLayout* l);
+    void prepareIntMode(QLayout* l);
+    void prepareFloatMode(QLayout* l);
 
 private:
     QRegularExpressionValidator *m_hexvalidator, *m_hexpvalidator;
