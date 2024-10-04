@@ -2,7 +2,7 @@
  <img src="https://user-images.githubusercontent.com/1503603/156148159-02d1181a-153e-4d0b-9512-5f9ac30bcd2f.png" alt="QHexView logo" title="QHexView"/>
 </div>
 <div align="center">
- <i>An hexadecimal widget for Qt5</i>
+ <i>An hexadecimal widget for Qt5 and Qt6</i>
  <br>
  <br>
  <div align="center">
@@ -39,7 +39,7 @@ Data is managed by QHexView through QHexDocument class.<br>
 It's possible to load a generic QIODevice with QHexDocument's method `fromDevice()` with various buffer backends.<br>
 Helper methods are provided in order to load a QFile as In-Memory buffer:<br>
 ```cpp
-#include <qhexview.h>
+#include <QHexView/qhexview.h>
 
 QHexOptions options;
 options.grouplength = 2; // Pack bytes as AABB
