@@ -2,39 +2,39 @@ QT += widgets
 
 DEFINES += "QHEXVIEW_ENABLE_DIALOGS=1"
 
-HEADERS += $$PWD/model/commands/hexcommand.h \
-           $$PWD/model/commands/insertcommand.h \
-           $$PWD/model/commands/removecommand.h \
-           $$PWD/model/commands/replacecommand.h \
-           $$PWD/model/buffer/qdevicebuffer.h \
-           $$PWD/model/buffer/qhexbuffer.h \
-           $$PWD/model/buffer/qmemorybuffer.h \
-           $$PWD/model/buffer/qmemoryrefbuffer.h \
-           $$PWD/model/buffer/qmappedfilebuffer.h \
-           $$PWD/model/qhexdelegate.h \
-           $$PWD/model/qhexutils.h \
-           $$PWD/model/qhexcursor.h \
-           $$PWD/model/qhexmetadata.h \
-           $$PWD/model/qhexoptions.h \
-           $$PWD/model/qhexdocument.h \
-           $$PWD/dialogs/hexfinddialog.h \
-           $$PWD/qhexview.h
+HEADERS += $$PWD/include/QHexView/model/commands/hexcommand.h \
+           $$PWD/include/QHexView/model/commands/insertcommand.h \
+           $$PWD/include/QHexView/model/commands/removecommand.h \
+           $$PWD/include/QHexView/model/commands/replacecommand.h \
+           $$PWD/include/QHexView/model/buffer/qdevicebuffer.h \
+           $$PWD/include/QHexView/model/buffer/qhexbuffer.h \
+           $$PWD/include/QHexView/model/buffer/qmemorybuffer.h \
+           $$PWD/include/QHexView/model/buffer/qmemoryrefbuffer.h \
+           $$PWD/include/QHexView/model/buffer/qmappedfilebuffer.h \
+           $$PWD/include/QHexView/model/qhexdelegate.h \
+           $$PWD/include/QHexView/model/qhexutils.h \
+           $$PWD/include/QHexView/model/qhexcursor.h \
+           $$PWD/include/QHexView/model/qhexmetadata.h \
+           $$PWD/include/QHexView/model/qhexoptions.h \
+           $$PWD/include/QHexView/model/qhexdocument.h \
+           $$PWD/include/QHexView/dialogs/hexfinddialog.h \
+           $$PWD/include/QHexView/qhexview.h
 
-SOURCES += $$PWD/model/commands/hexcommand.cpp \
-           $$PWD/model/commands/insertcommand.cpp \
-           $$PWD/model/commands/removecommand.cpp \
-           $$PWD/model/commands/replacecommand.cpp \
-           $$PWD/model/buffer/qdevicebuffer.cpp \
-           $$PWD/model/buffer/qhexbuffer.cpp \
-           $$PWD/model/buffer/qmemorybuffer.cpp \
-           $$PWD/model/buffer/qmemoryrefbuffer.cpp \
-           $$PWD/model/buffer/qmappedfilebuffer.cpp \
-           $$PWD/model/qhexdelegate.cpp \
-           $$PWD/model/qhexutils.cpp \
-           $$PWD/model/qhexcursor.cpp \
-           $$PWD/model/qhexmetadata.cpp \
-           $$PWD/model/qhexdocument.cpp \
-           $$PWD/dialogs/hexfinddialog.cpp \
-           $$PWD/qhexview.cpp
+SOURCES += $$PWD/src/model/commands/hexcommand.cpp \
+           $$PWD/src/model/commands/insertcommand.cpp \
+           $$PWD/src/model/commands/removecommand.cpp \
+           $$PWD/src/model/commands/replacecommand.cpp \
+           $$PWD/src/model/buffer/qdevicebuffer.cpp \
+           $$PWD/src/model/buffer/qhexbuffer.cpp \
+           $$PWD/src/model/buffer/qmemorybuffer.cpp \
+           $$PWD/src/model/buffer/qmemoryrefbuffer.cpp \
+           $$PWD/src/model/buffer/qmappedfilebuffer.cpp \
+           $$PWD/src/model/qhexdelegate.cpp \
+           $$PWD/src/model/qhexutils.cpp \
+           $$PWD/src/model/qhexcursor.cpp \
+           $$PWD/src/model/qhexmetadata.cpp \
+           $$PWD/src/model/qhexdocument.cpp \
+           $$PWD/src/dialogs/hexfinddialog.cpp \
+           $$PWD/src/qhexview.cpp
 
-INCLUDEPATH += $$PWD
+INCLUDEPATH += $$PWD/include
