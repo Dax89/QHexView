@@ -18,7 +18,7 @@
 #include <limits>
 
 #if defined(QHEXVIEW_ENABLE_DIALOGS)
-#include "dialogs/hexfinddialog.h"
+#include <QHexView/dialogs/hexfinddialog.h>
 #endif
 
 #if defined(QHEXVIEW_DEBUG)
