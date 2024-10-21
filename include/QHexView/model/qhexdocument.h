@@ -20,6 +20,7 @@ private:
 
 public:
     bool isEmpty() const;
+    bool isModified() const;
     bool canUndo() const;
     bool canRedo() const;
     void setData(const QByteArray& ba);
@@ -31,6 +32,7 @@ public:
     uchar at(int offset) const;
 
 public Q_SLOTS:
+    void clearModified();
     void undo();
     void redo();
     void insert(qint64 offset, uchar b);
@@ -60,6 +62,7 @@ public:
     static QHexDocument* create(QObject* parent = nullptr);
 
 Q_SIGNALS:
+    void modifiedChanged(bool modified);
     void canUndoChanged(bool canundo);
     void canRedoChanged(bool canredo);
     void dataChanged(const QByteArray& data, quint64 offset,

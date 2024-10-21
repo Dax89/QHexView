@@ -145,6 +145,8 @@ void QHexView::setDocument(QHexDocument* doc) {
         disconnect(m_hexdocument, &QHexDocument::changed, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::dataChanged, this, nullptr);
         disconnect(m_hexdocument, &QHexDocument::reset, this, nullptr);
+        disconnect(m_hexdocument, &QHexDocument::modifiedChanged, this,
+                   nullptr);
     }
 
     m_hexdocument = doc;
@@ -157,6 +159,9 @@ void QHexView::setDocument(QHexDocument* doc) {
 
     connect(m_hexdocument, &QHexDocument::dataChanged, this,
             &QHexView::dataChanged);
+
+    connect(m_hexdocument, &QHexDocument::modifiedChanged, this,
+            &QHexView::modifiedChanged);
 
     connect(m_hexdocument, &QHexDocument::changed, this,
             [=]() { this->checkAndUpdate(true); });
@@ -361,6 +366,11 @@ void QHexView::paste(bool hex) {
         m_hexdocument->insert(m_hexcursor->offset(), pastedata);
     else
         m_hexdocument->replace(m_hexcursor->offset(), pastedata);
+}
+
+void QHexView::clearModified() {
+    if(m_hexdocument)
+        m_hexdocument->clearModified();
 }
 
 void QHexView::selectAll() {
@@ -809,6 +819,10 @@ unsigned int QHexView::addressWidth() const {
 }
 
 unsigned int QHexView::lineLength() const { return m_options.linelength; }
+
+bool QHexView::isModified() const {
+    return m_hexdocument && m_hexdocument->isModified();
+}
 
 bool QHexView::canUndo() const {
     return m_hexdocument && m_hexdocument->canUndo();

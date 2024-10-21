@@ -37,6 +37,7 @@ public:
     QByteArray getLine(qint64 line) const;
     unsigned int addressWidth() const;
     unsigned int lineLength() const;
+    bool isModified() const;
     bool canUndo() const;
     bool canRedo() const;
     quint64 offset() const;
@@ -96,6 +97,7 @@ public Q_SLOTS:
     void copyAs(CopyMode mode = CopyMode::Visual) const;
     void copy(bool hex = false) const;
     void paste(bool hex = false);
+    void clearModified();
     void selectAll();
     void removeSelection();
     void switchMode();
@@ -158,6 +160,7 @@ private:
 Q_SIGNALS:
     void dataChanged(const QByteArray& data, quint64 offset,
                      QHexDocument::ChangeReason reason);
+    void modifiedChanged(bool modified);
     void positionChanged();
     void modeChanged();
 
