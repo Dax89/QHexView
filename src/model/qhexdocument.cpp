@@ -30,6 +30,7 @@ qint64 QHexDocument::lastIndexOf(const QByteArray& ba, qint64 from) {
     return m_buffer->lastIndexOf(ba, from);
 }
 
+bool QHexDocument::accept(qint64 idx) const { return m_buffer->accept(idx); }
 bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
 bool QHexDocument::isModified() const { return !m_undostack.isClean(); }
 bool QHexDocument::canUndo() const { return m_undostack.canUndo(); }

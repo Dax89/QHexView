@@ -30,6 +30,7 @@ struct QHexColor {
 struct QHexOptions {
     // Appearance
     QChar unprintablechar{'.'};
+    QChar invalidchar{'?'};
     QString addresslabel{""};
     QString hexlabel;
     QString asciilabel;

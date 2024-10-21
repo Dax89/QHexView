@@ -132,6 +132,7 @@ private:
     qreal endColumnX() const;
     qreal cellWidth() const;
     qreal lineHeight() const;
+    qint64 positionFromLineCol(qint64 line, qint64 col) const;
     QHexPosition positionFromPoint(QPoint pt) const;
     QPoint absolutePoint(QPoint pt) const;
     QHexArea areaFromPoint(QPoint pt) const;

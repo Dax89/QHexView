@@ -12,6 +12,7 @@ public:
 
 public:
     virtual uchar at(qint64 idx);
+    virtual bool accept(qint64 idx) const;
     virtual void replace(qint64 offset, const QByteArray& data);
     virtual void read(char* data, int size);
     virtual void read(const QByteArray& ba);

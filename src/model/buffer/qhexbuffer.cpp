@@ -10,6 +10,11 @@ void QHexBuffer::replace(qint64 offset, const QByteArray& data) {
     this->insert(offset, data);
 }
 
+bool QHexBuffer::accept(qint64 idx) const {
+    Q_UNUSED(idx);
+    return true;
+}
+
 void QHexBuffer::read(char* data, int size) {
     QBuffer* buffer = new QBuffer(this);
     buffer->setData(data, size);

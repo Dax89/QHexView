@@ -721,24 +721,32 @@ void QHexView::drawDocument(QTextCursor& c) const {
 
         c.insertText(" " + addrstr + " ", acf);
 
-        auto linebytes = this->getLine(line);
+        QByteArray linebytes = this->getLine(line);
         c.insertText(" ", {});
 
         // Hex Part
-        for(auto column = 0u; column < m_options.linelength;) {
+        for(unsigned int column = 0u; column < m_options.linelength;) {
             QTextCharFormat cf;
 
-            for(auto byteidx = 0u; byteidx < m_options.grouplength;
+            for(unsigned int byteidx = 0u; byteidx < m_options.grouplength;
                 byteidx++, column++) {
-                QString s =
-                    linebytes.isEmpty() ||
-                            column >= static_cast<qint64>(linebytes.size())
-                        ? "  "
-                        : QString(QHexUtils::toHex(linebytes.mid(column, 1))
-                                      .toUpper());
-                quint8 b = static_cast<int>(column) < linebytes.size()
-                               ? linebytes.at(column)
-                               : 0x00;
+                QString s;
+                quint8 b{};
+
+                if(m_hexdocument->accept(
+                       this->positionFromLineCol(line, column))) {
+                    s = linebytes.isEmpty() ||
+                                column >= static_cast<qint64>(linebytes.size())
+                            ? "  "
+                            : QString(QHexUtils::toHex(linebytes.mid(column, 1))
+                                          .toUpper());
+                    b = static_cast<int>(column) < linebytes.size()
+                            ? linebytes.at(column)
+                            : 0x00;
+                }
+                else
+                    s = QString(m_options.invalidchar).repeated(2);
+
                 cf = this->drawFormat(c, b, s, QHexArea::Hex, line, column,
                                       static_cast<int>(column) <
                                           linebytes.size());
@@ -750,17 +758,25 @@ void QHexView::drawDocument(QTextCursor& c) const {
         c.insertText(" ", {});
 
         // Ascii Part
-        for(auto column = 0u; column < m_options.linelength; column++) {
-            auto s = linebytes.isEmpty() ||
-                             column >= static_cast<qint64>(linebytes.size())
-                         ? QChar(' ')
-                         : (QChar::isPrint(linebytes.at(column))
-                                ? QChar(linebytes.at(column))
-                                : m_options.unprintablechar);
+        for(unsigned int column = 0u; column < m_options.linelength; column++) {
+            QString s;
+            quint8 b{};
 
-            quint8 b = static_cast<int>(column) < linebytes.size()
-                           ? linebytes.at(column)
-                           : 0x00;
+            if(m_hexdocument->accept(this->positionFromLineCol(line, column))) {
+                s = linebytes.isEmpty() ||
+                            column >= static_cast<qint64>(linebytes.size())
+                        ? QChar(' ')
+                        : (QChar::isPrint(linebytes.at(column))
+                               ? QChar(linebytes.at(column))
+                               : m_options.unprintablechar);
+
+                b = static_cast<int>(column) < linebytes.size()
+                        ? linebytes.at(column)
+                        : 0x00;
+            }
+            else
+                s = m_options.invalidchar;
+
             this->drawFormat(c, b, s, QHexArea::Ascii, line, column,
                              static_cast<int>(column) < linebytes.size());
         }
@@ -927,6 +943,15 @@ qreal QHexView::cellWidth() const {
 
 qreal QHexView::lineHeight() const { return m_fontmetrics.height(); }
 
+qint64 QHexView::positionFromLineCol(qint64 line, qint64 col) const {
+    if(m_hexdocument) {
+        return qMin((line * m_options.linelength) + col,
+                    m_hexdocument->length());
+    }
+
+    return 0;
+}
+
 QHexPosition QHexView::positionFromPoint(QPoint pt) const {
     QHexPosition pos = QHexPosition::invalid();
     auto abspt = this->absolutePoint(pt);
@@ -1040,9 +1065,8 @@ QTextCharFormat QHexView::drawFormat(QTextCursor& c, quint8 b, const QString& s,
                         QTextCharFormat::UnderlineStyle::SingleUnderline);
                 }
 
-                if(offset ==
-                   metadata
-                       .begin) // Remove previous metadata's style, if needed
+                if(offset == metadata.begin) // Remove previous metadata's
+                                             // style, if needed
                 {
                     if(metadata.comment.isEmpty())
                         selcf.setUnderlineStyle(

@@ -17,6 +17,7 @@ public:
 
 private:
     explicit QHexDocument(QHexBuffer* buffer, QObject* parent = nullptr);
+    bool accept(qint64 idx) const;
 
 public:
     bool isEmpty() const;
