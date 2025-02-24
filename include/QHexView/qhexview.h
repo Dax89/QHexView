@@ -109,15 +109,25 @@ public Q_SLOTS:
     void setAutoWidth(bool r);
 
 private:
-    void paint(QPainter* painter) const;
+    bool atTheBottom () const;
+    void addLineToQTextCursor (quint64 line, QTextCursor&) const;
+    void paint (QPainter*) const;
     void checkOptions();
     void checkState();
     void checkAndUpdate(bool calccolumns = false);
     void calcColumns();
     void ensureVisible();
     void drawSeparators(QPainter* p) const;
+    
+    // What about these functions returning an std::unique_ptr <QTextDocument>?
+    // The do not perform the drawing operation per se, merely writing to QTextDocument.
+    // Therefore, they could be changed into this:
+    // std::unique_ptr <QTextDocument> makeHeader   (const QRectF& clip_rect = {})
+    // std::unique_ptr <QTextDocument> makeDocument (const QRectF& clip_rect = {})
+    // The clip_rect is an optional second parameter to QTextDocument.
     void drawHeader(QTextCursor& c) const;
     void drawDocument(QTextCursor& c) const;
+    
     QTextCharFormat drawFormat(QTextCursor& c, quint8 b, const QString& s,
                                QHexArea area, qint64 line, qint64 column,
                                bool applyformat) const;

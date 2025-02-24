@@ -409,20 +409,168 @@ void QHexView::setAutoWidth(bool r) {
     this->checkState();
 }
 
-void QHexView::paint(QPainter* painter) const {
-    QTextDocument doc;
-    doc.setDocumentMargin(0);
-    doc.setUndoRedoEnabled(false);
-    doc.setDefaultFont(this->font());
+bool QHexView::atTheBottom () const
+{
+    QScrollBar* vertical = verticalScrollBar();
+    return vertical && vertical->value() && vertical->value() == vertical->maximum();
+}
 
-    QTextCursor c(&doc);
+void QHexView::addLineToQTextCursor (quint64 line, QTextCursor& c) const
+{   // Perhaps this function could be decoupled from the QHexView class, becoming a freestanding static one?
+    // Its only purpose is to receive data and to write to QTextCursor after all.
+    quint64 address = line * m_options.linelength + this->baseAddress();
+    QString addrstr = QString::number(address, 16)
+                          .rightJustified(this->addressWidth(), '0')
+                          .toUpper();
 
-    this->drawHeader(c);
-    this->drawDocument(c);
+    // Address Part
+    QTextCharFormat acf;
+    acf.setForeground(m_options.headercolor);
 
-    painter->translate(-this->horizontalScrollBar()->value(), 0);
-    doc.drawContents(painter);
-    this->drawSeparators(painter);
+    if(m_options.hasFlag(QHexFlags::StyledAddress))
+        acf.setBackground(this->palette().color(QPalette::Window));
+
+    if(m_hexdelegate)
+        m_hexdelegate->renderAddress(address, acf, this);
+
+    if(m_hexcursor->line() == static_cast<qint64>(line) &&
+       m_options.hasFlag(QHexFlags::HighlightAddress)) {
+        acf.setBackground(this->palette().color(QPalette::Highlight));
+        acf.setForeground(this->palette().color(QPalette::HighlightedText));
+    }
+
+    c.insertText(" " + addrstr + " ", acf);
+
+    QByteArray linebytes = this->getLine(line);
+    c.insertText(" ", {});
+
+    // Hex Part
+    for(unsigned int column = 0u; column < m_options.linelength;) {
+        QTextCharFormat cf;
+
+        for(unsigned int byteidx = 0u; byteidx < m_options.grouplength;
+            byteidx++, column++) {
+            QString s;
+            quint8 b{};
+
+            if(m_hexdocument->accept(
+                   this->positionFromLineCol(line, column))) {
+                s = linebytes.isEmpty() ||
+                            column >= static_cast<qint64>(linebytes.size())
+                        ? "  "
+                        : QString(QHexUtils::toHex(linebytes.mid(column, 1))
+                                      .toUpper());
+                b = static_cast<int>(column) < linebytes.size()
+                        ? linebytes.at(column)
+                        : 0x00;
+            }
+            else
+                s = QString(m_options.invalidchar).repeated(2);
+
+            cf = this->drawFormat(c, b, s, QHexArea::Hex, line, column,
+                                  static_cast<int>(column) <
+                                      linebytes.size());
+        }
+
+        c.insertText(" ", cf);
+    }
+
+    c.insertText(" ", {});
+
+    // Ascii Part
+    for(unsigned int column = 0u; column < m_options.linelength; column++) {
+        QString s;
+        quint8 b{};
+
+        if(m_hexdocument->accept(this->positionFromLineCol(line, column))) {
+            s = linebytes.isEmpty() ||
+                        column >= static_cast<qint64>(linebytes.size())
+                    ? QChar(' ')
+                    : (QChar::isPrint(linebytes.at(column))
+                           ? QChar(linebytes.at(column))
+                           : m_options.unprintablechar);
+
+            b = static_cast<int>(column) < linebytes.size()
+                    ? linebytes.at(column)
+                    : 0x00;
+        }
+        else
+            s = m_options.invalidchar;
+
+        this->drawFormat(c, b, s, QHexArea::Ascii, line, column,
+                         static_cast<int>(column) < linebytes.size());
+    }
+
+    QTextBlockFormat bf;
+
+    if(m_options.linealternatebackground.isValid() && line % 2)
+        bf.setBackground(m_options.linealternatebackground);
+    else if(m_options.linebackground.isValid() && !(line % 2))
+        bf.setBackground(m_options.linebackground);
+
+    c.setBlockFormat(bf);
+    c.insertBlock({});
+};
+
+void QHexView::paint (QPainter* painter) const
+{   
+    auto draw_with_qtextdocument = [this, painter] (auto add_text)
+    {
+        QTextDocument document;
+        document.setDocumentMargin (0);
+        document.setUndoRedoEnabled (false);
+        document.setDefaultFont (font());
+        QTextCursor cursor (&document);
+        add_text (cursor);
+        document.drawContents (painter);
+    };
+    
+    auto draw_header   = [this] (QTextCursor& cursor) { drawHeader   (cursor); };
+    auto draw_document = [this] (QTextCursor& cursor) { drawDocument (cursor); };
+    
+    painter->translate (-this->horizontalScrollBar()->value(), 0);
+    
+    if (atTheBottom())
+    {   /* The problem this solves is not obvious, so here is some explanation:         */
+        /* When we scroll the slider, before reaching the end, this is what we see:     */
+        /* - The top visible line is always fully visible;                              */
+        /* - The bottom visible line may, or may not be clipped.                        */
+        /* Now, what should happen when we scroll all the way to the end?               */
+        /* The way I see it, the roles are supposed to be reversed in that case.        */
+        /* Now the bottom line should always be fully visible, since we are at the end. */
+        /* And the top visible line? It may or may not be clipped.                      */
+        /* In order to achieve that we paint in reverse, from bottom to top.            */
+        
+        uint64_t line = lines() - 1;
+        qreal height  = painter->viewport().height();
+        painter->setClipRect (QRectF (horizontalScrollBar() ? horizontalScrollBar()->value() : 0,
+                                      lineHeight(),
+                                      painter->viewport().width(),
+                                      painter->viewport().height() - lineHeight()));
+        while (height > lineHeight())
+        {
+            auto draw_line = [this, line = line--] (QTextCursor& cursor)
+                                                   { addLineToQTextCursor (line, cursor); };
+            height -= lineHeight();
+            painter->save();
+            painter->translate (0, height);
+            draw_with_qtextdocument (draw_line);
+            painter->restore();
+        }
+        
+        // I have never used the setClipRect() function before, I hope this properly restores the clipping state.
+        painter->setClipRect (QRectF(), Qt::NoClip);
+        draw_with_qtextdocument (draw_header);
+        drawSeparators (painter);
+    }
+    else
+    {
+        draw_with_qtextdocument (draw_header);
+        painter->translate (0, lineHeight());
+        draw_with_qtextdocument (draw_document);
+        painter->translate (0, -lineHeight());
+        drawSeparators (painter);
+    }
 }
 
 void QHexView::checkOptions() {
@@ -688,7 +836,10 @@ void QHexView::drawDocument(QTextCursor& c) const {
     if(!m_hexdocument)
         return;
 
+    // This does not seem to do anything useful, remove?
     qreal y = !m_options.hasFlag(QHexFlags::NoHeader) ? this->lineHeight() : 0;
+    
+    // This cast appears to be redundant
     quint64 line = static_cast<quint64>(this->verticalScrollBar()->value());
 
     QTextCharFormat addrformat;
@@ -698,98 +849,7 @@ void QHexView::drawDocument(QTextCursor& c) const {
     for(qint64 l = 0; m_hexdocument->isEmpty() ||
                       (line < this->lines() && l < this->visibleLines());
         l++, line++, y += this->lineHeight()) {
-        quint64 address = line * m_options.linelength + this->baseAddress();
-        QString addrstr = QString::number(address, 16)
-                              .rightJustified(this->addressWidth(), '0')
-                              .toUpper();
-
-        // Address Part
-        QTextCharFormat acf;
-        acf.setForeground(m_options.headercolor);
-
-        if(m_options.hasFlag(QHexFlags::StyledAddress))
-            acf.setBackground(this->palette().color(QPalette::Window));
-
-        if(m_hexdelegate)
-            m_hexdelegate->renderAddress(address, acf, this);
-
-        if(m_hexcursor->line() == static_cast<qint64>(line) &&
-           m_options.hasFlag(QHexFlags::HighlightAddress)) {
-            acf.setBackground(this->palette().color(QPalette::Highlight));
-            acf.setForeground(this->palette().color(QPalette::HighlightedText));
-        }
-
-        c.insertText(" " + addrstr + " ", acf);
-
-        QByteArray linebytes = this->getLine(line);
-        c.insertText(" ", {});
-
-        // Hex Part
-        for(unsigned int column = 0u; column < m_options.linelength;) {
-            QTextCharFormat cf;
-
-            for(unsigned int byteidx = 0u; byteidx < m_options.grouplength;
-                byteidx++, column++) {
-                QString s;
-                quint8 b{};
-
-                if(m_hexdocument->accept(
-                       this->positionFromLineCol(line, column))) {
-                    s = linebytes.isEmpty() ||
-                                column >= static_cast<qint64>(linebytes.size())
-                            ? "  "
-                            : QString(QHexUtils::toHex(linebytes.mid(column, 1))
-                                          .toUpper());
-                    b = static_cast<int>(column) < linebytes.size()
-                            ? linebytes.at(column)
-                            : 0x00;
-                }
-                else
-                    s = QString(m_options.invalidchar).repeated(2);
-
-                cf = this->drawFormat(c, b, s, QHexArea::Hex, line, column,
-                                      static_cast<int>(column) <
-                                          linebytes.size());
-            }
-
-            c.insertText(" ", cf);
-        }
-
-        c.insertText(" ", {});
-
-        // Ascii Part
-        for(unsigned int column = 0u; column < m_options.linelength; column++) {
-            QString s;
-            quint8 b{};
-
-            if(m_hexdocument->accept(this->positionFromLineCol(line, column))) {
-                s = linebytes.isEmpty() ||
-                            column >= static_cast<qint64>(linebytes.size())
-                        ? QChar(' ')
-                        : (QChar::isPrint(linebytes.at(column))
-                               ? QChar(linebytes.at(column))
-                               : m_options.unprintablechar);
-
-                b = static_cast<int>(column) < linebytes.size()
-                        ? linebytes.at(column)
-                        : 0x00;
-            }
-            else
-                s = m_options.invalidchar;
-
-            this->drawFormat(c, b, s, QHexArea::Ascii, line, column,
-                             static_cast<int>(column) < linebytes.size());
-        }
-
-        QTextBlockFormat bf;
-
-        if(m_options.linealternatebackground.isValid() && line % 2)
-            bf.setBackground(m_options.linealternatebackground);
-        else if(m_options.linebackground.isValid() && !(line % 2))
-            bf.setBackground(m_options.linebackground);
-
-        c.setBlockFormat(bf);
-        c.insertBlock({});
+        addLineToQTextCursor (line, c);
         if(m_hexdocument->isEmpty())
             break;
     }
@@ -806,12 +866,17 @@ unsigned int QHexView::calcAddressWidth() const {
     return QString::number(maxaddr, 16).size();
 }
 
-int QHexView::visibleLines(bool absolute) const {
-    int vl = static_cast<int>(
-        qCeil(this->viewport()->height() / this->lineHeight()));
-    if(!m_options.hasFlag(QHexFlags::NoHeader))
+int QHexView::visibleLines (bool absolute) const
+{   
+    div_t division = std::div (viewport()->height(), fontMetrics().height());
+    /* This takes into account a partially visible line.                */
+    /* Integer arithmetic appears to be good enough for counting lines. */
+    int vl = division.rem ? division.quot + 1 : division.quot;
+    
+    if (!m_options.hasFlag(QHexFlags::NoHeader))
         vl--;
-    return absolute ? vl : qMin<int>(this->lines(), vl);
+    
+    return absolute ? vl : qMin <int> (this->lines(), vl);
 }
 
 qint64 QHexView::getLastColumn(qint64 line) const {
@@ -889,9 +954,13 @@ quint64 QHexView::baseAddress() const { return m_options.baseaddress; }
 quint64 QHexView::lines() const {
     if(!m_hexdocument)
         return 0;
+    
+    if (!m_options.linelength)
+        return 0;
 
-    auto lines = static_cast<quint64>(qCeil(
-        m_hexdocument->length() / static_cast<double>(m_options.linelength)));
+    lldiv_t division = std::div (m_hexdocument->length(), m_options.linelength);
+    quint64 lines = division.rem ? division.quot + 1 : division.quot;
+        
     return !m_hexdocument->isEmpty() && !lines ? 1 : lines;
 }
 
@@ -995,7 +1064,10 @@ QHexPosition QHexView::positionFromPoint(QPoint pt) const {
 }
 
 QPoint QHexView::absolutePoint(QPoint pt) const {
-    return pt + QPoint(this->horizontalScrollBar()->value(), 0);
+    /* Painting of widget once the bottom is reached is slightly different. */
+    /* So we have to account for that here.                                 */
+    return pt + QPoint (this->horizontalScrollBar()->value(),
+                        atTheBottom() ? -std::div (viewport()->height(), fontMetrics().height()).rem : 0);
 }
 
 QHexArea QHexView::areaFromPoint(QPoint pt) const {
@@ -1431,6 +1503,8 @@ void QHexView::paintEvent(QPaintEvent*) {
 }
 
 void QHexView::resizeEvent(QResizeEvent* e) {
+    // The documentation for QAbstractScrollArea suggests handling the resize event of view port in viewportEvent().
+    // But I have not come accross any issues so far, so no problem I suppose?
     this->checkState();
     QAbstractScrollArea::resizeEvent(e);
 }
