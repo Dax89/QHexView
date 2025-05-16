@@ -429,8 +429,9 @@ void QHexView::checkOptions() {
     if(m_options.grouplength > m_options.linelength)
         m_options.grouplength = m_options.linelength;
 
-    m_options.addresswidth =
-        qMax<unsigned int>(m_options.addresswidth, this->calcAddressWidth());
+    // Only auto-calculate if not manually set
+    if(m_options.addresswidth == 0)
+        m_options.addresswidth = this->calcAddressWidth();
 
     // Round to nearest multiple of 2
     m_options.grouplength =
