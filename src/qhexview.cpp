@@ -647,13 +647,23 @@ void QHexView::ensureVisible() {
 
     auto pos = m_hexcursor->position();
     auto vlines = this->visibleLines();
+    auto scrollValue = this->verticalScrollBar()->value();
 
-    if(pos.line >= (this->verticalScrollBar()->value() + vlines))
-        this->verticalScrollBar()->setValue(pos.line - vlines + 1);
-    else if(pos.line < this->verticalScrollBar()->value())
-        this->verticalScrollBar()->setValue(pos.line);
-    else
+    // Calculate target scroll position to center the cursor
+    auto targetScroll = pos.line - (vlines / 2);
+
+    // Ensure we don't scroll past the beginning or end
+    if (targetScroll < 0) {
+        targetScroll = 0;
+    } else if (targetScroll > this->lines() - vlines) {
+        targetScroll = this->lines() - vlines;
+    }
+
+    if (scrollValue != targetScroll) {
+        this->verticalScrollBar()->setValue(targetScroll);
+    } else {
         this->viewport()->update();
+    }
 }
 
 void QHexView::drawSeparators(QPainter* p) const {
