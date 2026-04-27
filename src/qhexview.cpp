@@ -1647,7 +1647,18 @@ bool QHexView::event(QEvent* e) {
                                  m_currentarea == QHexArea::Ascii)) {
                 auto* helpevent = static_cast<QHelpEvent*>(e);
                 auto pos = this->positionFromPoint(helpevent->pos());
-                auto comment = m_hexmetadata->getComment(pos.line, pos.column);
+
+                QString comment;
+
+                if(m_hexdelegate) {
+                    auto offset = m_hexcursor->positionToOffset(pos);
+                    comment = m_hexdelegate->comment(
+                        offset, this->getByte(offset), this);
+                }
+
+                if(comment.isEmpty())
+                    comment = m_hexmetadata->getComment(pos.line, pos.column);
+
                 if(!comment.isEmpty())
                     QToolTip::showText(helpevent->globalPos(), comment);
                 return true;

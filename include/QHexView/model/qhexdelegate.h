@@ -17,6 +17,8 @@ public:
     virtual QString addressHeader(const QHexView* hexview) const;
     virtual QString hexHeader(const QHexView* hexview) const;
     virtual QString asciiHeader(const QHexView* hexview) const;
+    virtual QString comment(quint64 offset, quint8 b,
+                            const QHexView* hexview) const;
     virtual void renderAddress(quint64 address, QHexCharFormat& cf,
                                const QHexView* hexview) const;
     virtual bool renderByte(quint64 offset, quint8 b, QHexCharFormat& outcf,

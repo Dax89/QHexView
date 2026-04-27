@@ -5,17 +5,25 @@ QHexDelegate::QHexDelegate(QObject* parent): QObject{parent} {}
 
 QString QHexDelegate::addressHeader(const QHexView* hexview) const {
     Q_UNUSED(hexview);
-    return QString();
+    return QString{};
 }
 
 QString QHexDelegate::hexHeader(const QHexView* hexview) const {
     Q_UNUSED(hexview);
-    return QString();
+    return QString{};
 }
 
 QString QHexDelegate::asciiHeader(const QHexView* hexview) const {
     Q_UNUSED(hexview);
-    return QString();
+    return QString{};
+}
+
+QString QHexDelegate::comment(quint64 offset, quint8 b,
+                              const QHexView* hexview) const {
+    Q_UNUSED(offset);
+    Q_UNUSED(b);
+    Q_UNUSED(hexview);
+    return QString{};
 }
 
 void QHexDelegate::renderAddress(quint64 address, QHexCharFormat& cf,
