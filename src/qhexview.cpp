@@ -1301,8 +1301,20 @@ QHexCharFormat QHexView::drawFormat(PaintContext* ctx, quint8 b,
             }
         }
 
-        if(hasdelegate && column < this->getLastColumn(line))
-            selcf = cf;
+        if(hasdelegate) { // check if highlight strip continues
+            bool hasnext = column + 1 <= this->getLastColumn(line);
+            QHexCharFormat nextcf;
+
+            // peek next byte's style
+            if(hasnext) {
+                uchar nextb = this->getByte(offset + 1);
+
+                if(m_hexdelegate->renderByte(offset + 1, nextb, nextcf, this) &&
+                   cf.background == nextcf.background) {
+                    selcf = cf;
+                }
+            }
+        }
     }
 
     if(m_hexdocument->trackChanges()) {
@@ -1841,4 +1853,8 @@ QByteArray QHexView::getLine(qint64 line) const {
     return m_hexdocument ? m_hexdocument->read(line * m_options.line_length,
                                                m_options.line_length)
                          : QByteArray{};
+}
+
+uchar QHexView::getByte(qint64 offset) const {
+    return m_hexdocument ? m_hexdocument->at(offset) : uchar{};
 }

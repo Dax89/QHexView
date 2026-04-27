@@ -63,6 +63,7 @@ public:
     QByteArray selectedBytes() const;
     QByteArray visibleBytes() const;
     QByteArray getLine(qint64 line) const;
+    uchar getByte(qint64 offset) const;
     unsigned int addressWidth() const;
     unsigned int lineLength() const;
     bool isModified() const;
