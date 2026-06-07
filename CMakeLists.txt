@@ -5,6 +5,7 @@ project(QHexView)
 option(QHEXVIEW_BUILD_EXAMPLE "Build Example Application" ON)
 option(QHEXVIEW_USE_QT5 "Enable Qt5 build" OFF)
 option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" ON)
+option(QHEXVIEW_ASAN "Enable ASAN" OFF)
 
 if(QHEXVIEW_USE_QT5)
     find_package(Qt5 REQUIRED COMPONENTS Widgets)
@@ -83,6 +84,12 @@ if(QHEXVIEW_ENABLE_DIALOGS)
     target_compile_definitions(${PROJECT_NAME} 
         PUBLIC
             QHEXVIEW_ENABLE_DIALOGS
+    )
+endif()
+
+if(QHEXVIEW_ASAN)
+    target_compile_options(QHexView PRIVATE
+        $<$<CONFIG:Debug>:$<IF:$<CXX_COMPILER_ID:MSVC>,/fsanitize=address,-fsanitize=address>>
     )
 endif()
 
