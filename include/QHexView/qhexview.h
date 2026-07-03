@@ -125,6 +125,7 @@ public Q_SLOTS:
     void invertByteOrder();
     void undo();
     void redo();
+    void clear();
     void cut(bool hex = false);
     void copyVisual() const;
     void copyFormat(const QHexCopyFormat& cf) const;

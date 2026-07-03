@@ -136,6 +136,8 @@ void QHexDocument::redo() {
     Q_EMIT changed();
 }
 
+void QHexDocument::clear() { this->remove(0, this->length()); }
+
 void QHexDocument::insert(qint64 offset, uchar b) {
     this->insert(offset, QByteArray(1, b));
 }
@@ -183,6 +185,9 @@ void QHexDocument::replace(qint64 offset, const QByteArray& data) {
 }
 
 void QHexDocument::remove(qint64 offset, int len) {
+    if(len <= 0)
+        return;
+
     QByteArray data = m_buffer->read(offset, len);
     m_undostack->push(
         new QHexViewRemoveCommand(m_buffer, m_changes, this, offset, len));

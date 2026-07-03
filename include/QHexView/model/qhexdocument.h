@@ -43,6 +43,7 @@ public Q_SLOTS:
     void clearModified();
     void undo();
     void redo();
+    void clear();
     void insert(qint64 offset, uchar b);
     void replace(qint64 offset, uchar b);
     void insert(qint64 offset, const QByteArray& data);

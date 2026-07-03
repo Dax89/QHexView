@@ -373,6 +373,11 @@ void QHexView::redo() {
         m_hexdocument->redo();
 }
 
+void QHexView::clear() {
+    if(m_hexdocument)
+        m_hexdocument->clear();
+}
+
 void QHexView::cut(bool hex) {
     this->copy(hex);
     if(m_readonly)
