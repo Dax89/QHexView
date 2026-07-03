@@ -138,12 +138,20 @@ void QHexDocument::redo() {
 
 void QHexDocument::clear() { this->remove(0, this->length()); }
 
+void QHexDocument::append(uchar b) {
+    this->insert(this->length(), QByteArray(1, b));
+}
+
 void QHexDocument::insert(qint64 offset, uchar b) {
     this->insert(offset, QByteArray(1, b));
 }
 
 void QHexDocument::replace(qint64 offset, uchar b) {
     this->replace(offset, QByteArray(1, b));
+}
+
+void QHexDocument::append(const QByteArray& data) {
+    this->insert(this->length(), data);
 }
 
 void QHexDocument::insert(qint64 offset, const QByteArray& data) {
