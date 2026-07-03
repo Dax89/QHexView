@@ -1872,5 +1872,7 @@ QByteArray QHexView::getLine(qint64 line) const {
 }
 
 uchar QHexView::getByte(qint64 offset) const {
-    return m_hexdocument ? m_hexdocument->at(offset) : uchar{};
+    return m_hexdocument && offset < m_hexdocument->length()
+               ? m_hexdocument->at(offset)
+               : uchar{};
 }
