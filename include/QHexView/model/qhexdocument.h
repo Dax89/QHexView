@@ -16,7 +16,7 @@ public:
 
 private:
     explicit QHexDocument(QHexBuffer* buffer, QObject* parent = nullptr);
-    qsizetype findChange(qint64 offset) const;
+    qint64 findChange(qint64 offset) const;
     bool accept(qint64 idx) const;
     void removeChange(qint64 offset, qint64 n);
     void moveChanges(qint64 offset, qint64 n);

@@ -37,7 +37,7 @@ QHexChangeReason QHexDocument::getChangeReason(qint64 offset) const {
     return idx != -1 ? m_changes[idx].reason : QHexChangeReason::None;
 }
 
-qsizetype QHexDocument::findChange(qint64 offset) const {
+qint64 QHexDocument::findChange(qint64 offset) const {
     if(!m_trackchanges)
         return -1;
 
@@ -248,7 +248,7 @@ void QHexDocument::removeChange(qint64 offset, qint64 n) {
 }
 
 void QHexDocument::moveChanges(qint64 offset, qint64 n) {
-    qsizetype idx = this->findChange(offset);
+    qint64 idx = this->findChange(offset);
     if(idx == -1)
         return;
 
