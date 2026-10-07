@@ -128,14 +128,12 @@ QHexView::QHexView(QWidget* parent)
     : QAbstractScrollArea(parent), m_fontmetrics(this->font()) {
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
-    auto hasMonospace = []() -> bool {
-        return QFontDatabase::families().filter("monospace", Qt::CaseInsensitive).count() > 0;
-    };
-
-    if ((f.styleHint() != QFont::TypeWriter) && hasMonospace()) {
+#if !defined(Q_OS_MACOS)
+    if ((f.styleHint() != QFont::TypeWriter)) {
         f.setFamily("Monospace"); // Force Monospaced font
         f.setStyleHint(QFont::TypeWriter);
     }
+#endif
 
     this->setFont(f);
     this->setMouseTracking(true);
