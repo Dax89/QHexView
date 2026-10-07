@@ -6,7 +6,6 @@ option(QHEXVIEW_BUILD_EXAMPLE "Build Example Application" ON)
 option(QHEXVIEW_USE_QT5 "Enable Qt5 build" OFF)
 option(QHEXVIEW_ENABLE_DIALOGS "BuiltIn dialogs" ON)
 option(QHEXVIEW_ASAN "Enable ASAN" OFF)
-option(QHEXVIEW_DEBUG "Enable Debug Output" OFF)
 
 if(QHEXVIEW_USE_QT5)
     find_package(Qt5 REQUIRED COMPONENTS Widgets)
@@ -96,8 +95,4 @@ endif()
 
 if(QHEXVIEW_BUILD_EXAMPLE)
     add_subdirectory(example)
-endif()
-
-if (QHEXVIEW_DEBUG)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE QHEXVIEW_DEBUG)
 endif()

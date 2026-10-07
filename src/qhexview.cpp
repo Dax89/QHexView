@@ -26,20 +26,6 @@
 #define qhexview_fmtprint(fmt, ...)
 #endif
 
-void qhexview_dumpfont(const QFont &font)
-{
-#if defined(QHEXVIEW_DEBUG)
-    QFontInfo info(font);
-    qDebug() << "=== QFont Dump ======================";
-    qDebug() << "Requested family:" << font.family();
-    qDebug() << "Chosen family:" << info.family();
-    qDebug() << "Exact match?:" << info.exactMatch();
-    qDebug() << "Fixed pitch?:" << info.fixedPitch();
-    qDebug() << "Style Hint:" << info.styleHint();
-    qDebug() << "=====================================";
-#endif
-}
-
 namespace {
 
 void merge_formats(QHexCharFormat& dst, const QHexCharFormat& src) {
@@ -141,14 +127,14 @@ void QHexView::PaintContext::advanceX() { x += this->hexview->cellWidth(); }
 QHexView::QHexView(QWidget* parent)
     : QAbstractScrollArea(parent), m_fontmetrics(this->font()) {
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    qhexview_dumpfont(f);
 
-    const bool hasMonospace
-        = QFontDatabase::families().filter("monospace", Qt::CaseInsensitive).count() > 0;
-    if ((f.styleHint() != QFont::TypeWriter) && hasMonospace) {
+    auto hasMonospace = []() -> bool {
+        return QFontDatabase::families().filter("monospace", Qt::CaseInsensitive).count() > 0;
+    };
+
+    if ((f.styleHint() != QFont::TypeWriter) && hasMonospace()) {
         f.setFamily("Monospace"); // Force Monospaced font
         f.setStyleHint(QFont::TypeWriter);
-        qhexview_dumpfont(f);
     }
 
     this->setFont(f);
