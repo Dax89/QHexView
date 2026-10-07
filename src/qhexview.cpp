@@ -128,10 +128,12 @@ QHexView::QHexView(QWidget* parent)
     : QAbstractScrollArea(parent), m_fontmetrics(this->font()) {
     QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
-    if(f.styleHint() != QFont::TypeWriter) {
+#if !defined(Q_OS_MACOS)
+    if ((f.styleHint() != QFont::TypeWriter)) {
         f.setFamily("Monospace"); // Force Monospaced font
         f.setStyleHint(QFont::TypeWriter);
     }
+#endif
 
     this->setFont(f);
     this->setMouseTracking(true);
@@ -1810,7 +1812,7 @@ void QHexView::mouseMoveEvent(QMouseEvent* e) {
 void QHexView::wheelEvent(QWheelEvent* e) {
     e->ignore();
 
-#if defined(Q_OS_OSX)
+#if defined(Q_OS_MACOS)
     // In macOS scrollbar invisibility should not prevent
     // scrolling from working
 #else
